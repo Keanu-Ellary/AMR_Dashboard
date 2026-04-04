@@ -15,14 +15,20 @@
     "react-dom": "19.2.4"
   },
   "devDependencies": {
+    "@prisma/adapter-pg": "^7.6.0",
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
+    "@types/node": "^20.19.39",
+    "@types/pg": "^8.20.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19",
+    "dotenv": "^17.4.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
+    "pg": "^8.20.0",
     "prisma": "^6.19.3",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "ts-node": "^10.9.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
   }
 }
