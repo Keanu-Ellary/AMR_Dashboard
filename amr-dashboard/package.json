@@ -10,13 +10,17 @@
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
+    "leaflet": "^1.9.4",
     "next": "16.2.1",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "react-leaflet": "^5.0.0"
   },
   "devDependencies": {
     "@prisma/adapter-pg": "^7.6.0",
+    "@serwist/next": "^9.5.7",
     "@tailwindcss/postcss": "^4",
+    "@types/leaflet": "^1.9.21",
     "@types/node": "^20.19.39",
     "@types/pg": "^8.20.0",
     "@types/react": "^19.2.14",
@@ -26,6 +30,7 @@
     "eslint-config-next": "16.2.1",
     "pg": "^8.20.0",
     "prisma": "^6.19.3",
+    "serwist": "^9.5.7",
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
