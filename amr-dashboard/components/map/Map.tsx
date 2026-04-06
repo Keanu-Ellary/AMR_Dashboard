@@ -8,30 +8,25 @@ import { useMapContext } from "./MapContext";
 import Site from "./Site";
 import River from "./River";
 import addLegend from "./Legend";
-import type { ContaminationLevel } from "@/types/map_types";
-import type { SamplingPoint } from "@/types/site_types";
+import addFilterPanel from "./FilterPanel";
+import type { MapProps } from "@/types/map_types";
+import { DEFAULT_FILTERS } from "@/constants/map_constants";
 
-interface MapProps {
-  points:       SamplingPoint[];
-  selectedSite: SamplingPoint | null;
-  onSelectSite: (site: SamplingPoint) => void;
-  filters?:     ContaminationLevel[];
-}
-
-export default function Map({ points, selectedSite, onSelectSite, filters }: MapProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<L.Map | null>(null);
+export default function Map({ points, selectedSite, onSelectSite, filters, onFiltersChange }: MapProps) {
+  const mapDivRef = useRef<HTMLDivElement>(null); // Leaflet owns this
+  const mapRef    = useRef<L.Map | null>(null);
   const { setMap } = useMapContext();
 
-  //Child components render when map is ready
+  const activeFilters = filters ?? DEFAULT_FILTERS;
+
   const [mapReady, setMapReady] = useState(false);
 
   useEffect(() => {
-    if (mapRef.current || !containerRef.current) return;
+    if (mapRef.current || !mapDivRef.current) return;
 
-    const map = L.map(containerRef.current, {
+    const map = L.map(mapDivRef.current, {
       center: [-25.735, 28.28],
-      zoom: 11,
+      zoom:   11,
     });
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -40,11 +35,12 @@ export default function Map({ points, selectedSite, onSelectSite, filters }: Map
 
     map.whenReady(() => {
       addLegend(map);
+      addFilterPanel(map, points, activeFilters, onFiltersChange);
     });
 
     mapRef.current = map;
     setMap(map);
-    setMapReady(true);//re-render children once map is initialized
+    setMapReady(true);
 
     return () => {
       map.remove();
@@ -53,14 +49,49 @@ export default function Map({ points, selectedSite, onSelectSite, filters }: Map
     };
   }, []);
 
+  const filteredPoints = points.filter((point) => {
+    if (!filters) return true;
+
+    if (filters.contaminationLevels) {
+      if (filters.contaminationLevels?.length > 0 &&
+        !filters.contaminationLevels.includes(point.contaminationLevel))
+      return false;
+    }
+
+    if (filters.sites) {
+      if (filters.sites?.length > 0 &&
+        !filters.sites.includes(point.name))
+      return false;
+    }
+
+    if (filters.regions) {
+      if (filters.regions?.length > 0 &&
+        !filters.regions.includes(point.region))
+      return false;
+    }
+
+    const sampleDate = new Date(point.lastSampled);
+    if (filters.startDate && sampleDate < new Date(filters.startDate)) return false;
+    if (filters.endDate   && sampleDate > new Date(filters.endDate))   return false;
+
+    return true;
+  });
+
   return (
-    <div ref={containerRef} style={{ width: "100%", height: "100%" }}>
+    <div style={{ width: "100%", height: "100%", position: "relative" }}>
+
+      {/* Inner div for Leaflet */}
+      <div ref={mapDivRef} style={{ width: "100%", height: "100%" }} />
+
       {mapReady && mapRef.current && (
         <>
-          <River map={mapRef.current} activeRisks={filters} />
+          <River
+            map={mapRef.current}
+            activeRisks={filters?.contaminationLevels}
+          />
           <Site
             map={mapRef.current}
-            points={points}
+            points={filteredPoints}
             selectedSite={selectedSite}
             onSelectSite={onSelectSite}
           />

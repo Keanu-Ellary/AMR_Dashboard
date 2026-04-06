@@ -6,6 +6,8 @@ import { MapProvider } from "@/components/map/MapContext";
 import { samplingPoints } from "@/data/sites";
 import type { SamplingPoint } from "@/types/site_types";
 import SitesSidebar from "@/components/map/SitesSidebar";
+import { MapFilters } from "@/types/map_types";
+import { DEFAULT_FILTERS } from "@/constants/map_constants";
 
 const Map = dynamic(() => import("@/components/map/Map"), {
   ssr: false,
@@ -20,7 +22,8 @@ const Map = dynamic(() => import("@/components/map/Map"), {
 
 export default function Home() {
   const [selectedSite, setSelectedSite] = useState<SamplingPoint | null>(null);
-
+  const [filters, setFilters] = useState<MapFilters>(DEFAULT_FILTERS);
+  
   return (
     <div>
       <h1 style={styles.pageTitle}>Overview</h1>
@@ -42,6 +45,8 @@ export default function Home() {
               points={samplingPoints}
               selectedSite={selectedSite}
               onSelectSite={setSelectedSite}
+              filters={filters}
+              onFiltersChange={setFilters}
             />
           </div>
           <SitesSidebar

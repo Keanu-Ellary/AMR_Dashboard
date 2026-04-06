@@ -16,6 +16,7 @@ export default function SiteList({ points, selectedSite, onSelectSite }: SiteLis
     moderate: 1,
     low: 2,
     unknown: 3,
+    filtered: 4,
   };
   const sortedPoints = [...points].sort(
     (pointA, pointB) => (levelOrder[pointA.contaminationLevel] ?? 3) - (levelOrder[pointB.contaminationLevel] ?? 3)

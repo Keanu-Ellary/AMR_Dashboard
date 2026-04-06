@@ -19,6 +19,21 @@ export interface MapProps {
   points:        SamplingPoint[];
   selectedSite:  SamplingPoint | null;
   onSelectSite:  (site: SamplingPoint) => void;
+  filters?: MapFilters;
+  onFiltersChange: (f: MapFilters) => void;
 }
 
-export type ContaminationLevel = "low" | "moderate" | "high" | "unknown";
+export type ContaminationLevel = "low" | "moderate" | "high" | "unknown" | "filtered";
+
+export interface MapFilters {
+
+  contaminationLevels?: ContaminationLevel[];
+
+  sites?: string[];
+
+  regions?: string[];
+
+  startDate?: string;
+
+  endDate?: string;
+}
