@@ -1,8 +1,91 @@
+"use client";
+
+import dynamic from "next/dynamic";
+import { useState } from "react";
+import { MapProvider } from "@/components/map/MapContext";
+import { samplingPoints } from "@/data/sites";
+import type { SamplingPoint } from "@/types/site_types";
+import SitesSidebar from "@/components/map/SitesSidebar";
+
+const Map = dynamic(() => import("@/components/map/Map"), {
+  ssr: false,
+  loading: () => (
+    <div style={{ display: "flex", height: "100%", alignItems: "center",
+      justifyContent: "center", background: "#f8f6f6", color: "#121111",
+      fontFamily: "opensans, sans-serif", fontSize: "20px" }}>
+      Loading map...
+    </div>
+  ),
+});
 
 export default function Home() {
+  const [selectedSite, setSelectedSite] = useState<SamplingPoint | null>(null);
+
   return (
     <div>
-      Hello World
+      <h1 style={styles.pageTitle}>Overview</h1>
+      <div style={styles.grid}>
+        <span style={styles.card}>
+          <span style={styles.cardTitle}>Total Samples:</span>
+          <span style={styles.cardDesc}> 4 </span>
+        </span>
+         <span style={styles.card}>
+          <span style={styles.cardTitle}>Total Isolates:</span>
+          <span style={styles.cardDesc}> 9 </span>
+        </span>
+      </div>
+      <MapProvider>
+        <div style={{ display: "flex", height: "100vh", background: "#ffffff" }}>
+
+          <div style={{ flex: 1, position: "relative" }}>
+            <Map
+              points={samplingPoints}
+              selectedSite={selectedSite}
+              onSelectSite={setSelectedSite}
+            />
+          </div>
+          <SitesSidebar
+            points={samplingPoints}
+            selectedSite={selectedSite}
+            onSelectSite={setSelectedSite}
+          />
+        </div>
+      </MapProvider>
     </div>
   );
 }
+
+
+const styles: Record<string, React.CSSProperties> = {
+  pageTitle: {
+    fontSize: "24px",
+    fontWeight: 700,
+    color: "#060606",
+    marginBottom: "16px",
+  },
+  grid: {
+    display:"grid",
+    gridTemplateColumns:"repeat(3, 200px)",
+    gap:"12px",
+    marginBottom:"48px",
+  },
+  card: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "flex-start",
+    gap: "8px",
+    padding: "20px",
+    background: "#94c8ff",
+    borderRadius:"8px",
+  },
+  cardTitle: {
+    fontSize: "16px",
+    fontWeight: 700,
+    color: "#060606",
+  },
+  cardDesc: {
+    fontSize: "12px",
+    color: "#141415",
+    lineHeight: 1.6,
+  },
+};
