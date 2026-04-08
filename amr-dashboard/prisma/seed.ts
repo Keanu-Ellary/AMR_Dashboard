@@ -12,13 +12,22 @@ async function main()
                 surname: "Smith",
                 email: "admin1@gmail.com",
                 isAdmin: true,
+                password: "$2a$10$CTqHkBOLwZrL2EtOtt6vdOAT9.l4upP9qfahGkUw4A13UVbrewPqO",
             },
             {
                 name: "Jackson",
                 surname: "Doe",
                 email: "JackAdmin@gmail.com",
                 isAdmin: true,
+                password: "$2a$10$.8f4aTZ47fwjwd0P3.yZze6vxJ11WGT9vu1gwaFRmCAmi2z4WdJ/i",
             },
+            {
+                name: "Tony",
+                surname: "Stark",
+                email: "tony@industries.com",
+                isAdmin: true,
+                password: "$2a$10$m/eQJJ46DgsuQ1l2RsFbCOd6Xkcm105bKdyd6pX9RlDznutaHyZ5W"
+            }
         ],
         skipDuplicates: true,
     });
@@ -29,11 +38,13 @@ async function main()
                 name: "Adam",
                 surname: "Groove",
                 email: "AdGroo@gmail.com",
+                password: "$2a$10$wm7BNrOIxDcyXNCg1lRKdePG6PnowlE8pUyn2YwaBJdd/0neDuu4a",
             },
             {
                 name: "Alice",
                 surname: "Map",
                 email: "Alice@gmail.com",
+                password: "$2a$10$Q7BL50faig/TfvElda6JrOGXqRcpeI2tUpg/5FCtu4cZQHYqiMbMy"
             },
         ],
         skipDuplicates: true,

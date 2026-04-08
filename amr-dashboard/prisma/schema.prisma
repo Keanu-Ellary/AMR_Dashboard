@@ -9,18 +9,45 @@ generator client {
 }
 
 model AdminUser {
-  id      Int     @id @default(autoincrement())
-  name    String
-  surname String
-  email   String  @unique
-  isAdmin Boolean
+  id        Int        @id @default(autoincrement())
+  name      String
+  surname   String
+  email     String     @unique
+  password  String
+  isAdmin   Boolean
+  siteDatas SiteData[]
 }
 
 model User {
-  id      Int    @id @default(autoincrement())
-  name    String
-  surname String
-  email   String @unique
+  id       Int    @id @default(autoincrement())
+  name     String
+  surname  String
+  email    String @unique
+  password String
+}
+
+model SiteData {
+  id          Int         @id @default(autoincrement())
+  dangerZone  String // "red" | "yellow"
+  latitude    Float
+  longitude   Float
+  temperature Float // °C
+  ph          Float
+  tds         Float // Total Dissolved Solids
+  ec          Float // Electirical Conductivity
+  dissolvedO2 Float
+  createdAt   DateTime    @default(now())
+  adminId     Int
+  admin       AdminUser   @relation(fields: [adminId], references: [id])
+  images      SiteImage[]
+}
+
+model SiteImage {
+  id        Int      @id @default(autoincrement())
+  url       String
+  createdAt DateTime @default(now())
+  siteId    Int
+  site      SiteData @relation(fields: [siteId], references: [id], onDelete: Cascade)
 }
 
 datasource db {
