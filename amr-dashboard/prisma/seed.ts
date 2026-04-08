@@ -50,6 +50,34 @@ async function main()
         skipDuplicates: true,
     });
 
+    await prisma.siteData.createMany({
+        data: [
+            {
+                dangerZone: "red",
+                latitude: -26.8075,
+                longitude: 29.8875,
+                temperature: 22,
+                ph: 6.7,
+                tds: 120,
+                ec: 1.5,
+                dissolvedO2: 8.1,
+                adminId: 3
+            },
+            {
+                dangerZone: "yellow",
+                latitude: -64.8075,
+                longitude: 34.8875,
+                temperature: 20,
+                ph: 7.4,
+                tds: 300,
+                ec: 1.5,
+                dissolvedO2: 8.1,
+                adminId: 3
+            }
+        ],
+        skipDuplicates: true,
+    });
+
     console.log("Database seeded");
 }
 
