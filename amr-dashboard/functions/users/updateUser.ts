@@ -44,7 +44,7 @@ export async function updateUser(
 
         return {
             statusCode: 200,
-            body: user,
+            body: {user},
         };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any)

@@ -21,12 +21,13 @@ export async function registerAdmin(token: string, data: {
     try {
         const hashed = await bcrypt.hash(data.password, 10);
 
-        const newUser = await prisma.user.create({
+        const newUser = await prisma.adminUser.create({
             data: {
                 name: data.name,
                 surname: data.surname,
                 email: data.email,
                 password: hashed,
+                isAdmin: true,
             },
         });
 
