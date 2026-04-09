@@ -7,14 +7,28 @@ export async function getSiteById(id: number) {
             select: {
                 id: true,
                 dangerZone: true,
+
+                sampleName: true,
+                isolationSource: true,
+                collectionDate: true,
+                geoLocName: true,
                 latitude: true,
                 longitude: true,
+                amrResGenes: true,
+                predictedSir: true,
+                sampleAnalysisType: true,
+
                 temperature: true,
-                ph: true,
                 tds: true,
-                ec: true,
+                ph: true,
                 dissolvedO2: true,
-                images: true,
+                ec: true,
+                createdAt: true,
+                images: {
+                    select: {
+                        url: true,
+                    }
+                },
             }
         });
 
@@ -28,7 +42,7 @@ export async function getSiteById(id: number) {
 
         return {
             statusCode: 200,
-            body: site
+            body: {site}
         };
     } catch (error) {
         console.error(error);

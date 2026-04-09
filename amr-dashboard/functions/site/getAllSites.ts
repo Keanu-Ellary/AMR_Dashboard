@@ -6,8 +6,17 @@ export async function getAllSites() {
             select: {
                 id: true,
                 dangerZone: true,
+
+                sampleName: true,
+                isolationSource: true,
+                collectionDate: true,
+                geoLocName: true,
                 latitude: true,
                 longitude: true,
+                amrResGenes: true,
+                predictedSir: true,
+                sampleAnalysisType: true,
+
                 temperature: true,
                 tds: true,
                 ph: true,
@@ -24,7 +33,7 @@ export async function getAllSites() {
 
         return {
             statusCode: 200,
-            body: sites
+            body: {sites}
         };
     } catch (error) {
         console.error(error);
