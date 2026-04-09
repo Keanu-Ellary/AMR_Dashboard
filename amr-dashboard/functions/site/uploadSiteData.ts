@@ -4,14 +4,42 @@ import { minioClient, BUCKET } from "../../lib/minio";
 
 export async function uploadSiteData(token: string, 
     data: {
-        dangerZone: "red" | "yellow";
+        // required:
+        sampleName: string,
+        isolationSource: string,
+        collectionDate: Date,
+        geoLocName: string,
         latitude: number;
         longitude: number;
-        temperature: number;
-        ph: number;
-        tds: number;
-        ec: number;
-        dissolvedO2: number;
+        amrResGenes: string,
+        predictedSir: string,
+        sampleAnalysisType: string,
+
+        // optional
+        isolateId?: string,
+        orgamism?: string,
+        sampleId?: string,
+        collectedBy?: string,
+        sequenceName?: string,
+        elementType?: string,
+        class?: string,
+        subclass?: string,
+        targetLength?: number,
+        referenceLength?: number,
+        coverage?: number,
+        identity?: number,
+        alignmentLength?: number,
+        accession?: string,
+        virtulenceGenes?: string,
+        plasmidReplicons?: string,
+        temperature?: number;
+        ph?: number;
+        tds?: number;
+        ec?: number;
+        dissolvedO2?: number;
+        
+        // extra
+        dangerZone?: "red" | "yellow";
     },
     imageBase64?: string
 ) {
@@ -35,7 +63,7 @@ export async function uploadSiteData(token: string,
             };
         }
 
-        if (data.ph < 0 || data.ph > 14)
+        if (data.ph && (data.ph < 0 || data.ph > 14))
         {
             throw new Error("Invalid pH level");
         }

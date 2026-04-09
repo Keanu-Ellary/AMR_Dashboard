@@ -27,19 +27,48 @@ model User {
 }
 
 model SiteData {
-  id          Int         @id @default(autoincrement())
-  dangerZone  String // "red" | "yellow"
-  latitude    Float
-  longitude   Float
-  temperature Float // °C
-  ph          Float
-  tds         Float // Total Dissolved Solids
-  ec          Float // Electirical Conductivity
-  dissolvedO2 Float
-  createdAt   DateTime    @default(now())
-  adminId     Int
-  admin       AdminUser   @relation(fields: [adminId], references: [id])
-  images      SiteImage[]
+  id Int @id @default(autoincrement())
+
+  // mandatory
+  sampleName         String
+  isolationSource    String
+  collectionDate     DateTime
+  geoLocName         String
+  latitude           Float
+  longitude          Float
+  amrResGenes        String
+  predictedSir       String
+  sampleAnalysisType String
+
+  // optional
+  isolateId        String?
+  organism         String?
+  sampleId         String?
+  collectedBy      String?
+  sequenceName     String?
+  elementType      String?
+  class            String?
+  subclass         String?
+  targetLength     Float?
+  referenceLength  Float?
+  coverage         Float?
+  identity         Float?
+  alignmentLength  Float?
+  accession        String?
+  virtulenceGenes  String?
+  plasmidReplicons String?
+  temperature      Float? // °C
+  ph               Float?
+  tds              Float? // Total Dissolved Solids
+  ec               Float? // Electirical Conductivity
+  dissolvedO2      Float?
+
+  dangerZone String? // "red" | "yellow"
+
+  createdAt DateTime    @default(now())
+  adminId   Int
+  admin     AdminUser   @relation(fields: [adminId], references: [id])
+  images    SiteImage[]
 }
 
 model SiteImage {

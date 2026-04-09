@@ -30,7 +30,7 @@ export async function getUsers()
 
         return {
             statusCode: 500,
-            body: JSON.stringify({error: "Failed to fetch users"}),
+            body: {error: "Failed to fetch users"},
         };
     }
 }
