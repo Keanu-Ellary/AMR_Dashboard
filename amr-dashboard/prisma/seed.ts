@@ -53,26 +53,38 @@ async function main()
     await prisma.siteData.createMany({
         data: [
             {
-                dangerZone: "red",
+                adminId: 3,
+                sampleName: "Sample A",
+                isolationSource: "River water",
+                collectionDate: new Date("2026-04-01"),
+                geoLocName: "Apies River - Point F",
                 latitude: -26.8075,
-                longitude: 29.8875,
+                longitude: 29.6677,
+                amrResGenes: "geneA, geneB",
+                predictedSir: "Resistant",
+                sampleAnalysisType: "Metagenomic",
+
                 temperature: 22,
-                ph: 6.7,
-                tds: 120,
-                ec: 1.5,
                 dissolvedO2: 8.1,
-                adminId: 3
+
+                dangerZone: "red",
             },
             {
-                dangerZone: "yellow",
-                latitude: -64.8075,
-                longitude: 34.8875,
-                temperature: 20,
+                adminId: 3,
+                sampleName: "Sample B",
+                isolationSource: "River water",
+                collectionDate: new Date("2026-04-09"),
+                geoLocName: "Apies River - Point Z",
+                latitude: -66.8075,
+                longitude: 49.6677,
+                amrResGenes: "geneX",
+                predictedSir: "Intermediate",
+                sampleAnalysisType: "PCR",
+
                 ph: 7.4,
                 tds: 300,
-                ec: 1.5,
-                dissolvedO2: 8.1,
-                adminId: 3
+
+                dangerZone: "yellow",
             }
         ],
         skipDuplicates: true,

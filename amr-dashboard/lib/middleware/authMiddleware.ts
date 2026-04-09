@@ -31,7 +31,7 @@ export function adminNeeded(token: string)
         };
     }
 
-    if (!user.userId)
+    if (!user.isAdmin)
     {
         return {
             authorized: false,

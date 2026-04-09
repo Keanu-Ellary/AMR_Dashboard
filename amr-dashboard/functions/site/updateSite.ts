@@ -5,14 +5,42 @@ export async function updateSite(
     token: string,
     siteId: number,
     updates: {
-        dangerZone?: "red" | "yellow";
+        // required:
+        sampleName?: string,
+        isolationSource?: string,
+        collectionDate?: Date,
+        geoLocName?: string,
         latitude?: number;
         longitude?: number;
+        amrResGenes?: string,
+        predictedSir?: string,
+        sampleAnalysisType?: string,
+
+        // optional
+        isolateId?: string,
+        orgamism?: string,
+        sampleId?: string,
+        collectedBy?: string,
+        sequenceName?: string,
+        elementType?: string,
+        class?: string,
+        subclass?: string,
+        targetLength?: number,
+        referenceLength?: number,
+        coverage?: number,
+        identity?: number,
+        alignmentLength?: number,
+        accession?: string,
+        virtulenceGenes?: string,
+        plasmidReplicons?: string,
         temperature?: number;
         ph?: number;
         tds?: number;
         ec?: number;
         dissolvedO2?: number;
+        
+        // extra
+        dangerZone?: "red" | "yellow";
     }
 ) {
     const authorize = adminNeeded(token);
