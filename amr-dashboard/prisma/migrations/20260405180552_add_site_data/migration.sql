@@ -1,0 +1,19 @@
+-- CreateTable
+CREATE TABLE "SiteData" (
+    "id" SERIAL NOT NULL,
+    "dangerZone" TEXT NOT NULL,
+    "latitude" DOUBLE PRECISION NOT NULL,
+    "longitude" DOUBLE PRECISION NOT NULL,
+    "temperature" DOUBLE PRECISION NOT NULL,
+    "ph" DOUBLE PRECISION NOT NULL,
+    "tds" DOUBLE PRECISION NOT NULL,
+    "ec" DOUBLE PRECISION NOT NULL,
+    "dissolvedO2" DOUBLE PRECISION NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "adminId" INTEGER NOT NULL,
+
+    CONSTRAINT "SiteData_pkey" PRIMARY KEY ("id")
+);
+
+-- AddForeignKey
+ALTER TABLE "SiteData" ADD CONSTRAINT "SiteData_adminId_fkey" FOREIGN KEY ("adminId") REFERENCES "AdminUser"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
