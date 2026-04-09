@@ -30,6 +30,14 @@ export async function addPhotosToSite(
             };
         }
 
+        if (imagesBase64.length === 0)
+        {
+            return {
+                statusCode: 404,
+                body: {error: "There are no images to add"}
+            };
+        }
+
         const imagesToUpload = [];
 
         for (const baseString of imagesBase64)
