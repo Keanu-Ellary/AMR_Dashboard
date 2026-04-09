@@ -14,8 +14,10 @@
     "jsonwebtoken": "^9.0.3",
     "minio": "^8.0.7",
     "multer": "^2.1.1",
+    "autoprefixer": "^10.4.27",
     "leaflet": "^1.9.4",
     "next": "16.2.1",
+    "postcss": "^8.5.8",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-leaflet": "^5.0.0"
