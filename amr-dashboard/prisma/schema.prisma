@@ -1,0 +1,85 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model AdminUser {
+  id        Int        @id @default(autoincrement())
+  name      String
+  surname   String
+  email     String     @unique
+  password  String
+  isAdmin   Boolean
+  siteDatas SiteData[]
+}
+
+model User {
+  id       Int    @id @default(autoincrement())
+  name     String
+  surname  String
+  email    String @unique
+  password String
+}
+
+model SiteData {
+  id Int @id @default(autoincrement())
+
+  // mandatory
+  sampleName         String
+  isolationSource    String
+  collectionDate     DateTime
+  geoLocName         String
+  latitude           Float
+  longitude          Float
+  amrResGenes        String
+  predictedSir       String
+  sampleAnalysisType String
+
+  // optional
+  isolateId        String?
+  organism         String?
+  sampleId         String?
+  collectedBy      String?
+  sequenceName     String?
+  elementType      String?
+  class            String?
+  subclass         String?
+  targetLength     Float?
+  referenceLength  Float?
+  coverage         Float?
+  identity         Float?
+  alignmentLength  Float?
+  accession        String?
+  virtulenceGenes  String?
+  plasmidReplicons String?
+  temperature      Float? // °C
+  ph               Float?
+  tds              Float? // Total Dissolved Solids
+  ec               Float? // Electirical Conductivity
+  dissolvedO2      Float?
+
+  dangerZone String? // "red" | "yellow"
+
+  createdAt DateTime    @default(now())
+  adminId   Int
+  admin     AdminUser   @relation(fields: [adminId], references: [id])
+  images    SiteImage[]
+}
+
+model SiteImage {
+  id        Int      @id @default(autoincrement())
+  url       String
+  createdAt DateTime @default(now())
+  siteId    Int
+  site      SiteData @relation(fields: [siteId], references: [id], onDelete: Cascade)
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
