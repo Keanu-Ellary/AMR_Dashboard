@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { toast } from "react-toastify";
-import { login } from "@/app/services/authService";
+import { login, getMe } from "@/app/services/authService";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);

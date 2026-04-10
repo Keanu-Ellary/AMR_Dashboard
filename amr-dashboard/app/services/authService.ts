@@ -8,3 +8,13 @@ export async function login(email: string, password: string) {
 
     return response;
 };
+
+export async function getMe() {
+    const response = await fetch('/api/me', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+    });
+
+    const meData = await response.json();
+    return meData.user;
+}
