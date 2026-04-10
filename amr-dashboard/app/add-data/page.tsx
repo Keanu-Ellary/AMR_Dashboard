@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { Home, BarChart2, Map as MapIcon, ChevronRight, User } from 'lucide-react';
+import { Home, BarChart2, Map as MapIcon, ChevronRight, User, Sidebar } from 'lucide-react';
 import Link from 'next/link';
+import SideNavBar from '@/components/SideNavBar';
 
 export default function AddDataPage() {
   const [dangerZone, setDangerZone] = useState('Choose Zone');
@@ -58,36 +59,7 @@ export default function AddDataPage() {
     <div className="flex h-screen bg-[#2D2D2D] p-2 font-sans text-sm">
       <div className="flex w-full bg-white rounded-[2rem] shadow-lg overflow-hidden border border-gray-100">
         
-        {/* sidebar */}
-        <div className="w-64 border-r border-gray-100 flex flex-col pt-6">
-          <div className="px-6 mb-8 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center">
-              <User size={16} className="text-gray-600" />
-            </div>
-            <span className="font-semibold text-gray-800">Admin</span>
-          </div>
-          
-          <div className="px-6 mb-2 text-xs font-semibold text-gray-400">
-            Dashboards
-          </div>
-          <nav className="flex-1 space-y-1 px-4">
-            <Link href="/" className="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg">
-              <Home size={18} />
-              <span className="font-medium">Overview</span>
-            </Link>
-            <Link href="/statistics" className="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg">
-              <BarChart2 size={18} />
-              <span className="font-medium">Statistics</span>
-            </Link>
-            <div className="flex items-center justify-between px-4 py-2 bg-gray-200 text-gray-800 rounded-lg font-medium">
-              <div className="flex items-center gap-3">
-                <MapIcon size={18} />
-                <span className="font-medium">Map View</span>
-              </div>
-              <ChevronRight size={16} />
-            </div>
-          </nav>
-        </div>
+        <SideNavBar />
 
         {/* MAIN Form Column */}
         <div className="w-80 border-r border-gray-100 p-6 flex flex-col overflow-y-auto py-4">

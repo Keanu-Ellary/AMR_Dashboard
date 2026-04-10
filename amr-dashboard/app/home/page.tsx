@@ -8,6 +8,8 @@ import type { SamplingPoint } from "@/types/site_types";
 import SitesSidebar from "@/components/map/SitesSidebar";
 import { MapFilters } from "@/types/map_types";
 import { DEFAULT_FILTERS } from "@/constants/map_constants";
+import SideNavBar from "@/components/SideNavBar";
+import TopNavBar from "@/components/TopNavBar";
 
 const Map = dynamic(() => import("@/components/map/Map"), {
   ssr: false,
@@ -25,37 +27,43 @@ export default function Home() {
   const [filters, setFilters] = useState<MapFilters>(DEFAULT_FILTERS);
   
   return (
-    <div>
-      <h1 style={styles.pageTitle}>Overview</h1>
-      <div style={styles.grid}>
-        <span style={styles.card}>
-          <span style={styles.cardTitle}>Total Samples:</span>
-          <span style={styles.cardDesc}> 4 </span>
-        </span>
-         <span style={styles.card}>
-          <span style={styles.cardTitle}>Total Isolates:</span>
-          <span style={styles.cardDesc}> 9 </span>
-        </span>
-      </div>
-      <MapProvider>
-        <div style={{ display: "flex", height: "100vh", background: "#ffffff" }}>
+    <div className="flex h-screen bg-gray-100 font-sans">  
+      <SideNavBar />
+        <div className="flex-1 flex flex-col overflow-hidden">  
+          <TopNavBar />
+    
+          <main className="flex-1 overflow-auto p-6">
+            <div style={styles.grid}>
+              <span style={styles.card}>
+                <span style={styles.cardTitle}>Total Samples:</span>
+                <span style={styles.cardDesc}> 4 </span>
+              </span>
+              <span style={styles.card}>
+                <span style={styles.cardTitle}>Total Isolates:</span>
+                <span style={styles.cardDesc}> 9 </span>
+              </span>
+            </div>
+            <MapProvider>
+              <div style={{ display: "flex", height: "100vh", background: "#ffffff" }}>
 
-          <div style={{ flex: 1, position: "relative" }}>
-            <Map
-              points={samplingPoints}
-              selectedSite={selectedSite}
-              onSelectSite={setSelectedSite}
-              filters={filters}
-              onFiltersChange={setFilters}
-            />
-          </div>
-          <SitesSidebar
-            points={samplingPoints}
-            selectedSite={selectedSite}
-            onSelectSite={setSelectedSite}
-          />
+                <div style={{ flex: 1, position: "relative" }}>
+                  <Map
+                    points={samplingPoints}
+                    selectedSite={selectedSite}
+                    onSelectSite={setSelectedSite}
+                    filters={filters}
+                    onFiltersChange={setFilters}
+                  />
+                </div>
+                <SitesSidebar
+                  points={samplingPoints}
+                  selectedSite={selectedSite}
+                  onSelectSite={setSelectedSite}
+                />
+              </div>
+            </MapProvider>
+          </main>
         </div>
-      </MapProvider>
     </div>
   );
 }
