@@ -3,15 +3,24 @@ import {prisma} from "../../lib/db"
 export async function anomaliesPerSite() {
     try {
         const sites = await prisma.siteData.findMany({
-            orderBy: {createdAt: "asc"}
+            orderBy: {createdAt: "asc"},
         });
 
         const anomalies = [];
 
-        for (let j = 0; j < sites.length; j++)
+        for (let j = 1; j < sites.length; j++)
         {
             const prevSite = sites[j - 1];
             const currSite = sites[j];
+
+            if(
+                prevSite.temperature ==  null ||
+                currSite.temperature == null ||
+                prevSite.ph == null ||
+                currSite.ph == null||
+                prevSite.tds ==  null ||
+                currSite.tds == null
+            ){continue}
 
             const jumpTemp = Math.abs(currSite.temperature - prevSite.temperature);
             const jumppH = Math.abs(currSite.ph - prevSite.ph);
@@ -80,6 +89,11 @@ export async function anomalyUpdateCheck(siteId: number, data: {
                 statusCode: 404,
                 body: {error: "Site not found"}
             };
+        }
+
+        if(site.temperature == null || site.ph == null || site.tds == null)
+        {
+            throw new Error("Fields are empty. Cannot perform function");
         }
 
         const jumpTemp = Math.abs(data.newTemp - site.temperature);
