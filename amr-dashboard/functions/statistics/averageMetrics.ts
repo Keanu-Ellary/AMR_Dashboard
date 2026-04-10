@@ -18,10 +18,16 @@ export async function averageMetrics() {
 
         for (let j = 0; j < sites.length; j++)
         {
-            totalpH += sites[j].ph;
-            totalTemp += sites[j].temperature;
-            totalDiss += sites[j].dissolvedO2;
-            totalTDS += sites[j].tds;
+            if (sites && sites[j]) {
+                const site = sites[j];
+
+                if (site.ph && site.temperature && site.dissolvedO2 && site.tds) {
+                    totalpH += site.ph;
+                    totalTemp += site.temperature;
+                    totalDiss += site.dissolvedO2;
+                    totalTDS += site.tds;
+                }
+            }
         }
 
         const avgpH = totalpH / sites.length;

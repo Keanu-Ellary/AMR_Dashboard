@@ -5,6 +5,12 @@ export async function WQI() {
         const sites = await prisma.siteData.findMany();
 
         const results = sites.map(site => {
+            if (!site.ph || !site.dissolvedO2 || !site.tds || !site.ec) {
+                return {
+                    id: site.id,
+                    WQI: null
+                };
+            }
             const score = 
                 0.25 * (14 - Math.abs(7 - site.ph)) +
                 0.25 * site.dissolvedO2 + 
