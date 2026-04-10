@@ -27,7 +27,7 @@ function NavLink({ href, icon: Icon, label, isActive }: NavItem & { isActive: bo
   );
 }
 
-export default function SideNavBar() {
+export default function SideNavBar({isLoggedIn}: { isLoggedIn: boolean }) {
   const pathname = usePathname();
 
   return (
@@ -60,14 +60,16 @@ export default function SideNavBar() {
           ))}
       </nav>
 
-      <button
-        onClick={async () => { await logout();
-          window.location.href = "/login";
-        }}
-         className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-gray-600 hover:bg-gray-100 w-full"
-      >
-         <LogOutIcon size={18} /> Logout
-      </button>
+      {isLoggedIn && (
+          <button
+            onClick={async () => { await logout();
+              window.location.href = "/login";
+            }}
+            className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-gray-600 hover:bg-gray-100 w-full"
+        >
+          <LogOutIcon size={18} /> Logout
+        </button>
+      )}
     </div>
   );
 }
