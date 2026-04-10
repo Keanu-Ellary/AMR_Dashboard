@@ -2,43 +2,27 @@
 
 import React, { useState } from "react";
 import { toast } from "react-toastify";
+import { login } from "@/app/services/authService";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const loginMockResponseFail = {
-    statusCode: 500,
-    message: "Login failed",
-  };
-  const loginMockResponseSuccess = {
-    statusCode: 200,
-    message: "Login successful",
-    data: {
-      token: "mock-jwt-token",
-      user: {
-        id: 1,
-        name: "John Doe",
-        email: "john.doe@example.com",
+ const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      if (!email || !password) {
+        toast.error("Please enter email and password.");
+        return;
       }
-    }
-  };
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email || !password) {
-      toast.error("Please enter email and password.");
-      return;
-    }
-    const response = loginMockResponseSuccess;
-    if (response && response.statusCode === 200) {
-      toast.success("Login successful!");
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      window.location.href = "/home";
-    } else { 
-      toast.error("Login failed. Please try again.");
-    } 
+      const response = await login(email, password);
+      if (response && response.status === 200) {
+        toast.success("Login successful!");
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        window.location.href = "/home";
+      } else { 
+        toast.error("Login failed. Please try again.");
+      } 
   };
 
   return (
@@ -56,7 +40,7 @@ export default function LoginPage() {
             Please Enter Your Details
           </p>
           
-          <form className="w-full max-w-sm flex flex-col gap-6" onSubmit={(e) => e.preventDefault()}>
+          <form className="w-full max-w-sm flex flex-col gap-6" onSubmit={handleLogin}>
             <input
               type="email"
               placeholder="Email"
@@ -94,7 +78,6 @@ export default function LoginPage() {
             <div className="flex flex-col items-center gap-4 mt-6">
               <button
                 type="submit"
-                onClick={handleLogin}
                 className="w-48 bg-blue-200 text-slate-800 font-medium py-3 rounded-full hover:bg-blue-300 transition-colors shadow-sm"
               >
                 Login
