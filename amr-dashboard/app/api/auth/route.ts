@@ -19,7 +19,7 @@ export async function POST(req: Request)
 
         if (isAdmin) {
             const cookieStore = await cookies();
-            cookieStore.set('user', JSON.stringify({ token: res.body.jwtToken }), {
+            cookieStore.set('user', JSON.stringify({ token: res.body.jwtToken, isAdmin: isAdmin }), {
                 httpOnly: true,
                 secure: true,
                 sameSite: 'strict',

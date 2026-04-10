@@ -47,6 +47,7 @@ export default function LoginPage() {
               className="w-full border border-gray-300 rounded-full px-6 py-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all"
               value={email}
               onChange = {(e) => setEmail(e.target.value)}
+              suppressHydrationWarning
             />
             
             <div className="relative w-full">
@@ -56,6 +57,7 @@ export default function LoginPage() {
                 className="w-full border border-gray-300 rounded-full px-6 py-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all pr-12"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                suppressHydrationWarning
               />
               <button
                 type="button"

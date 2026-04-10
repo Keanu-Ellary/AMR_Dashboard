@@ -6,6 +6,8 @@ import { usePathname } from "next/navigation";
 import clsx from "clsx";
 import { NAV_ITEMS } from "@/constants/navbar_constants";
 import { NavItem } from "@/types/navbar_types";
+import { LogOutIcon } from "lucide-react";
+import { logout } from "@/app/services/authService";
 
 
 function NavLink({ href, icon: Icon, label, isActive }: NavItem & { isActive: boolean }) {
@@ -47,7 +49,7 @@ export default function SideNavBar() {
       <div className="text-xs text-gray-500 uppercase font-semibold mb-4">
         Dashboards
       </div>
-      <nav className="flex flex-col gap-2">
+      <nav className="flex flex-col gap-2 flex-1">
         {NAV_ITEMS.filter(item => item.href !== "/add-data" && item.href !== "/analyze")
           .map((item) => (
             <NavLink
@@ -57,6 +59,15 @@ export default function SideNavBar() {
             />
           ))}
       </nav>
+
+      <button
+        onClick={async () => { await logout();
+          window.location.href = "/login";
+        }}
+         className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-gray-600 hover:bg-gray-100 w-full"
+      >
+         <LogOutIcon size={18} /> Logout
+      </button>
     </div>
   );
 }
