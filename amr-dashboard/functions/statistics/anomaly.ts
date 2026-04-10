@@ -13,9 +13,14 @@ export async function anomaliesPerSite() {
             const prevSite = sites[j - 1];
             const currSite = sites[j];
 
-            const jumpTemp = Math.abs(currSite.temperature - prevSite.temperature);
-            const jumppH = Math.abs(currSite.ph - prevSite.ph);
-            const jumpTDS = Math.abs(currSite.tds - prevSite.tds);
+            var jumpTemp = 0;
+            var jumppH = 0;
+            var jumpTDS = 0;
+            if (currSite.temperature && prevSite?.temperature && currSite.ph && prevSite?.ph && currSite.tds && prevSite?.tds) {
+                jumpTemp = Math.abs(currSite.temperature - prevSite.temperature);
+                jumppH = Math.abs(currSite.ph - prevSite.ph);
+                jumpTDS = Math.abs(currSite.tds - prevSite.tds);
+            }
 
             if (jumpTemp > 5)
             {
@@ -82,9 +87,14 @@ export async function anomalyUpdateCheck(siteId: number, data: {
             };
         }
 
-        const jumpTemp = Math.abs(data.newTemp - site.temperature);
-        const jumppH = Math.abs(data.newpH - site.ph);
-        const jumpTDS = Math.abs(data.newTDS - site.tds);
+        var jumpTemp = 0;
+        var jumppH = 0;
+        var jumpTDS = 0;
+        if (site.temperature && site.ph && site.tds) {
+             jumpTemp = Math.abs(data.newTemp - site.temperature);
+             jumppH = Math.abs(data.newpH - site.ph);
+             jumpTDS = Math.abs(data.newTDS - site.tds);
+        }
 
         const anomalies = [];
 

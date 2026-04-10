@@ -2,6 +2,8 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import SideNavBar from "@/components/SideNavBar";
+import TopNavBar from "@/components/TopNavBar";
 import {
   LineChart,
   Line,
@@ -38,72 +40,12 @@ export default function StatisticsPage() {
   return (
     <div className="flex h-screen bg-gray-100 font-sans">
       
-      {/* Sidebar Navigation */}
-      <div className="w-64 bg-white border-r flex flex-col p-4">
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center font-bold">U</div>
-            <Link href="/login" className="font-semibold text-gray-700 hover:text-green-600 transition-colors">Login</Link>
-          </div>
-        </div>
-
-        <div className="text-xs text-gray-500 uppercase font-semibold mb-4">Dashboards</div>
-        <nav className="flex flex-col gap-2">
-          <a href="#" className="flex items-center gap-3 px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-md">
-            <LayoutDashboard size={18} />
-            <span>Overview</span>
-          </a>
-          <a href="#" className="flex items-center gap-3 px-3 py-2 bg-gray-200 text-gray-900 rounded-md font-medium">
-            <PieChartIcon size={18} />
-            <span>Statistics</span>
-          </a>
-          <a href="#" className="flex items-center gap-3 px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-md ml-4 text-sm">
-            <span>Map View</span>
-          </a>
-        </nav>
-      </div>
+      <SideNavBar />
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Header bar */}
-        <header className="bg-white border-b px-6 py-4 flex justify-between items-center">
-          <div className="text-gray-500 text-sm flex gap-2">
-            <span>Dashboards</span> / <span className="text-gray-900 font-medium">Statistics</span>
-          </div>
-          <div className="relative">
-            <button 
-              onClick={() => setIsExportOpen(!isExportOpen)}
-              className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 transition-colors"
-            >
-              <Download size={16} /> Export
-            </button>
-            
-            {isExportOpen && (
-              <div className="absolute right-0 mt-2 w-36 bg-white rounded-md shadow-lg border border-gray-200 z-10">
-                <div className="py-1">
-                  <button 
-                    onClick={() => { setIsExportOpen(false); alert("Exporting as CSV..."); }}
-                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    Export as CSV
-                  </button>
-                  <button 
-                    onClick={() => { setIsExportOpen(false); alert("Exporting as TSV..."); }}
-                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    Export as TSV
-                  </button>
-                  <button 
-                    onClick={() => { setIsExportOpen(false); alert("Exporting as JSON..."); }}
-                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    Export as JSON
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </header>
+        <TopNavBar />
 
         {/* Dashboard Content */}
         <main className="flex-1 overflow-auto p-6">
