@@ -1,6 +1,8 @@
 import { login } from "@/functions/auth/login";
 import { cookies } from "next/headers";
 
+const ONE_HOUR = 60 * 60;
+
 export async function POST(req: Request)
 {
     const body = await req.json();
@@ -17,11 +19,11 @@ export async function POST(req: Request)
 
         if (isAdmin) {
             const cookieStore = await cookies();
-            cookieStore.set('user', JSON.stringify({ email: res.body.user?.email , isAdmin: isAdmin}), {
+            cookieStore.set('user', JSON.stringify({ token: res.body.jwtToken }), {
                 httpOnly: true,
                 secure: true,
                 sameSite: 'strict',
-                maxAge: 60 * 60 //1 hour
+                maxAge: ONE_HOUR
             });
         }
     }
@@ -32,7 +34,7 @@ export async function POST(req: Request)
 }
 
 function decodeJwt(token: string) {
-    const payload = token.split(".")[1];
-    const decodedPayload = Buffer.from(payload, "base64").toString("utf-8");
-    return JSON.parse(decodedPayload);
+    const jwtData = token.split(".")[1];
+    const decodedData = Buffer.from(jwtData, "base64").toString("utf-8");
+    return JSON.parse(decodedData);
 }
