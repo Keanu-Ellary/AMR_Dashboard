@@ -3,24 +3,28 @@ import {prisma} from "../../lib/db"
 export async function anomaliesPerSite() {
     try {
         const sites = await prisma.siteData.findMany({
-            orderBy: {createdAt: "asc"}
+            orderBy: {createdAt: "asc"},
         });
 
         const anomalies = [];
 
-        for (let j = 0; j < sites.length; j++)
+        for (let j = 1; j < sites.length; j++)
         {
             const prevSite = sites[j - 1];
             const currSite = sites[j];
 
-            var jumpTemp = 0;
-            var jumppH = 0;
-            var jumpTDS = 0;
-            if (currSite.temperature && prevSite?.temperature && currSite.ph && prevSite?.ph && currSite.tds && prevSite?.tds) {
-                jumpTemp = Math.abs(currSite.temperature - prevSite.temperature);
-                jumppH = Math.abs(currSite.ph - prevSite.ph);
-                jumpTDS = Math.abs(currSite.tds - prevSite.tds);
-            }
+            if(
+                prevSite.temperature ==  null ||
+                currSite.temperature == null ||
+                prevSite.ph == null ||
+                currSite.ph == null||
+                prevSite.tds ==  null ||
+                currSite.tds == null
+            ){continue}
+
+            const jumpTemp = Math.abs(currSite.temperature - prevSite.temperature);
+            const jumppH = Math.abs(currSite.ph - prevSite.ph);
+            const jumpTDS = Math.abs(currSite.tds - prevSite.tds);
 
             if (jumpTemp > 5)
             {
@@ -87,14 +91,14 @@ export async function anomalyUpdateCheck(siteId: number, data: {
             };
         }
 
-        var jumpTemp = 0;
-        var jumppH = 0;
-        var jumpTDS = 0;
-        if (site.temperature && site.ph && site.tds) {
-             jumpTemp = Math.abs(data.newTemp - site.temperature);
-             jumppH = Math.abs(data.newpH - site.ph);
-             jumpTDS = Math.abs(data.newTDS - site.tds);
+        if(site.temperature == null || site.ph == null || site.tds == null)
+        {
+            throw new Error("Fields are empty. Cannot perform function");
         }
+
+        const jumpTemp = Math.abs(data.newTemp - site.temperature);
+        const jumppH = Math.abs(data.newpH - site.ph);
+        const jumpTDS = Math.abs(data.newTDS - site.tds);
 
         const anomalies = [];
 

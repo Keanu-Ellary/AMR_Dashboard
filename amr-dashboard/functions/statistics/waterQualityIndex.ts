@@ -1,16 +1,15 @@
 import {prisma} from "../../lib/db"
 
-export async function WQI() {
+export async function waterQualityIndex() {
     try {
         const sites = await prisma.siteData.findMany();
 
         const results = sites.map(site => {
-            if (!site.ph || !site.dissolvedO2 || !site.tds || !site.ec) {
-                return {
-                    id: site.id,
-                    WQI: null
-                };
+            if(site.dissolvedO2 == null || site.ph == null || site.tds == null || site.ec == null)
+            {
+                throw new Error("Fields are empty. Cannot perform function");
             }
+
             const score = 
                 0.25 * (14 - Math.abs(7 - site.ph)) +
                 0.25 * site.dissolvedO2 + 
