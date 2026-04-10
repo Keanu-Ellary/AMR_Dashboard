@@ -4,6 +4,7 @@ import React, { useState, useRef } from "react";
 import Link from "next/link";
 import { Upload } from "lucide-react";
 import SideNavBar from "@/components/SideNavBar";
+import TopNavBar from "@/components/TopNavBar";
 
 export default function AnalyzePage() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -44,8 +45,12 @@ export default function AnalyzePage() {
         {/* Sidebar */}
         <SideNavBar />
 
+        <div className="flex-1 flex flex-col overflow-hidden">  
+          <TopNavBar />
+
         {/* Main Content */}
         <main className="flex-1 overflow-auto flex relative bg-white">
+
           <div className="flex-1 p-8 flex flex-col">
            
             <div className="mb-8 mt-2">
@@ -124,6 +129,7 @@ export default function AnalyzePage() {
           </div>
         </main>
       </div>
+    </div>
     </div>
   );
 }

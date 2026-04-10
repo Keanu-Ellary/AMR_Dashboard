@@ -48,13 +48,14 @@ export default function SideNavBar() {
         Dashboards
       </div>
       <nav className="flex flex-col gap-2">
-        {NAV_ITEMS.map((item) => (
-          <NavLink
-            key={item.href}
-            {...item}
-            isActive={pathname === item.href}
-          />
-        ))}
+        {NAV_ITEMS.filter(item => item.href !== "/add-data" && item.href !== "/analyze")
+          .map((item) => (
+            <NavLink
+              key={item.href}
+              {...item}
+              isActive={pathname === item.href}
+            />
+          ))}
       </nav>
     </div>
   );

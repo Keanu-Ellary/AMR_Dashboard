@@ -1,9 +1,8 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { Home, BarChart2, Map as MapIcon, ChevronRight, User, Sidebar } from 'lucide-react';
-import Link from 'next/link';
 import SideNavBar from '@/components/SideNavBar';
+import TopNavBar from '@/components/TopNavBar';
 
 export default function AddDataPage() {
   const [dangerZone, setDangerZone] = useState('Choose Zone');
@@ -60,9 +59,13 @@ export default function AddDataPage() {
       <div className="flex w-full bg-white rounded-[2rem] shadow-lg overflow-hidden border border-gray-100">
         
         <SideNavBar />
+         <div className="flex-1 flex flex-col overflow-hidden">  
+                  <TopNavBar />
+
 
         {/* MAIN Form Column */}
         <div className="w-80 border-r border-gray-100 p-6 flex flex-col overflow-y-auto py-4">
+          
           <button className="bg-[#ef4444] text-white px-4 py-1.5 rounded w-fit text-xs font-medium mb-4 hover:bg-red-600 transition">
             Close
           </button>
@@ -225,6 +228,7 @@ export default function AddDataPage() {
 
         </div>
       </div>
+    </div>
     </div>
   );
 }
