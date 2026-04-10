@@ -10,17 +10,7 @@ import { MapFilters } from "@/types/map_types";
 import { DEFAULT_FILTERS } from "@/constants/map_constants";
 import SideNavBar from "@/components/SideNavBar";
 import TopNavBar from "@/components/TopNavBar";
-
-const Map = dynamic(() => import("@/components/map/Map"), {
-  ssr: false,
-  loading: () => (
-    <div style={{ display: "flex", height: "100%", alignItems: "center",
-      justifyContent: "center", background: "#f8f6f6", color: "#121111",
-      fontFamily: "opensans, sans-serif", fontSize: "20px" }}>
-      Loading map...
-    </div>
-  ),
-});
+import { Map } from "@/components/map/LoadMap";
 
 export default function Home() {
   const [selectedSite, setSelectedSite] = useState<SamplingPoint | null>(null);
