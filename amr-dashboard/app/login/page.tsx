@@ -8,8 +8,12 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const loginMockResponse = {
+  const loginMockResponseFail = {
     statusCode: 500,
+    message: "Login failed",
+  };
+  const loginMockResponseSuccess = {
+    statusCode: 200,
     message: "Login successful",
     data: {
       token: "mock-jwt-token",
@@ -23,9 +27,14 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const response = loginMockResponse;
+    if (!email || !password) {
+      toast.error("Please enter email and password.");
+      return;
+    }
+    const response = loginMockResponseSuccess;
     if (response && response.statusCode === 200) {
       toast.success("Login successful!");
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       window.location.href = "/home";
     } else { 
       toast.error("Login failed. Please try again.");
@@ -52,6 +61,8 @@ export default function LoginPage() {
               type="email"
               placeholder="Email"
               className="w-full border border-gray-300 rounded-full px-6 py-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all"
+              value={email}
+              onChange = {(e) => setEmail(e.target.value)}
             />
             
             <div className="relative w-full">
@@ -59,6 +70,8 @@ export default function LoginPage() {
                 type={showPassword ? "text" : "password"}
                 placeholder="Password"
                 className="w-full border border-gray-300 rounded-full px-6 py-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all pr-12"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
               />
               <button
                 type="button"
