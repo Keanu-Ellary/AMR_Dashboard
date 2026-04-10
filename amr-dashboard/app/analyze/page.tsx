@@ -40,13 +40,7 @@ export default function AnalyzePage() {
   };
 
   return (
-    <div className="flex h-screen bg-[#1E1E1E] text-gray-900 font-sans p-4">
-      <div className="flex w-full h-full bg-white rounded-2xl overflow-hidden shadow-xl">
-        {/* Sidebar */}
-        <SideNavBar />
-
-        <div className="flex-1 flex flex-col overflow-hidden">  
-          <TopNavBar />
+    <div className="flex h-screen  text-gray-900 font-sans p-4">
 
         {/* Main Content */}
         <main className="flex-1 overflow-auto flex relative bg-white">
@@ -129,7 +123,5 @@ export default function AnalyzePage() {
           </div>
         </main>
       </div>
-    </div>
-    </div>
   );
 }

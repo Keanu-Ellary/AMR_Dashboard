@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 import { NAV_ITEMS } from "@/constants/navbar_constants";
 
 
-export default function TopNavBar() {
+export default function TopNavBar({isAdmin}: { isAdmin: boolean }) {
 
     const pathname = usePathname();
     const [isExportOpen, setIsExportOpen] = useState(false);
@@ -19,13 +19,15 @@ export default function TopNavBar() {
             </div>
             <div className="relative">
                 {pathname === "/home" && (
-                <div className="flex gap-2">
-                    <button 
-                        onClick={() => window.location.href = "/add-data"}
-                        className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2 transition-colors"
-                    >
+                <div className="flex gap-2" >
+                    {isAdmin && (
+                        <button 
+                            onClick={() => window.location.href = "/add-data"}
+                            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2 transition-colors"
+                        >
                     Upload Data
                     </button>
+                     )}
 
                     <button 
                         onClick={() => window.location.href = "/analyze"}

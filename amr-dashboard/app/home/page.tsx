@@ -17,10 +17,6 @@ export default function Home() {
   const [filters, setFilters] = useState<MapFilters>(DEFAULT_FILTERS);
   
   return (
-    <div className="flex h-screen bg-gray-100 font-sans">  
-      <SideNavBar />
-        <div className="flex-1 flex flex-col overflow-hidden">  
-          <TopNavBar />
     
           <main className="flex-1 overflow-auto p-6">
             <div style={styles.grid}>
@@ -53,8 +49,6 @@ export default function Home() {
               </div>
             </MapProvider>
           </main>
-        </div>
-    </div>
   );
 }
 

@@ -63,12 +63,7 @@ export default function AddDataPage() {
 
   return (
 
-    <div className="flex h-screen bg-[#2D2D2D] p-2 font-sans text-sm">
-      <div className="flex w-full bg-white rounded-[2rem] shadow-lg overflow-hidden border border-gray-100">
-        
-        <SideNavBar />
-         <div className="flex-1 flex flex-col overflow-hidden">  
-                  <TopNavBar />
+    <div className="flex h-screen p-2 font-sans text-sm">
 
           <div className="flex-1 flex overflow-hidden">
             {/* MAIN Form Column */}
@@ -213,7 +208,5 @@ export default function AddDataPage() {
           </div>
 
       </div>
-    </div>
-    </div>
   );
 }

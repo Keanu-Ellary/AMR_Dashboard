@@ -35,19 +35,9 @@ const organismPrevalenceData = [
 ];
 
 export default function StatisticsPage() {
-  const [isExportOpen, setIsExportOpen] = useState(false);
 
   return (
-    <div className="flex h-screen bg-gray-100 font-sans">
-      
-      <SideNavBar />
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top Header bar */}
-        <TopNavBar />
-
-        {/* Dashboard Content */}
         <main className="flex-1 overflow-auto p-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-[1400px] mx-auto w-full">
             
@@ -180,7 +170,5 @@ export default function StatisticsPage() {
             </div>
           </div>
         </main>
-      </div>
-    </div>
   );
 }
