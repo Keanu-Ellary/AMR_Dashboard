@@ -74,7 +74,10 @@ export default function AddDataPage() {
             {/* MAIN Form Column */}
             <div className="w-80 border-r border-gray-100 p-6 flex flex-col overflow-y-auto py-4">
               
-              <button className="bg-[#ef4444] text-white px-4 py-1.5 rounded w-fit text-xs font-medium mb-4 hover:bg-red-600 transition">
+              <button 
+                className="bg-[#ef4444] text-white px-4 py-1.5 rounded w-fit text-xs font-medium mb-4 hover:bg-red-600 transition"
+                onClick={() => window.location.href = "/home"}
+              >
                 Close
               </button>
 
