@@ -1,10 +1,36 @@
 "use client";
 
 import React, { useState } from "react";
-import Image from "next/image";
+import { toast } from "react-toastify";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const loginMockResponse = {
+    statusCode: 500,
+    message: "Login successful",
+    data: {
+      token: "mock-jwt-token",
+      user: {
+        id: 1,
+        name: "John Doe",
+        email: "john.doe@example.com",
+      }
+    }
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const response = loginMockResponse;
+    if (response && response.statusCode === 200) {
+      toast.success("Login successful!");
+      window.location.href = "/home";
+    } else { 
+      toast.error("Login failed. Please try again.");
+    } 
+  };
 
   return (
     <div className="min-h-screen bg-neutral-900 flex items-center justify-center p-4 md:p-8">
@@ -55,6 +81,7 @@ export default function LoginPage() {
             <div className="flex flex-col items-center gap-4 mt-6">
               <button
                 type="submit"
+                onClick={handleLogin}
                 className="w-48 bg-blue-200 text-slate-800 font-medium py-3 rounded-full hover:bg-blue-300 transition-colors shadow-sm"
               >
                 Login
@@ -62,12 +89,13 @@ export default function LoginPage() {
               
               <button
                 type="button"
+                onClick={() => window.history.back()}
                 className="w-40 bg-red-400 text-white font-medium py-2 rounded-full hover:bg-red-500 transition-colors shadow-sm flex items-center justify-center gap-2 text-sm"
               >
                 <span>✖</span> Go Back
               </button>
               
-              <a href="#" className="text-sm text-gray-500 underline hover:text-gray-700 mt-2">
+              <a href="/forgot-password" className="text-sm text-gray-500 underline hover:text-gray-700 mt-2">
                 Forgot Password
               </a>
             </div>
