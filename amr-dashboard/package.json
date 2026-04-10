@@ -9,6 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.7.0",
     "@prisma/client": "^6.19.3",
     "autoprefixer": "^10.4.27",
     "bcrypt": "^6.0.0",
@@ -21,8 +23,9 @@
     "postcss": "^8.5.8",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "react-leaflet": "^5.0.0",
-    "swagger-ui-react": "^5.32.2"
+    "recharts": "^3.8.1",
+    "tailwind-merge": "^3.5.0",
+    "react-leaflet": "^5.0.0"
   },
   "devDependencies": {
     "@prisma/adapter-pg": "^7.6.0",
