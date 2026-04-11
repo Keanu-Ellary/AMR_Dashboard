@@ -24,16 +24,19 @@ export interface MapProps {
 }
 
 export type ContaminationLevel = "low" | "moderate" | "high" | "unknown" | "filtered";
+export type DangerZone = "green" | "yellow" | "red" | "blue" | "grey";
+export type DangerZonesLabels = Record<DangerZone, ContaminationLevel>;
 
-export interface DangerZonesLabels {
-  low: "green";
-  moderate: "yellow";
-  high: "red";
-  unknown: "blue";
-  filtered: "grey";
+export function getDangerZoneLabel(zone: DangerZone): ContaminationLevel {
+  const labels: DangerZonesLabels = {
+    green: "low",
+    yellow: "moderate",
+    red: "high",
+    blue: "unknown",
+    grey: "filtered",
+  };
+  return labels[zone];
 }
-
-export type DangerZone = keyof DangerZonesLabels;
 
 export interface MapFilters {
 

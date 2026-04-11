@@ -9,7 +9,7 @@ import Site from "./Site";
 import River from "./River";
 import addLegend from "./Legend";
 import addFilterPanel from "./FilterPanel";
-import type { ContaminationLevel, MapProps } from "@/types/map_types";
+import { getDangerZoneLabel, type ContaminationLevel, type MapProps } from "@/types/map_types";
 import { DEFAULT_FILTERS } from "@/constants/map_constants";
 
 export default function Map({ points, selectedSite, onSelectSite, filters, onFiltersChange }: MapProps) {
@@ -54,7 +54,7 @@ export default function Map({ points, selectedSite, onSelectSite, filters, onFil
 
     if (filters.contaminationLevels) {
       if (filters.contaminationLevels?.length > 0 &&
-        !filters.contaminationLevels.includes(point.dangerZone as ContaminationLevel))
+        !filters.contaminationLevels.includes(getDangerZoneLabel(point.dangerZone as any)))
       return false;
     }
 
