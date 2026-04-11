@@ -1,10 +1,29 @@
 "use client";
 
 import React, { useState } from "react";
-import Image from "next/image";
+import { toast } from "react-toastify";
+import { login, getMe } from "@/app/services/authService";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+ const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      if (!email || !password) {
+        toast.error("Please enter email and password.");
+        return;
+      }
+      const response = await login(email, password);
+      if (response && response.status === 200) {
+        toast.success("Login successful!");
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        window.location.href = "/home";
+      } else { 
+        toast.error("Login failed. Please try again.");
+      } 
+  };
 
   return (
     <div className="min-h-screen bg-neutral-900 flex items-center justify-center p-4 md:p-8">
@@ -21,11 +40,14 @@ export default function LoginPage() {
             Please Enter Your Details
           </p>
           
-          <form className="w-full max-w-sm flex flex-col gap-6" onSubmit={(e) => e.preventDefault()}>
+          <form className="w-full max-w-sm flex flex-col gap-6" onSubmit={handleLogin}>
             <input
               type="email"
               placeholder="Email"
               className="w-full border border-gray-300 rounded-full px-6 py-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all"
+              value={email}
+              onChange = {(e) => setEmail(e.target.value)}
+              suppressHydrationWarning
             />
             
             <div className="relative w-full">
@@ -33,6 +55,9 @@ export default function LoginPage() {
                 type={showPassword ? "text" : "password"}
                 placeholder="Password"
                 className="w-full border border-gray-300 rounded-full px-6 py-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all pr-12"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                suppressHydrationWarning
               />
               <button
                 type="button"
@@ -62,12 +87,13 @@ export default function LoginPage() {
               
               <button
                 type="button"
+                onClick={() => window.history.back()}
                 className="w-40 bg-red-400 text-white font-medium py-2 rounded-full hover:bg-red-500 transition-colors shadow-sm flex items-center justify-center gap-2 text-sm"
               >
                 <span>✖</span> Go Back
               </button>
               
-              <a href="#" className="text-sm text-gray-500 underline hover:text-gray-700 mt-2">
+              <a href="/forgot-password" className="text-sm text-gray-500 underline hover:text-gray-700 mt-2">
                 Forgot Password
               </a>
             </div>

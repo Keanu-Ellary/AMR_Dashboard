@@ -1,36 +1,104 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { Home, BarChart2, Map as MapIcon, ChevronRight, User } from 'lucide-react';
-import Link from 'next/link';
+import { MapProvider } from '@/components/map/MapContext';
+import SitesSidebar from '@/components/map/SitesSidebar';
+import { samplingPoints } from '@/data/sites';
+import { Map } from "@/components/map/LoadMap";
+import { SamplingPoint } from '@/types/site_types';
+import { toast } from 'react-toastify';
+import { addSiteData, addMutlipleSiteData } from '@/app/services/siteService';
+import ConfirmFile from '@/components/add-data/confirmFile';
 
 export default function AddDataPage() {
   const [dangerZone, setDangerZone] = useState('Choose Zone');
   const [showImportDropdown, setShowImportDropdown] = useState(false);
   const [acceptType, setAcceptType] = useState('.csv');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const [imageBase64, setImageBase64] = useState<string | undefined>(undefined);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
 
   const [formData, setFormData] = useState({
-    longitude: '',
+    // required
+    sampleName: '',
+    isolationSource: '',
+    collectionDate: '',
+    geoLocName: '',
     latitude: '',
-    temp: '',
+    longitude: '',
+    amrResGenes: '',
+    predictedSir: '',
+    sampleAnalysisType: '',
+    dangerZone: '',
+
+    // optional
+    isolateId: '',
+    organism: '',
+    sampleId: '',
+    collectedBy: '',
+    sequenceName: '',
+    elementType: '',
+    class: '',
+    subclass: '',
+    targetLength: '',
+    referenceLength: '',
+    coverage: '',
+    identity: '',
+    alignmentLength: '',
+    accession: '',
+    virtulenceGenes: '',
+    plasmidReplicons: '',
+
+    // water params
+    temperature: '',
     ph: '',
     tds: '',
     ec: '',
-    do: ''
+    dissolvedO2: '',
   });
 
   const handleClear = () => {
     setDangerZone('Choose Zone');
     setFormData({
-      longitude: '',
-      latitude: '',
-      temp: '',
-      ph: '',
-      tds: '',
-      ec: '',
-      do: ''
+      // required
+    sampleName: '',
+    isolationSource: '',
+    collectionDate: '',
+    geoLocName: '',
+    latitude: '',
+    longitude: '',
+    amrResGenes: '',
+    predictedSir: '',
+    sampleAnalysisType: '',
+    dangerZone: '',
+
+    // optional
+    isolateId: '',
+    organism: '',
+    sampleId: '',
+    collectedBy: '',
+    sequenceName: '',
+    elementType: '',
+    class: '',
+    subclass: '',
+    targetLength: '',
+    referenceLength: '',
+    coverage: '',
+    identity: '',
+    alignmentLength: '',
+    accession: '',
+    virtulenceGenes: '',
+    plasmidReplicons: '',
+
+    // water params
+    temperature: '',
+    ph: '',
+    tds: '',
+    ec: '',
+    dissolvedO2: '',
     });
+    setImageBase64(undefined);
   };
 
   const handleImportClick = (type: string) => {
@@ -49,210 +117,309 @@ export default function AddDataPage() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      console.log('Importing file:', file.name);
-      // Logic to actually parse the file would go here
+      setPendingFile(file);
     }
   };
 
+   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setImageBase64(base64String);
+        toast.success('Image loaded successfully!');
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleAddData = async () => {
+    const response = await addSiteData({
+      // required
+      sampleName: formData.sampleName,
+      isolationSource: formData.isolationSource,
+      collectionDate: new Date(formData.collectionDate),
+      geoLocName: formData.geoLocName,
+      latitude: parseFloat(formData.latitude),
+      longitude: parseFloat(formData.longitude),
+      amrResGenes: formData.amrResGenes,
+      predictedSir: formData.predictedSir,
+      sampleAnalysisType: formData.sampleAnalysisType,
+      dangerZone: formData.dangerZone as 'red' | 'yellow' | undefined,
+
+      // water params
+      temperature: formData.temperature ? parseFloat(formData.temperature) : undefined,
+      ph: formData.ph ? parseFloat(formData.ph) : undefined,
+      tds: formData.tds ? parseFloat(formData.tds) : undefined,
+      ec: formData.ec ? parseFloat(formData.ec) : undefined,
+      dissolvedO2: formData.dissolvedO2 ? parseFloat(formData.dissolvedO2) : undefined,
+
+      // optional
+      isolateId: formData.isolateId || undefined,
+      orgamism: formData.organism || undefined,
+      sampleId: formData.sampleId || undefined,
+      collectedBy: formData.collectedBy || undefined,
+      sequenceName: formData.sequenceName || undefined,
+      elementType: formData.elementType || undefined,
+      class: formData.class || undefined,
+      subclass: formData.subclass || undefined,
+      targetLength: formData.targetLength ? parseFloat(formData.targetLength) : undefined,
+      referenceLength: formData.referenceLength ? parseFloat(formData.referenceLength) : undefined,
+      coverage: formData.coverage ? parseFloat(formData.coverage) : undefined,
+      identity: formData.identity ? parseFloat(formData.identity) : undefined,
+      alignmentLength: formData.alignmentLength ? parseFloat(formData.alignmentLength) : undefined,
+      accession: formData.accession || undefined,
+      virtulenceGenes: formData.virtulenceGenes || undefined,
+      plasmidReplicons: formData.plasmidReplicons || undefined,
+
+      // image
+      imageBase64,
+    });
+    if (response.status === 200 || response.status === 201) {
+      toast.success('Site data added successfully!');
+      handleClear();
+    } else {
+      toast.error('Failed to add site data. Please try again.');
+    }
+
+
+  }
+
+  const handleAddFileData = async() => {
+    console.log('Adding file data...');
+    if (!pendingFile) {
+      toast.error('No file selected. Please select a file to import.');
+      return;
+    }
+
+    setPendingFile(null);
+    if (fileInputRef.current?.files?.[0]) {
+      const file = fileInputRef.current.files[0];
+      const response = await addMutlipleSiteData(file);
+
+      if (response.status === 200 || response.status === 201) {
+        toast.success('File data added successfully!' );
+        handleClear();
+      } else {
+        toast.error('Failed to add file data. Please try again.');
+      }
+    }
+  }
+
+  const handleCancel = () => {
+    setPendingFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+
+   const [selectedSite, setSelectedSite] = useState<SamplingPoint | null>(null);
+
   return (
-    <div className="flex h-screen bg-[#2D2D2D] p-2 font-sans text-sm">
-      <div className="flex w-full bg-white rounded-[2rem] shadow-lg overflow-hidden border border-gray-100">
-        
-        {/* sidebar */}
-        <div className="w-64 border-r border-gray-100 flex flex-col pt-6">
-          <div className="px-6 mb-8 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center">
-              <User size={16} className="text-gray-600" />
-            </div>
-            <span className="font-semibold text-gray-800">Admin</span>
-          </div>
-          
-          <div className="px-6 mb-2 text-xs font-semibold text-gray-400">
-            Dashboards
-          </div>
-          <nav className="flex-1 space-y-1 px-4">
-            <Link href="/" className="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg">
-              <Home size={18} />
-              <span className="font-medium">Overview</span>
-            </Link>
-            <Link href="/statistics" className="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg">
-              <BarChart2 size={18} />
-              <span className="font-medium">Statistics</span>
-            </Link>
-            <div className="flex items-center justify-between px-4 py-2 bg-gray-200 text-gray-800 rounded-lg font-medium">
-              <div className="flex items-center gap-3">
-                <MapIcon size={18} />
-                <span className="font-medium">Map View</span>
-              </div>
-              <ChevronRight size={16} />
-            </div>
-          </nav>
-        </div>
 
-        {/* MAIN Form Column */}
-        <div className="w-80 border-r border-gray-100 p-6 flex flex-col overflow-y-auto py-4">
-          <button className="bg-[#ef4444] text-white px-4 py-1.5 rounded w-fit text-xs font-medium mb-4 hover:bg-red-600 transition">
-            Close
-          </button>
+    <div className="flex h-screen p-2 font-sans text-sm">
 
-          <div className="space-y-3 flex-1 overflow-visible">
-            {/* Form Fields */}
-            <div>
-              <label className="block text-gray-700 mb-1 text-xs">Danger Zone</label>
-              <select 
-                title="danger-zone"
-                className="w-full border border-gray-200 rounded-md px-3 py-1.5 bg-white text-gray-600 focus:outline-none focus:border-blue-500 text-xs"
-                value={dangerZone}
-                onChange={(e) => setDangerZone(e.target.value)}
-              >
-                <option>Choose Zone</option>
-                <option>Red Zone</option>
-                <option>Yellow Zone</option>
-              </select>
-            </div>
+      <ConfirmFile
+          file={pendingFile}
+           handleConfirm={handleAddFileData}
+            handleCancel={handleCancel}
+        />
 
-            <div>
-              <label className="block text-gray-700 mb-1 text-xs">Location GPS Co-ordinates</label>
-              <div className="flex gap-2 flex-wrap sm:flex-nowrap">
-                <input 
-                  type="text" 
-                  placeholder="Longitude" 
-                  value={formData.longitude}
-                  onChange={(e) => setFormData({...formData, longitude: e.target.value})}
-                  className="w-full border border-gray-200 rounded-md px-3 py-1.5 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" 
-                />
-                <input 
-                  type="text" 
-                  placeholder="Latitude" 
-                  value={formData.latitude}
-                  onChange={(e) => setFormData({...formData, latitude: e.target.value})}
-                  className="w-full border border-gray-200 rounded-md px-3 py-1.5 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" 
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-gray-700 mb-0.5 text-xs">Water Temperature (°C)</label>
-              <input type="text" placeholder="Value" value={formData.temp} onChange={(e) => setFormData({...formData, temp: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
-            </div>
-            <div>
-              <label className="block text-gray-700 mb-0.5 text-xs">Water pH Level</label>
-              <input type="text" placeholder="Value" value={formData.ph} onChange={(e) => setFormData({...formData, ph: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
-            </div>
-            <div>
-              <label className="block text-gray-700 mb-0.5 text-xs">Water TDS</label>
-              <input type="text" placeholder="Value" value={formData.tds} onChange={(e) => setFormData({...formData, tds: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
-            </div>
-            <div>
-              <label className="block text-gray-700 mb-0.5 text-xs">Water EC</label>
-              <input type="text" placeholder="Value" value={formData.ec} onChange={(e) => setFormData({...formData, ec: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
-            </div>
-            <div>
-              <label className="block text-gray-700 mb-0.5 text-xs">Water DO</label>
-              <input type="text" placeholder="Value" value={formData.do} onChange={(e) => setFormData({...formData, do: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
-            </div>
-          </div>
-
-          <div className="mt-4 flex flex-col gap-2">
-            <button className="w-full bg-[#22c55e] text-white py-1.5 rounded-md font-medium hover:bg-[#16a34a] transition text-sm">
-              Submit
-            </button>
-            <div className="relative">
-              {/* Hidden file input */}
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                accept={acceptType}
-                onChange={handleFileChange}
-                className="hidden" 
-              />
-              <button 
-                onClick={() => setShowImportDropdown(!showImportDropdown)}
-                className="w-full bg-[#0ea5e9] text-white py-1.5 rounded-md font-medium hover:bg-[#0284c7] transition text-sm flex justify-center items-center gap-1"
-              >
-                Import
-
-              </button>
-              {showImportDropdown && (
-                <div className="absolute bottom-full left-0 mb-1 w-full bg-white border border-gray-200 rounded-md shadow-lg overflow-hidden z-10">
-                  <button 
-                    onClick={() => handleImportClick('CSV')}
-                    className="block w-full text-left px-4 py-2 text-xs text-black font-semibold hover:bg-gray-100"
-                  >
-                    CSV
-                  </button>
-                  <button 
-                    onClick={() => handleImportClick('TSV')}
-                    className="block w-full text-left px-4 py-2 text-xs text-black font-semibold hover:bg-gray-100"
-                  >
-                    TSV
-                  </button>
-                  <button 
-                    onClick={() => handleImportClick('JSON')}
-                    className="block w-full text-left px-4 py-2 text-xs text-black font-semibold hover:bg-gray-100"
-                  >
-                    JSON
-                  </button>
-                </div>
-              )}
-            </div>
-            <button 
-              onClick={handleClear}
-              className="w-full bg-[#ef4444] text-white py-1.5 rounded-md font-medium hover:bg-[#dc2626] transition text-sm"
-            >
-              Clear
-            </button>
-          </div>
-        </div>
-
-        {/* MAP Column */}
-        <div className="flex-1 bg-white relative flex items-center justify-center p-8">
-        
-        </div>
-
-        {/* RIGHT Sidebar with mock data */}
-        <div className="w-64 bg-white p-6 border-l border-gray-100 flex flex-col pt-8 text-xs overflow-hidden">
-          
-          <div className="flex-1 flex flex-col min-h-0 mb-6">
-            <h3 className="font-semibold text-gray-800 text-xs mb-4 shrink-0">Red Areas</h3>
-            <div className="space-y-4 overflow-y-auto pr-2 flex-1 scrollbar-thin scrollbar-thumb-gray-200">
-              <div>
-                <p className="text-gray-800 font-medium">Magiliesburg Mountain Range</p>
-                <p className="text-gray-400">Just now</p>
-              </div>
-              <div>
-                <p className="text-gray-800 font-medium">Sunnyside</p>
-                <p className="text-gray-400">59 minutes ago</p>
-              </div>
-              <div>
-                <p className="text-gray-800 font-medium">Groenkloof</p>
-                <p className="text-gray-400">12 hours ago</p>
-              </div>
-              {/* scroll if added */}
+          <div className="flex-1 flex overflow-hidden">
+            {/* MAIN Form Column */}
+            <div className="w-80 border-r border-gray-100 p-6 flex flex-col overflow-y-auto py-4">
               
+              <button 
+                className="bg-[#ef4444] text-white px-4 py-1.5 rounded w-fit text-xs font-medium mb-4 hover:bg-red-600 transition"
+                onClick={() => window.location.href = "/home"}
+              >
+                Close
+              </button>
+
+              <div className="space-y-3 flex-1 overflow-visible">
+                {/* Form Fields */}
+
+                <div>
+                  <label className="block text-gray-700 mb-0.5 text-xs">Sample Name</label>
+                  <input type="text" placeholder="Value" value={formData.sampleName} onChange={(e) => setFormData({...formData, sampleName: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-0.5 text-xs">Isolation Source</label>
+                  <input type="text" placeholder="Value" value={formData.isolationSource} onChange={(e) => setFormData({...formData, isolationSource: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-0.5 text-xs">Collection Date </label>
+                  <input type="text" placeholder="Value" value={formData.collectionDate} onChange={(e) => setFormData({...formData, collectionDate: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-0.5 text-xs">Geographic Location Name</label>
+                  <input type="text" placeholder="Value" value={formData.geoLocName} onChange={(e) => setFormData({...formData, geoLocName: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
+                </div>
+
+                <div>
+                  <label className="block text-gray-700 mb-1 text-xs">Location GPS Co-ordinates</label>
+                  <div className="flex gap-2 flex-wrap sm:flex-nowrap">
+                    <input 
+                      type="text" 
+                      placeholder="Longitude" 
+                      value={formData.longitude}
+                      onChange={(e) => setFormData({...formData, longitude: e.target.value})}
+                      className="w-full border border-gray-200 rounded-md px-3 py-1.5 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" 
+                    />
+                    <input 
+                      type="text" 
+                      placeholder="Latitude" 
+                      value={formData.latitude}
+                      onChange={(e) => setFormData({...formData, latitude: e.target.value})}
+                      className="w-full border border-gray-200 rounded-md px-3 py-1.5 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" 
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-gray-700 mb-0.5 text-xs">AMR Resistance Genes</label>
+                  <input type="text" placeholder="Value" value={formData.amrResGenes} onChange={(e) => setFormData({...formData, amrResGenes: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-0.5 text-xs">Predicted SIR Profile</label>
+                  <input type="text" placeholder="Value" value={formData.predictedSir} onChange={(e) => setFormData({...formData, predictedSir: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-0.5 text-xs">Sample Analysis Type</label>
+                  <input type="text" placeholder="Value" value={formData.sampleAnalysisType} onChange={(e) => setFormData({...formData, sampleAnalysisType: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
+                </div>
+
+                <div>
+                  <label className="block text-gray-700 mb-1 text-xs">Danger Zone</label>
+                  <select 
+                    title="danger-zone"
+                    className="w-full border border-gray-200 rounded-md px-3 py-1.5 bg-white text-gray-600 focus:outline-none focus:border-blue-500 text-xs"
+                    value={dangerZone}
+                    onChange={(e) => setDangerZone(e.target.value)}
+                  >
+                    <option>Choose Zone</option>
+                    <option>Red</option>
+                    <option>Yellow</option>
+                    <option>Blue</option>
+                  </select>
+                </div>
+
+                <p className="text-black-500 text-xs border-b border-black-200 pb-2"> Optional </p>
+                
+                <div>
+                  <label className="block text-gray-700 mb-0.5 text-xs">Water Temperature (°C)</label>
+                  <input type="text" placeholder="Value" value={formData.temperature} onChange={(e) => setFormData({...formData, temperature: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-0.5 text-xs">Water pH Level</label>
+                  <input type="text" placeholder="Value" value={formData.ph} onChange={(e) => setFormData({...formData, ph: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-0.5 text-xs">Water TDS</label>
+                  <input type="text" placeholder="Value" value={formData.tds} onChange={(e) => setFormData({...formData, tds: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-0.5 text-xs">Water EC</label>
+                  <input type="text" placeholder="Value" value={formData.ec} onChange={(e) => setFormData({...formData, ec: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-0.5 text-xs">Water DO</label>
+                  <input type="text" placeholder="Value" value={formData.dissolvedO2} onChange={(e) => setFormData({...formData, dissolvedO2: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
+                </div>
+
+                 <p className="block text-gray-700 mb-0.5 text-xs">Site Image</p>
+                  <div>
+                    <input type="file" ref={imageInputRef} accept="image/*" onChange={handleImageChange} className="text-xs" />
+                    <button
+                      onClick={() => imageInputRef.current?.click()}
+                      className="w-full border border-dashed border-gray-300 rounded-md py-2 text-xs text-gray-500 hover:border-blue-400 hover:text-blue-500 transition"
+                    >
+                      {imageBase64 ? 'Image selected' : 'Click to upload image'}
+                    </button>
+                  </div>
+
+              </div>
+
+              <div className="mt-4 flex flex-col gap-2">
+                <button 
+                  className="w-full bg-[#22c55e] text-white py-1.5 rounded-md font-medium hover:bg-[#16a34a] transition text-sm"
+                  onClick={handleAddData}
+                >
+                  Submit
+                </button>
+
+                <div className="relative">
+                  {/* Hidden file input */}
+                  <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    accept={acceptType}
+                    onChange={handleFileChange}
+                    className="hidden" 
+                  />
+                  <button 
+                    onClick={() => setShowImportDropdown(!showImportDropdown)}
+                    className="w-full bg-[#0ea5e9] text-white py-1.5 rounded-md font-medium hover:bg-[#0284c7] transition text-sm flex justify-center items-center gap-1"
+                  >
+                    Import
+
+                  </button>
+                  {showImportDropdown && (
+                    <div className="absolute bottom-full left-0 mb-1 w-full bg-white border border-gray-200 rounded-md shadow-lg overflow-hidden z-10">
+                      <button 
+                        onClick={() => handleImportClick('CSV')}
+                        className="block w-full text-left px-4 py-2 text-xs text-black font-semibold hover:bg-gray-100"
+                      >
+                        CSV
+                      </button>
+              
+                      <button 
+                        onClick={() => handleImportClick('TSV')}
+                        className="block w-full text-left px-4 py-2 text-xs text-black font-semibold hover:bg-gray-100"
+                      >
+                        TSV
+                      </button>
+                      <button 
+                        onClick={() => handleImportClick('JSON')}
+                        className="block w-full text-left px-4 py-2 text-xs text-black font-semibold hover:bg-gray-100"
+                      >
+                        JSON
+                      </button>
+                    </div>
+                  )}
+                </div>
+                <button 
+                  onClick={handleClear}
+                  className="w-full bg-[#ef4444] text-white py-1.5 rounded-md font-medium hover:bg-[#dc2626] transition text-sm"
+                >
+                  Clear
+                </button>
+              </div>
             </div>
+
+            {/* Map Column */}
+            <MapProvider>
+              <div className="flex-1 flex overflow-hidden">
+                <div className="flex-1 relative">
+                  <Map
+                    points={samplingPoints}
+                    selectedSite={selectedSite}
+                    onSelectSite={setSelectedSite}
+                    filters={{}}
+                    onFiltersChange={() => {}}
+                  />
+                </div>
+                <SitesSidebar
+                  points={samplingPoints}
+                  selectedSite={selectedSite}
+                  onSelectSite={setSelectedSite}
+                />
+              </div>
+            </MapProvider>
           </div>
 
-          <div className="flex-1 flex flex-col min-h-0">
-            <h3 className="font-semibold text-gray-800 text-xs mb-4 shrink-0">Yellow Areas</h3>
-            <div className="space-y-4 overflow-y-auto pr-2 flex-1 scrollbar-thin scrollbar-thumb-gray-200">
-              <div>
-                <p className="text-gray-800 font-medium">Gezina</p>
-                <p className="text-gray-400">2 hours ago</p>
-              </div>
-              <div>
-                <p className="text-gray-800 font-medium">Pretoria Zoo</p>
-                <p className="text-gray-400">6 hours ago</p>
-              </div>
-              <div>
-                <p className="text-gray-800 font-medium">UNISA Campus</p>
-                <p className="text-gray-400">2 days ago</p>
-              </div>
-            </div>
-          </div>
-
-        </div>
       </div>
-    </div>
   );
 }
