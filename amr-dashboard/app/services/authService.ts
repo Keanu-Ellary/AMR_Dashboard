@@ -28,3 +28,17 @@ export async function logout() {
 
     return response;
 }
+export async function resetPassword(email: string, password: string) {
+    const response = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+    });
+    
+    if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || "Failed to reset password");
+    }
+
+    return response;
+}

@@ -1,10 +1,45 @@
 "use client";
 
 import React, { useState } from "react";
-import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { resetPassword } from "../services/authService";
 
 export default function ForgotPasswordPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const router = useRouter();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+
+    if (!email) {
+      setError("Please enter your email");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
+    try {
+      await resetPassword(email, password);
+
+      setSuccess("Password reset successfully. Redirecting to login...");
+      setTimeout(() => {
+        router.push("/login");
+      }, 2000);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-neutral-900 flex items-center justify-center p-4 md:p-8">
@@ -30,11 +65,26 @@ export default function ForgotPasswordPage() {
             Change your password
           </p>
           
-          <form className="w-full max-w-sm flex flex-col gap-6" onSubmit={(e) => e.preventDefault()}>
+          <form className="w-full max-w-sm flex flex-col gap-6" onSubmit={handleSubmit}>
+            {error && <div className="text-red-500 text-sm mb-2">{error}</div>}
+            {success && <div className="text-green-500 text-sm mb-2">{success}</div>}
+            
+            <div className="relative w-full">
+              <input
+                type="email"
+                placeholder="Email Address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full border border-gray-300 rounded-full px-6 py-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all"
+              />
+            </div>
+
             <div className="relative w-full">
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="New Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 className="w-full border border-gray-300 rounded-full px-6 py-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all pr-12"
               />
               <button
@@ -59,6 +109,8 @@ export default function ForgotPasswordPage() {
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="Confirm New Password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
                 className="w-full border border-gray-300 rounded-full px-6 py-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all pr-12"
               />
               <button
@@ -89,6 +141,7 @@ export default function ForgotPasswordPage() {
               
               <button
                 type="button"
+                onClick={() => router.push("/login")}
                 className="w-40 bg-red-400 text-white font-medium py-2 rounded-full hover:bg-red-500 transition-colors shadow-sm flex items-center justify-center gap-2 text-sm"
               >
                 <span>✖</span> Go Back
