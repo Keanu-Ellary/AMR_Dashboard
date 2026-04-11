@@ -1,8 +1,8 @@
 "use client";
 
 import type { SiteData } from "@/types/site_types";
-import { RISK_COLOUR } from "@/constants/map_constants";
-import { ContaminationLevel } from "@/types/map_types";
+import { RISK_COLOUR, CONTAMINATION_LEVEL_ORDER } from "@/constants/map_constants";
+import { ContaminationLevel, DangerZone, DangerZonesLabels, getDangerZoneLabel } from "@/types/map_types";
 
 interface SiteListProps {
   points: SiteData[];
@@ -12,16 +12,9 @@ interface SiteListProps {
 
 export default function SiteList({ points, selectedSite, onSelectSite }: SiteListProps) {
 
-  const levelOrder: Record<ContaminationLevel, number> = {
-    high: 0,
-    moderate: 1,
-    low: 2,
-    unknown: 3,
-    filtered: 4,
-  };
-
+  const getDanger = (zone?: DangerZone)=> zone ? getDangerZoneLabel(zone) : "unknown";
   const sortedPoints = [...points].sort(
-    (pointA, pointB) => (levelOrder[pointA.dangerZone as ContaminationLevel] ?? 3) - (levelOrder[pointB.dangerZone as ContaminationLevel] ?? 3)
+    (pointA, pointB) => (CONTAMINATION_LEVEL_ORDER[getDanger(pointA.dangerZone)] ?? 3) - (CONTAMINATION_LEVEL_ORDER[getDanger(pointB.dangerZone)] ?? 3)
   );
 
   return (
@@ -35,8 +28,12 @@ export default function SiteList({ points, selectedSite, onSelectSite }: SiteLis
       <ul style={styles.list}>
         {sortedPoints.map((site) => {
           const isSelected = selectedSite?.id === site.id;
-          const riskColor  = RISK_COLOUR[site.dangerZone as ContaminationLevel]?.fill ?? "#94a3b8";
-
+          let riskColor = RISK_COLOUR.unknown.fill;
+          if (site.dangerZone) {
+            const dangerZoneLabel = getDangerZoneLabel(site.dangerZone);
+            riskColor  = RISK_COLOUR[dangerZoneLabel]?.fill;
+          }
+          
           return (
             <li
               key={site.id}
