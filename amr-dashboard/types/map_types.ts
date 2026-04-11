@@ -1,4 +1,4 @@
-import type { SamplingPoint } from "./site_types";
+import type { SiteData } from "./site_types";
 
 export interface RiverColourData {
   fill:   string;
@@ -16,14 +16,24 @@ export interface RiverSegment {
 }
 
 export interface MapProps {
-  points:        SamplingPoint[];
-  selectedSite:  SamplingPoint | null;
-  onSelectSite:  (site: SamplingPoint) => void;
+  points:        SiteData[];
+  selectedSite:  SiteData | null;
+  onSelectSite:  (site: SiteData) => void;
   filters?: MapFilters;
   onFiltersChange: (f: MapFilters) => void;
 }
 
 export type ContaminationLevel = "low" | "moderate" | "high" | "unknown" | "filtered";
+
+export interface DangerZonesLabels {
+  low: "green";
+  moderate: "yellow";
+  high: "red";
+  unknown: "blue";
+  filtered: "grey";
+}
+
+export type DangerZone = keyof DangerZonesLabels;
 
 export interface MapFilters {
 

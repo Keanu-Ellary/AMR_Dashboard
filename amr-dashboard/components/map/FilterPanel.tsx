@@ -1,7 +1,7 @@
 "use client";
 
 import L from "leaflet";
-import type { SamplingPoint } from "@/types/site_types";
+import type { SiteData } from "@/types/site_types";
 import type { ContaminationLevel, MapFilters } from "@/types/map_types";
 import { RISK_COLOUR } from "@/constants/map_constants";
 
@@ -175,14 +175,14 @@ function attachEvents(
 
 export default function addFilterPanel(
   map:        L.Map,
-  points:     SamplingPoint[],
+  points:     SiteData[],
   filters:    MapFilters,
   setFilters: (f: MapFilters) => void
 ) {
   const div = L.DomUtil.create("div", "amr-filter");
 
-  const uniqueSites   = [...new Set(points.map((p) => p.name))];
-  const uniqueRegions = [...new Set(points.map((p) => p.region))];
+  const uniqueSites   = [...new Set(points.map((p) => p.sampleName))];
+  const uniqueRegions = [...new Set(points.map((p) => p.geoLocName))];
 
   div.innerHTML = renderHTML(filters, uniqueSites, uniqueRegions);
   attachEvents(div, filters, uniqueSites, uniqueRegions, setFilters);

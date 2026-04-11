@@ -9,7 +9,7 @@ import Site from "./Site";
 import River from "./River";
 import addLegend from "./Legend";
 import addFilterPanel from "./FilterPanel";
-import type { MapProps } from "@/types/map_types";
+import type { ContaminationLevel, MapProps } from "@/types/map_types";
 import { DEFAULT_FILTERS } from "@/constants/map_constants";
 
 export default function Map({ points, selectedSite, onSelectSite, filters, onFiltersChange }: MapProps) {
@@ -54,23 +54,23 @@ export default function Map({ points, selectedSite, onSelectSite, filters, onFil
 
     if (filters.contaminationLevels) {
       if (filters.contaminationLevels?.length > 0 &&
-        !filters.contaminationLevels.includes(point.contaminationLevel))
+        !filters.contaminationLevels.includes(point.dangerZone as ContaminationLevel))
       return false;
     }
 
     if (filters.sites) {
       if (filters.sites?.length > 0 &&
-        !filters.sites.includes(point.name))
+        !filters.sites.includes(point.sampleName))
       return false;
     }
 
     if (filters.regions) {
       if (filters.regions?.length > 0 &&
-        !filters.regions.includes(point.region))
+        !filters.regions.includes(point.geoLocName))
       return false;
     }
 
-    const sampleDate = new Date(point.lastSampled);
+    const sampleDate = new Date(point.collectionDate);
     if (filters.startDate && sampleDate < new Date(filters.startDate)) return false;
     if (filters.endDate   && sampleDate > new Date(filters.endDate))   return false;
 

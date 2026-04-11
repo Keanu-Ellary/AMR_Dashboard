@@ -40,6 +40,7 @@ export interface WaterMetadata {
 
 
 export interface SiteData {
+        id?: number;
         // required:
         sampleName: string,
         isolationSource: string,

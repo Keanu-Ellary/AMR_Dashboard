@@ -1,16 +1,17 @@
 "use client";
 
-import type { SamplingPoint } from "@/types/site_types";
+import type { SiteData } from "@/types/site_types";
 import { RISK_COLOUR } from "@/constants/map_constants";
 import { ContaminationLevel } from "@/types/map_types";
 
 interface SiteListProps {
-  points: SamplingPoint[];
-  selectedSite: SamplingPoint | null;
-  onSelectSite: (site: SamplingPoint) => void;
+  points: SiteData[];
+  selectedSite: SiteData | null;
+  onSelectSite: (site: SiteData) => void;
 }
 
 export default function SiteList({ points, selectedSite, onSelectSite }: SiteListProps) {
+
   const levelOrder: Record<ContaminationLevel, number> = {
     high: 0,
     moderate: 1,
@@ -18,8 +19,9 @@ export default function SiteList({ points, selectedSite, onSelectSite }: SiteLis
     unknown: 3,
     filtered: 4,
   };
+
   const sortedPoints = [...points].sort(
-    (pointA, pointB) => (levelOrder[pointA.contaminationLevel] ?? 3) - (levelOrder[pointB.contaminationLevel] ?? 3)
+    (pointA, pointB) => (levelOrder[pointA.dangerZone as ContaminationLevel] ?? 3) - (levelOrder[pointB.dangerZone as ContaminationLevel] ?? 3)
   );
 
   return (
@@ -33,7 +35,7 @@ export default function SiteList({ points, selectedSite, onSelectSite }: SiteLis
       <ul style={styles.list}>
         {sortedPoints.map((site) => {
           const isSelected = selectedSite?.id === site.id;
-          const riskColor  = RISK_COLOUR[site.contaminationLevel]?.fill ?? "#94a3b8";
+          const riskColor  = RISK_COLOUR[site.dangerZone as ContaminationLevel]?.fill ?? "#94a3b8";
 
           return (
             <li
@@ -54,11 +56,11 @@ export default function SiteList({ points, selectedSite, onSelectSite }: SiteLis
               />
 
               <div style={styles.itemBody}>
-                <div style={styles.siteName}>{site.name}</div>
+                <div style={styles.siteName}>{site.geoLocName}</div>
 
                 <div style={styles.dateRow}>
-                  <span style={styles.dateLabel}>Last sampled</span>
-                  <span style={styles.dateValue}>{site.lastSampled}</span>
+                  <span style={styles.dateLabel}>Last sampled:</span>
+                  <span style={styles.dateValue}>{new Date(site.collectionDate).toLocaleDateString("en-ZA", { year: "numeric", month: "short", day: "numeric" })}</span>
                 </div>
               </div>
             </li>
@@ -129,7 +131,6 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: "stretch",
     borderRadius: "6px",
     border: "1px solid",
-    overflow: "hidden",
     transition: "all 0.15s ease",
   },
 

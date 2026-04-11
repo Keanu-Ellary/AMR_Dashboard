@@ -1,20 +1,32 @@
 "use client";
 
-import dynamic from "next/dynamic";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MapProvider } from "@/components/map/MapContext";
-import { samplingPoints } from "@/data/sites";
-import type { SamplingPoint } from "@/types/site_types";
+import type { SiteData } from "@/types/site_types";
 import SitesSidebar from "@/components/map/SitesSidebar";
 import { MapFilters } from "@/types/map_types";
 import { DEFAULT_FILTERS } from "@/constants/map_constants";
-import SideNavBar from "@/components/SideNavBar";
-import TopNavBar from "@/components/TopNavBar";
 import { Map } from "@/components/map/LoadMap";
+import { getAllSites } from "@/app/services/siteService";
 
 export default function Home() {
-  const [selectedSite, setSelectedSite] = useState<SamplingPoint | null>(null);
+  const [selectedSite, setSelectedSite] = useState<SiteData | null>(null);
   const [filters, setFilters] = useState<MapFilters>(DEFAULT_FILTERS);
+  const [sites, setSites] = useState<SiteData[]>([]);
+
+  const handleGetAllSites = async () => {
+    const allSitesResponse = await getAllSites();
+
+    if (allSitesResponse.ok) {
+      const allSiteData = await allSitesResponse.json();
+      setSites(allSiteData.sites);
+
+    }
+  }
+
+  useEffect(() => {
+    handleGetAllSites();
+  }, []);
   
   return (
     
@@ -34,7 +46,7 @@ export default function Home() {
 
                 <div style={{ flex: 1, position: "relative" }}>
                   <Map
-                    points={samplingPoints}
+                    points={sites}
                     selectedSite={selectedSite}
                     onSelectSite={setSelectedSite}
                     filters={filters}
@@ -42,7 +54,7 @@ export default function Home() {
                   />
                 </div>
                 <SitesSidebar
-                  points={samplingPoints}
+                  points={sites}
                   selectedSite={selectedSite}
                   onSelectSite={setSelectedSite}
                 />

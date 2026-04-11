@@ -2,17 +2,17 @@
 
 import L from "leaflet";
 import { useEffect, useRef } from "react";
-import type { ContaminationLevel } from "@/types/map_types";
-import type { SamplingPoint } from "@/types/site_types";
+import type { ContaminationLevel, DangerZone } from "@/types/map_types";
+import type { SiteData } from "@/types/site_types";
 import { RISK_COLOUR } from "@/constants/map_constants";
 import siteImage from "../../assets/site.png";
 
 interface SiteProps {
   map: L.Map;
-  points: SamplingPoint[];
-  selectedSite: SamplingPoint | null;
-  onSelectSite: (site: SamplingPoint) => void;
-  activeRisks?: ContaminationLevel[];
+  points: SiteData[];
+  selectedSite: SiteData | null;
+  onSelectSite: (site: SiteData) => void;
+  activeDangerZones?: DangerZone[];
 }
 
 const TOOLTIP_STYLES = {
@@ -126,31 +126,31 @@ function createMarkerIcon(
   });
 }
 
-function siteTooltipHTML(point: SamplingPoint): string {
-  const c = RISK_COLOUR[point.contaminationLevel] ?? RISK_COLOUR.moderate;
-  const waterquality = point.metadata;
+function siteTooltipHTML(point: SiteData): string {
+  const dangerZone = point.dangerZone as DangerZone;
+  const c = RISK_COLOUR[dangerZone] ?? RISK_COLOUR.moderate;
 
   return `
     <div style="${TOOLTIP_STYLES.wrapper}">
 
-      <img src="/site.png" alt="${point.name}" style="${TOOLTIP_STYLES.siteImage}" />
-      <div style="${TOOLTIP_STYLES.name}">${point.name}</div>
+      <img src="/site.png" alt="${point.sampleName}" style="${TOOLTIP_STYLES.siteImage}" />
+      <div style="${TOOLTIP_STYLES.name}">${point.sampleName}</div>
       <div style="${TOOLTIP_STYLES.badge}">
         <span style="${TOOLTIP_STYLES.riskBadge(c.glow, c.fill)}">${c.label}</span>
       </div>
 
       <div style="${TOOLTIP_STYLES.grid}">
         <span style="${TOOLTIP_STYLES.gridLabel}">Latitude</span>
-        <span style="${TOOLTIP_STYLES.gridValue}">${point.coordinates[0].toFixed(5)}°</span>
+        <span style="${TOOLTIP_STYLES.gridValue}">${point.latitude.toFixed(5)}°</span>
 
         <span style="${TOOLTIP_STYLES.gridLabel}">Longitude</span>
-        <span style="${TOOLTIP_STYLES.gridValue}">${point.coordinates[1].toFixed(5)}°</span>
+        <span style="${TOOLTIP_STYLES.gridValue}">${point.longitude.toFixed(5)}°</span>
 
         <span style="${TOOLTIP_STYLES.gridLabel}">Region</span>
-        <span style="${TOOLTIP_STYLES.gridValue}">${point.region}</span>
+        <span style="${TOOLTIP_STYLES.gridValue}">${point.geoLocName}</span>
 
         <span style="${TOOLTIP_STYLES.gridLabel}">Sampled</span>
-        <span style="${TOOLTIP_STYLES.gridValue}">${point.lastSampled}</span>
+        <span style="${TOOLTIP_STYLES.gridValue}">${point.collectionDate}</span>
       </div>
 
       <div style="${TOOLTIP_STYLES.divider}"></div>
@@ -158,19 +158,19 @@ function siteTooltipHTML(point: SamplingPoint): string {
       <div style="${TOOLTIP_STYLES.sectionTitle}">Water Quality</div>
       <div style="${TOOLTIP_STYLES.waterGrid}">
         <span style="${TOOLTIP_STYLES.waterLabel}">pH</span>
-        <span style="${TOOLTIP_STYLES.waterValue}">${waterquality.pH.toFixed(1)}</span>
+        <span style="${TOOLTIP_STYLES.waterValue}">${point.ph?.toFixed(1)}</span>
 
         <span style="${TOOLTIP_STYLES.waterLabel}">Temperature</span>
-        <span style="${TOOLTIP_STYLES.waterValue}">${waterquality.temperature.toFixed(1)} °C</span>
+        <span style="${TOOLTIP_STYLES.waterValue}">${point.temperature?.toFixed(1)} °C</span>
 
         <span style="${TOOLTIP_STYLES.waterLabel}">Dissolved O₂</span>
-        <span style="${TOOLTIP_STYLES.waterValue}">${waterquality.disolvedOxygen.toFixed(2)} mg/L</span>
+        <span style="${TOOLTIP_STYLES.waterValue}">${point.dissolvedO2?.toFixed(2)} mg/L</span>
 
         <span style="${TOOLTIP_STYLES.waterLabel}">Conductivity</span>
-        <span style="${TOOLTIP_STYLES.waterValue}">${waterquality.electricalConductivity.toFixed(1)} µS/cm</span>
+        <span style="${TOOLTIP_STYLES.waterValue}">${point.ec?.toFixed(1)} µS/cm</span>
 
         <span style="${TOOLTIP_STYLES.waterLabel}">TDS</span>
-        <span style="${TOOLTIP_STYLES.waterValue}">${waterquality.totalDisolvedSolids.toFixed(1)} mg/L</span>
+        <span style="${TOOLTIP_STYLES.waterValue}">${point.tds?.toFixed(1)} mg/L</span>
       </div>
 
       <div style="${TOOLTIP_STYLES.link}">View More</div>
@@ -183,7 +183,7 @@ export default function Site({
   points,
   selectedSite,
   onSelectSite,
-  activeRisks,
+  activeDangerZones,
 }: SiteProps) {
 
   const layerRef   = useRef<L.LayerGroup | null>(null);
@@ -202,13 +202,14 @@ export default function Site({
     layerRef.current  = layer;
     markersRef.current = {};
 
-    const visiblePoints = activeRisks && activeRisks.length > 0
-        ? points.filter((p) => activeRisks.includes(p.contaminationLevel))
+    const visiblePoints = activeDangerZones && activeDangerZones.length > 0
+        ? points.filter((p) => activeDangerZones.includes(p.dangerZone as DangerZone))
         : points;
 
     visiblePoints.forEach((point) => {
-      const marker = L.marker(point.coordinates, {
-        icon:         createMarkerIcon(point.contaminationLevel, false),
+      if (!point.latitude || !point.longitude) return;
+      const marker = L.marker([point.latitude, point.longitude], {
+        icon:         createMarkerIcon(point.dangerZone as DangerZone, false),
         zIndexOffset: 500,
       });
 
@@ -222,7 +223,8 @@ export default function Site({
 
       marker.on("click", () => onSelectSite(point));
       marker.addTo(layer);
-      markersRef.current[point.id] = marker;
+      if (point.sampleId)
+        markersRef.current[point.sampleId] = marker;
     });
 
     return () => {
@@ -230,20 +232,22 @@ export default function Site({
       map.removeLayer(layer);
     };
 
-  }, [map, points, activeRisks]);
+  }, [map, points, activeDangerZones]);
 
   useEffect(() => {
     if (!map) return;
 
     points.forEach((pt) => {
-      const m = markersRef.current[pt.id];
+      if (!pt.sampleId) return;
+
+      const m = markersRef.current[pt.sampleId];
       if (m) m.setIcon(
-        createMarkerIcon(pt.contaminationLevel, selectedSite?.id === pt.id)
+        createMarkerIcon(pt.dangerZone as DangerZone, selectedSite?.sampleId === pt.sampleId)
       );
     });
 
     if (selectedSite) {
-      map.flyTo(selectedSite.coordinates, 13, { animate: true, duration: 0.85 });
+      map.flyTo([selectedSite.latitude, selectedSite.longitude], 13, { animate: true, duration: 0.85 });
     }
 
   }, [selectedSite]);
