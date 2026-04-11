@@ -13,7 +13,7 @@ def preprocess_image(image_bytes):
     # Open image
     image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     # Resize to typical generic input shape, e.g., 224x224
-    image = image.resize((800, 800))
+    image = image.resize((800, 800), Image.Resampling.BILINEAR)
     # Convert to numpy array and normalize
     img_data = np.array(image).astype('float32') / 255.0
     # Change data layout from HWC to CHW

@@ -12,6 +12,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    console.log("Received image payload. Length:", image.length);
+    console.log("Image payload start:", image.substring(0, 50));
+
     // The URL of your deployed AWS Lambda function (e.g., Lambda Function URL or API Gateway)
     const lambdaUrl = process.env.ALGAE_DETECTOR_LAMBDA_URL;
 
@@ -42,7 +45,26 @@ export async function POST(req: NextRequest) {
 
     const result = await lambdaResponse.json();
 
-    return NextResponse.json({ success: true, data: result });
+    let parsedData = result;
+    // Lambda proxy integrations return the actual data inside a stringified 'body' property
+    if (result.body && typeof result.body === "string") {
+      try {
+        parsedData = JSON.parse(result.body);
+      } catch (e) {
+        console.error("Failed to parse Lambda body:", e);
+      }
+    }
+
+    console.log(
+      "Lambda returned parsed result:",
+      JSON.stringify(parsedData).substring(0, 300) + "...",
+    );
+
+    if (parsedData.error) {
+      return NextResponse.json({ error: parsedData.error }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true, data: parsedData });
   } catch (error) {
     console.error("Error processing algae detection API request:", error);
     return NextResponse.json(
