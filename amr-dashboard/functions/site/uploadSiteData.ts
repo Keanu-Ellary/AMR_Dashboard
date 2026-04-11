@@ -117,3 +117,119 @@ export async function uploadSiteData(token: string,
         };
     }
 }
+
+export async function uploadMultipleSiteData(token: string, file: File) {
+    
+    if (file.type !== "text/csv" && file.type !== "text/tsv" && file.type !== "application/json") {
+        return {
+            statusCode: 400,
+            body: {error: "Invalid file type. Only CSV, TSV, and JSON files are allowed."}
+        };
+    }
+
+    const fileExtension = file.name.slice(file.name.lastIndexOf(".")).toLowerCase();
+    const fileText = await file.text();
+    let rows: Record<string, string>[] = [];
+
+    try {
+
+        if (fileExtension === ".csv") {
+            const [headerLine, ...dataLines] = fileText.trim().split("\n");
+            const headers = headerLine.split(",").map(h => h.trim());
+            rows = dataLines
+                .filter(line => line.trim() !== "")
+                .map(line => {
+                    const values = line.split(",").map(v => v.trim());
+                    return Object.fromEntries(headers.map((h, i) => [h, values[i] ?? ""]));
+                });
+
+        } else if (fileExtension === ".tsv") {
+            const [headerLine, ...dataLines] = fileText.trim().split("\n");
+            const headers = headerLine.split("\t").map(h => h.trim()); 
+            rows = dataLines
+                .filter(line => line.trim() !== "")
+                .map(line => {
+                    const values = line.split("\t").map(v => v.trim());
+                    return Object.fromEntries(headers.map((h, i) => [h, values[i] ?? ""]));
+                });
+
+        } else if (fileExtension === ".json") {
+            const parsed = JSON.parse(fileText);
+            rows = Array.isArray(parsed) ? parsed : [parsed];
+        }
+
+        if (rows.length === 0) {
+            return {
+                statusCode: 400,
+                body: { error: "file is empty." }
+            };
+        }
+
+        const uploadResponses = [];
+
+        for (const row of rows) {
+            const res = await uploadSiteData(token, {
+                sampleName: row.sampleName,
+                isolationSource: row.isolationSource,
+                collectionDate: new Date(row.collectionDate),
+                geoLocName: row.geoLocName,
+                latitude: parseFloat(row.latitude),
+                longitude: parseFloat(row.longitude),
+                amrResGenes: row.amrResGenes,
+                predictedSir: row.predictedSir,
+                sampleAnalysisType: row.sampleAnalysisType,
+
+                ...(row.dangerZone && { dangerZone: row.dangerZone as "red" | "yellow"}),
+                ...(row.isolateId && { isolateId: row.isolateId }),
+                ...(row.orgamism && { orgamism: row.orgamism }),
+                ...(row.sampleId && { sampleId: row.sampleId }),
+                ...(row.collectedBy && { collectedBy: row.collectedBy }),
+                ...(row.sequenceName && { sequenceName: row.sequenceName }),
+                ...(row.elementType && { elementType: row.elementType }),
+                ...(row.class && { class: row.class }),
+                ...(row.subclass && { subclass: row.subclass }),
+                ...(row.accession && { accession: row.accession }),
+                ...(row.virtulenceGenes && { virtulenceGenes: row.virtulenceGenes }),
+                ...(row.plasmidReplicons && { plasmidReplicons: row.plasmidReplicons }),
+                ...(row.targetLength && { targetLength: parseFloat(row.targetLength) }),
+                ...(row.referenceLength && { referenceLength: parseFloat(row.referenceLength) }),
+                ...(row.alignmentLength && { alignmentLength: parseFloat(row.alignmentLength) }),
+                ...(row.coverage && { coverage: parseFloat(row.coverage) }),
+                ...(row.identity && { identity: parseFloat(row.identity) }),
+                ...(row.temperature && { temperature: parseFloat(row.temperature) }),
+                ...(row.ph && { ph: parseFloat(row.ph) }),
+                ...(row.tds && { tds: parseFloat(row.tds) }),
+                ...(row.ec && { ec: parseFloat(row.ec) }),
+                ...(row.dissolvedO2 && { dissolvedO2: parseFloat(row.dissolvedO2) }),
+            });
+
+            uploadResponses.push({ sampleName: row.sampleName, ...res });
+        }
+
+        const failedResponses = uploadResponses.filter(r => r.statusCode !== 201);
+        const successfulResponses = uploadResponses.filter(r => r.statusCode === 201);
+
+        if (failedResponses.length === uploadResponses.length) {
+            return {
+                statusCode: 400,
+                message: "Failed to upload.",
+            }
+        }
+
+        return {
+            statusCode: 200,
+            body: {
+                message: `${successfulResponses.length} uploaded successfully, ${failedResponses.length} failed.`,
+                succeeded: successfulResponses,
+                failed: failedResponses
+            }
+        };
+
+    } catch (error) {
+        console.error(error);
+        return {
+            statusCode: 500,
+            body: { error: "Failed to process CSV file." }
+        };
+    }
+}
