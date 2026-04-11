@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { MapProvider } from "@/components/map/MapContext";
 import type { SiteData } from "@/types/site_types";
 import SitesSidebar from "@/components/map/SitesSidebar";
-import { MapFilters } from "@/types/map_types";
+import { getDangerZoneLabel, MapFilters } from "@/types/map_types";
 import { DEFAULT_FILTERS } from "@/constants/map_constants";
 import { Map } from "@/components/map/LoadMap";
 import { getAllSites } from "@/app/services/siteService";
@@ -26,7 +26,36 @@ export default function Home() {
 
   useEffect(() => {
     handleGetAllSites();
+    filteredPoints;
   }, []);
+
+  const filteredPoints = sites.filter((point) => {
+      if (!filters) return true;
+  
+      if (filters.contaminationLevels) {
+        if (filters.contaminationLevels?.length > 0 &&
+          !filters.contaminationLevels.includes(getDangerZoneLabel(point.dangerZone as any)))
+        return false;
+      }
+  
+      if (filters.sites) {
+        if (filters.sites?.length > 0 &&
+          !filters.sites.includes(point.sampleName))
+        return false;
+      }
+  
+      if (filters.regions) {
+        if (filters.regions?.length > 0 &&
+          !filters.regions.includes(point.geoLocName))
+        return false;
+      }
+  
+      const sampleDate = new Date(point.collectionDate);
+      if (filters.startDate && sampleDate < new Date(filters.startDate)) return false;
+      if (filters.endDate   && sampleDate > new Date(filters.endDate))   return false;
+  
+      return true;
+    });
   
   return (
     
@@ -46,7 +75,7 @@ export default function Home() {
 
                 <div style={{ flex: 1, position: "relative" }}>
                   <Map
-                    points={sites}
+                    points={filteredPoints}
                     selectedSite={selectedSite}
                     onSelectSite={setSelectedSite}
                     filters={filters}
@@ -54,7 +83,7 @@ export default function Home() {
                   />
                 </div>
                 <SitesSidebar
-                  points={sites}
+                  points={filteredPoints}
                   selectedSite={selectedSite}
                   onSelectSite={setSelectedSite}
                 />

@@ -7,8 +7,6 @@ import { uploadSiteData } from "@/functions/site/uploadSiteData";
 export async function GET(req: Request) {
     const {searchParams} = new URL(req.url);
 
-    console.log("req", req.url);
-
     // dates
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
