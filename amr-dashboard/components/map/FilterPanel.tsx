@@ -5,6 +5,146 @@ import type { SiteData } from "@/types/site_types";
 import type { ContaminationLevel, MapFilters } from "@/types/map_types";
 import { RISK_COLOUR } from "@/constants/map_constants";
 
+function renderHTML(
+  filters:       MapFilters,
+  uniqueSites:   string[],
+): string {
+  return `
+    <div style="${FILTER_STYLES.wrapper}">
+
+      <div style="${FILTER_STYLES.title}">Filters</div>
+
+      <div style="${FILTER_STYLES.section}">
+        <div style="${FILTER_STYLES.sectionTitle}">Contamination Level</div>
+        ${Object.entries(RISK_COLOUR).map(([level, v]) => `
+          <div style="${FILTER_STYLES.row}">
+            <input type="checkbox" data-level="${level}"
+              ${filters.contaminationLevels?.includes(level as ContaminationLevel) ? "checked" : ""}
+            />
+            <div style="${FILTER_STYLES.riverColour(v.fill)}"></div>
+            <span>${v.label}</span>
+          </div>
+        `).join("")}
+      </div>
+
+      <div style="${FILTER_STYLES.section}">
+        <div style="${FILTER_STYLES.sectionTitle}">Sites</div>
+        ${uniqueSites.map(site => `
+          <div style="${FILTER_STYLES.row}">
+            <input type="checkbox" data-site="${site}"
+              ${filters.sites?.includes(site) ? "checked" : ""}
+            />
+            <span>${site}</span>
+          </div>
+        `).join("")}
+      </div>
+
+      <div style="${FILTER_STYLES.section}">
+        <div style="${FILTER_STYLES.sectionTitle}">Date Range</div>
+        <input type="date" id="startDate"
+          style="${FILTER_STYLES.dateInput}"
+          value="${filters.startDate || ""}"
+        />
+        <input type="date" id="endDate"
+          style="${FILTER_STYLES.dateInput}"
+          value="${filters.endDate || ""}"
+        />
+      </div>
+
+    </div>
+  `;
+}
+
+function attachEvents(
+  div:           HTMLElement,
+  filters:       MapFilters,
+  uniqueSites:   string[],
+  setFilters:    (f: MapFilters) => void
+) {
+  div.querySelectorAll("input").forEach((input) => {
+    input.addEventListener("change", (e) => {
+      const target = e.target as HTMLInputElement;
+      const level  = target.getAttribute("data-level");
+      const site   = target.getAttribute("data-site");
+
+      let updated = { ...filters };
+
+      if (level) {
+        const exists = filters.contaminationLevels?.includes(level as ContaminationLevel);
+        updated.contaminationLevels = exists
+          ? filters.contaminationLevels?.filter((l) => l !== level)
+          : [...(filters.contaminationLevels ?? []), level as ContaminationLevel];
+      }
+
+      if (site) {
+        const exists = filters.sites?.includes(site);
+        updated.sites = exists
+          ? filters.sites?.filter((s) => s !== site)
+          : [...(filters.sites ?? []), site];
+      }
+
+      if (target.id === "startDate") updated.startDate = target.value;
+      if (target.id === "endDate")   updated.endDate   = target.value;
+
+      // Re-render with new filters
+      div.innerHTML = renderHTML(updated, uniqueSites);
+      attachEvents(div, updated, uniqueSites, setFilters);
+
+      setFilters(updated);
+    });
+  });
+}
+
+export default function addFilterPanel(
+  map:        L.Map,
+  points:     SiteData[],
+  filters:    MapFilters,
+  setFilters: (f: MapFilters) => void
+) {
+  const div = L.DomUtil.create("div", "amr-filter");
+
+  const uniqueSites   = [...new Set(points.map((p) => p.geoLocName)) ];
+  for (const site of uniqueSites) {
+    if (site) {
+      if (site.includes("Apies River - ")) {
+        const parts = site.split("Apies River - ");
+        if (parts.length > 1) {
+          const cleaned = parts[1].trim();
+          uniqueSites[uniqueSites.indexOf(site)] = cleaned;
+        }
+      }
+      if (site.includes(" - Apies River")) {
+        const parts = site.split(" - Apies River");
+        if (parts.length > 1) {
+          const cleaned = parts[0].trim();
+          uniqueSites[uniqueSites.indexOf(site)] = cleaned;
+        }
+      }
+    }
+  }
+
+  div.innerHTML = renderHTML(filters, uniqueSites);
+  attachEvents(div, filters, uniqueSites, setFilters);
+
+  div.style.zIndex        = "1000";
+  div.style.pointerEvents = "auto";
+  div.style.position      = "relative";
+
+  L.DomEvent.disableClickPropagation(div);
+  L.DomEvent.disableScrollPropagation(div);
+
+  map.whenReady(() => {
+    const topRight = map.getContainer()
+      .querySelector(".leaflet-top.leaflet-right");
+
+    if (topRight) {
+      (topRight as HTMLElement).style.zIndex = "1000";
+      topRight.appendChild(div);
+    }
+  });
+}
+
+
 const FILTER_STYLES = {
   wrapper: `
     font-family: 'Open Sans', sans-serif;
@@ -60,147 +200,3 @@ const FILTER_STYLES = {
     font-family: 'Open Sans', sans-serif;
   `,
 } as const;
-
-function renderHTML(
-  filters:       MapFilters,
-  uniqueSites:   string[],
-  uniqueRegions: string[]
-): string {
-  return `
-    <div style="${FILTER_STYLES.wrapper}">
-
-      <div style="${FILTER_STYLES.title}">Filters</div>
-
-      <div style="${FILTER_STYLES.section}">
-        <div style="${FILTER_STYLES.sectionTitle}">Contamination Level</div>
-        ${Object.entries(RISK_COLOUR).map(([level, v]) => `
-          <div style="${FILTER_STYLES.row}">
-            <input type="checkbox" data-level="${level}"
-              ${filters.contaminationLevels?.includes(level as ContaminationLevel) ? "checked" : ""}
-            />
-            <div style="${FILTER_STYLES.riverColour(v.fill)}"></div>
-            <span>${v.label}</span>
-          </div>
-        `).join("")}
-      </div>
-
-      <div style="${FILTER_STYLES.section}">
-        <div style="${FILTER_STYLES.sectionTitle}">Sites</div>
-        ${uniqueSites.map(site => `
-          <div style="${FILTER_STYLES.row}">
-            <input type="checkbox" data-site="${site}"
-              ${filters.sites?.includes(site) ? "checked" : ""}
-            />
-            <span>${site}</span>
-          </div>
-        `).join("")}
-      </div>
-
-      <div style="${FILTER_STYLES.section}">
-        <div style="${FILTER_STYLES.sectionTitle}">Regions</div>
-        ${uniqueRegions.map(region => `
-          <div style="${FILTER_STYLES.row}">
-            <input type="checkbox" data-region="${region}"
-              ${filters.regions?.includes(region) ? "checked" : ""}
-            />
-            <span>${region}</span>
-          </div>
-        `).join("")}
-      </div>
-
-      <div style="${FILTER_STYLES.section}">
-        <div style="${FILTER_STYLES.sectionTitle}">Date Range</div>
-        <input type="date" id="startDate"
-          style="${FILTER_STYLES.dateInput}"
-          value="${filters.startDate || ""}"
-        />
-        <input type="date" id="endDate"
-          style="${FILTER_STYLES.dateInput}"
-          value="${filters.endDate || ""}"
-        />
-      </div>
-
-    </div>
-  `;
-}
-
-function attachEvents(
-  div:           HTMLElement,
-  filters:       MapFilters,
-  uniqueSites:   string[],
-  uniqueRegions: string[],
-  setFilters:    (f: MapFilters) => void
-) {
-  div.querySelectorAll("input").forEach((input) => {
-    input.addEventListener("change", (e) => {
-      const target = e.target as HTMLInputElement;
-      const level  = target.getAttribute("data-level");
-      const site   = target.getAttribute("data-site");
-      const region = target.getAttribute("data-region");
-
-      let updated = { ...filters };
-
-      if (level) {
-        const exists = filters.contaminationLevels?.includes(level as ContaminationLevel);
-        updated.contaminationLevels = exists
-          ? filters.contaminationLevels?.filter((l) => l !== level)
-          : [...(filters.contaminationLevels ?? []), level as ContaminationLevel];
-      }
-
-      if (site) {
-        const exists = filters.sites?.includes(site);
-        updated.sites = exists
-          ? filters.sites?.filter((s) => s !== site)
-          : [...(filters.sites ?? []), site];
-      }
-
-      if (region) {
-        const exists = filters.regions?.includes(region);
-        updated.regions = exists
-          ? filters.regions?.filter((r) => r !== region)
-          : [...(filters.regions ?? []), region];
-      }
-
-      if (target.id === "startDate") updated.startDate = target.value;
-      if (target.id === "endDate")   updated.endDate   = target.value;
-
-      // Re-render with new filters
-      div.innerHTML = renderHTML(updated, uniqueSites, uniqueRegions);
-      attachEvents(div, updated, uniqueSites, uniqueRegions, setFilters);
-
-      setFilters(updated);
-    });
-  });
-}
-
-export default function addFilterPanel(
-  map:        L.Map,
-  points:     SiteData[],
-  filters:    MapFilters,
-  setFilters: (f: MapFilters) => void
-) {
-  const div = L.DomUtil.create("div", "amr-filter");
-
-  const uniqueSites   = [...new Set(points.map((p) => p.sampleName))];
-  const uniqueRegions = [...new Set(points.map((p) => p.geoLocName))];
-
-  div.innerHTML = renderHTML(filters, uniqueSites, uniqueRegions);
-  attachEvents(div, filters, uniqueSites, uniqueRegions, setFilters);
-
-  div.style.zIndex        = "1000";
-  div.style.pointerEvents = "auto";
-  div.style.position      = "relative";
-
-  L.DomEvent.disableClickPropagation(div);
-  L.DomEvent.disableScrollPropagation(div);
-
-  map.whenReady(() => {
-    const topRight = map.getContainer()
-      .querySelector(".leaflet-top.leaflet-right");
-
-    if (topRight) {
-      (topRight as HTMLElement).style.zIndex = "1000";
-      topRight.appendChild(div);
-    }
-  });
-}

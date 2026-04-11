@@ -11,7 +11,6 @@ export const RISK_COLOUR: Record<ContaminationLevel, RiverColourData> = {
 export const DEFAULT_FILTERS: MapFilters = {
   contaminationLevels: ["low", "moderate", "high", "unknown", "filtered"],
   sites:               [],
-  regions:             [],
   startDate:           "",
   endDate:             "",
 };
