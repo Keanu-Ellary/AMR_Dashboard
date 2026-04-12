@@ -24,14 +24,14 @@ export async function waterQualityIndex() {
 
         return {
             statusCode: 200,
-            body: results
+            body: {results}
         };
     } catch (error) {
         console.error(error);
 
         return {
             statusCode: 500,
-            body: {error: "Failed to calcuate WQI"}
+            body: {error: "Failed to calculate WQI"}
         };
     }
 }

@@ -5,7 +5,8 @@ export async function timeInUnsafe(siteId: number) {
         const data = await prisma.siteData.findUnique({
             where: {id: siteId},
             select: {
-                createdAt: true
+                createdAt: true,
+                dangerZone: true,
            }
         });
 
@@ -16,6 +17,14 @@ export async function timeInUnsafe(siteId: number) {
                 body: {error: "Site not found"}
             }
         };
+
+        if (data.dangerZone === "red")
+        {
+            return {
+                statusCode: 404,
+                body: {error: "Site is still red"}
+            };
+        }
 
         const now = new Date();
         const timeStartedAtRed = data.createdAt.getTime();

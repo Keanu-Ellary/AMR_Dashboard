@@ -35,23 +35,27 @@ export async function waterQuality() {
             };
         }
 
-        const totalDistance = 16;
+        let totalDistance = 0;
         let contaminatedDistance = 0;
 
-        for (let j = 0; j < sites.length; j++)
+        for (let j = 0; j < sites.length - 1; j++)
         {
             const curr = sites[j];
             const next = sites[j + 1];
 
-            contaminatedDistance = getDistance(
+            const dist = getDistance(
                 curr.latitude,
                 curr.longitude,
                 next.latitude,
                 next.longitude
             );
+
+            totalDistance += dist;
+
+            contaminatedDistance += dist;
         }
 
-        const percentageClean = 100 - ((contaminatedDistance / totalDistance) * 100);
+        const percentageClean = totalDistance === 0 ? 100 : 100 - ((contaminatedDistance / totalDistance) * 100);
 
         return {
             statusCode: 200,
