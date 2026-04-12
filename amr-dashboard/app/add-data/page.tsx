@@ -12,7 +12,6 @@ import { DEFAULT_FILTERS } from '@/constants/map_constants';
 import { getDangerZoneLabel, MapFilters } from '@/types/map_types';
 
 export default function AddDataPage() {
-  const [dangerZone, setDangerZone] = useState('Blue');
   const [showImportDropdown, setShowImportDropdown] = useState(false);
   const [acceptType, setAcceptType] = useState('.csv');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -41,7 +40,6 @@ export default function AddDataPage() {
     useEffect(() => {
       if (!selectedSite) return;
 
-      setDangerZone("Blue");
       setFormData({
         sampleName: selectedSite.sampleName ?? '',
         isolationSource: selectedSite.isolationSource ?? '',
@@ -52,7 +50,6 @@ export default function AddDataPage() {
         amrResGenes:selectedSite.amrResGenes ?? '',
         predictedSir:selectedSite.predictedSir ?? '',
         sampleAnalysisType: selectedSite.sampleAnalysisType ?? '',
-        dangerZone: dangerZone.toLowerCase() ?? '',
 
         isolateId:selectedSite.isolateId ?? '',
         organism: selectedSite.orgamism ?? '',
@@ -92,7 +89,6 @@ export default function AddDataPage() {
       amrResGenes: formData.amrResGenes,
       predictedSir: formData.predictedSir,
       sampleAnalysisType: formData.sampleAnalysisType,
-      dangerZone: formData.dangerZone as 'red' | 'yellow' | 'green' | 'blue',
 
       // water params
       temperature: formData.temperature ? parseFloat(formData.temperature) : undefined,
@@ -146,7 +142,6 @@ export default function AddDataPage() {
     amrResGenes: '',
     predictedSir: '',
     sampleAnalysisType: '',
-    dangerZone: 'blue',
 
     // optional
     isolateId: '',
@@ -176,7 +171,6 @@ export default function AddDataPage() {
 
   const handleClear = () => {
     setSelectedSite(null);
-    setDangerZone('Blue');
     setFormData({
       // required
     sampleName: '',
@@ -188,7 +182,6 @@ export default function AddDataPage() {
     amrResGenes: '',
     predictedSir: '',
     sampleAnalysisType: '',
-    dangerZone: 'blue',
 
     // optional
     isolateId: '',
@@ -263,7 +256,6 @@ export default function AddDataPage() {
       amrResGenes: formData.amrResGenes,
       predictedSir: formData.predictedSir,
       sampleAnalysisType: formData.sampleAnalysisType,
-      dangerZone: formData.dangerZone as 'red' | 'yellow' | 'green' | 'blue',
 
       // water params
       temperature: formData.temperature ? parseFloat(formData.temperature) : undefined,
@@ -447,21 +439,6 @@ export default function AddDataPage() {
                 </div>
 
                 <p className="text-black-500 text-xs border-b border-black-200 pb-2"> Optional </p>
-                
-                <div>
-                  <label className="block text-gray-700 mb-1 text-xs">Danger Zone</label>
-                  <select 
-                    title="danger-zone"
-                    className="w-full border border-gray-200 rounded-md px-3 py-1.5 bg-white text-gray-600 focus:outline-none focus:border-blue-500 text-xs"
-                    value={dangerZone}
-                    onChange={(e) => setDangerZone(e.target.value)}
-                  >
-                    <option>Red</option>
-                    <option>Yellow</option>
-                    <option>Green</option>
-                    <option>Blue</option>
-                  </select>
-                </div>
 
                 <div>
                   <label className="block text-gray-700 mb-0.5 text-xs">Isolate ID</label>

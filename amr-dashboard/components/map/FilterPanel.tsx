@@ -13,7 +13,7 @@ interface FilterPanelProps {
 }
 
 function FilterPanel({ filters, uniqueSites, onFiltersChange }: FilterPanelProps) {
-  const riskEntries = Object.entries(RISK_COLOUR).filter(([key]) => key !== "filtered");
+  const riskEntries = Object.entries(RISK_COLOUR).filter(([key]) => key !== "filtered" && key !== "unknown");
 
   const updateDangerLevelFilters = (level:ContaminationLevel) => {
     const levelExists = filters.contaminationLevels?.includes(level);
