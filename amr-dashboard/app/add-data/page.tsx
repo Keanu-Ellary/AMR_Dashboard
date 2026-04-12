@@ -163,7 +163,7 @@ export default function AddDataPage() {
       amrResGenes: formData.amrResGenes,
       predictedSir: formData.predictedSir,
       sampleAnalysisType: formData.sampleAnalysisType,
-      dangerZone: formData.dangerZone as 'red' | 'yellow' | undefined,
+      dangerZone: formData.dangerZone as 'red' | 'yellow' | 'green' | 'blue' | undefined,
 
       // water params
       temperature: formData.temperature ? parseFloat(formData.temperature) : undefined,
@@ -298,7 +298,7 @@ export default function AddDataPage() {
                 Close
               </button>
 
-              <div className="space-y-3 flex-1 overflow-visible">
+              <div className="space-y-3 flex-1 overflow-y-auto">
                 {/* Form Fields */}
 
                 <div>
@@ -351,6 +351,8 @@ export default function AddDataPage() {
                   <input type="text" placeholder="Value" value={formData.sampleAnalysisType} onChange={(e) => setFormData({...formData, sampleAnalysisType: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
                 </div>
 
+                <p className="text-black-500 text-xs border-b border-black-200 pb-2"> Optional </p>
+                
                 <div>
                   <label className="block text-gray-700 mb-1 text-xs">Danger Zone</label>
                   <select 
@@ -362,12 +364,77 @@ export default function AddDataPage() {
                     <option>Choose Zone</option>
                     <option>Red</option>
                     <option>Yellow</option>
+                    <option>Green</option>
                     <option>Blue</option>
                   </select>
                 </div>
 
-                <p className="text-black-500 text-xs border-b border-black-200 pb-2"> Optional </p>
-                
+                <div>
+                  <label className="block text-gray-700 mb-0.5 text-xs">Isolate ID</label>
+                  <input type="text" placeholder="Value" value={formData.isolateId} onChange={(e) => setFormData({...formData, isolateId: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-0.5 text-xs">Organism</label>
+                  <input type="text" placeholder="Value" value={formData.organism} onChange={(e) => setFormData({...formData, organism: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-0.5 text-xs">Sample ID</label>
+                  <input type="text" placeholder="Value" value={formData.sampleId} onChange={(e) => setFormData({...formData, sampleId: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-0.5 text-xs">Collected By</label>
+                  <input type="text" placeholder="Value" value={formData.collectedBy} onChange={(e) => setFormData({...formData, collectedBy: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-0.5 text-xs">Sequence Name</label>
+                  <input type="text" placeholder="Value" value={formData.sequenceName} onChange={(e) => setFormData({...formData, sequenceName: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-0.5 text-xs">Element Type</label>
+                  <input type="text" placeholder="Value" value={formData.elementType} onChange={(e) => setFormData({...formData, elementType: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-0.5 text-xs">Class</label>
+                  <input type="text" placeholder="Value" value={formData.class} onChange={(e) => setFormData({...formData, class: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-0.5 text-xs">Sub Class</label>
+                  <input type="text" placeholder="Value" value={formData.subclass} onChange={(e) => setFormData({...formData, subclass: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-0.5 text-xs">Target Length</label>
+                  <input type="text" placeholder="Value" value={formData.targetLength} onChange={(e) => setFormData({...formData, targetLength: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-0.5 text-xs">Reference Length</label>
+                  <input type="text" placeholder="Value" value={formData.referenceLength} onChange={(e) => setFormData({...formData, referenceLength: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-0.5 text-xs">Coverage</label>
+                  <input type="text" placeholder="Value" value={formData.coverage} onChange={(e) => setFormData({...formData, coverage: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-0.5 text-xs">Identity</label>
+                  <input type="text" placeholder="Value" value={formData.identity} onChange={(e) => setFormData({...formData, identity: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-0.5 text-xs">Alignment Length</label>
+                  <input type="text" placeholder="Value" value={formData.alignmentLength} onChange={(e) => setFormData({...formData, alignmentLength: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-0.5 text-xs">Accession</label>
+                  <input type="text" placeholder="Value" value={formData.accession} onChange={(e) => setFormData({...formData, accession: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-0.5 text-xs">Virtulence Genes</label>
+                  <input type="text" placeholder="Value" value={formData.virtulenceGenes} onChange={(e) => setFormData({...formData, virtulenceGenes: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-0.5 text-xs">Plasmid Replicons</label>
+                  <input type="text" placeholder="Value" value={formData.plasmidReplicons} onChange={(e) => setFormData({...formData, plasmidReplicons: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
+                </div>
+
+
                 <div>
                   <label className="block text-gray-700 mb-0.5 text-xs">Water Temperature (°C)</label>
                   <input type="text" placeholder="Value" value={formData.temperature} onChange={(e) => setFormData({...formData, temperature: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
@@ -402,7 +469,7 @@ export default function AddDataPage() {
 
               </div>
 
-              <div className="mt-4 flex flex-col gap-2">
+              <div className="mt-4 flex flex-col gap-2 flex-shrink-0 pb-10">
                 <button 
                   className="w-full bg-[#22c55e] text-white py-1.5 rounded-md font-medium hover:bg-[#16a34a] transition text-sm"
                   onClick={handleAddData}
