@@ -617,6 +617,7 @@ export default function AddDataPage() {
                                 onSelectSite={setSelectedSite}
                                 filters={filters}
                                 onFiltersChange={setFilters}
+                                allPoints={sites}
                               />
                   </div>
                   <SitesSidebar

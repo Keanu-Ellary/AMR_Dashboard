@@ -100,6 +100,7 @@ export default function Home() {
                     onSelectSite={setSelectedSite}
                     filters={filters}
                     onFiltersChange={setFilters}
+                    allPoints={sites}
                   />
                 </div>
                 <SitesSidebar
