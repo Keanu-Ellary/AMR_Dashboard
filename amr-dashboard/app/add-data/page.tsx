@@ -12,7 +12,7 @@ import { DEFAULT_FILTERS } from '@/constants/map_constants';
 import { getDangerZoneLabel, MapFilters } from '@/types/map_types';
 
 export default function AddDataPage() {
-  const [dangerZone, setDangerZone] = useState('Choose Zone');
+  const [dangerZone, setDangerZone] = useState('Blue');
   const [showImportDropdown, setShowImportDropdown] = useState(false);
   const [acceptType, setAcceptType] = useState('.csv');
   const fileInputRef = useRef<HTMLInputElement>(null);
