@@ -39,14 +39,24 @@ export default function Home() {
       }
   
       if (filters.sites) {
+        const site= point.geoLocName;
+        let siteName = site;
+        if (point.sampleName) {
+          if (site.includes("Apies River - ")) {
+            const parts = site.split("Apies River - ");
+            if (parts.length > 1) {
+              siteName = parts[1].trim();
+            }
+          }
+          if (site.includes(" - Apies River")) {
+            const parts = site.split(" - Apies River");
+            if (parts.length > 1) {
+              siteName = parts[0].trim();
+            }
+          }
+        }
         if (filters.sites?.length > 0 &&
-          !filters.sites.includes(point.sampleName))
-        return false;
-      }
-  
-      if (filters.regions) {
-        if (filters.regions?.length > 0 &&
-          !filters.regions.includes(point.geoLocName))
+          !filters.sites.includes(siteName))
         return false;
       }
   

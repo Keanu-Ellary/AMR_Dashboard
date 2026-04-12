@@ -110,15 +110,15 @@ export default function addFilterPanel(
       if (site.includes("Apies River - ")) {
         const parts = site.split("Apies River - ");
         if (parts.length > 1) {
-          const cleaned = parts[1].trim();
-          uniqueSites[uniqueSites.indexOf(site)] = cleaned;
+          const siteName = parts[1].trim();
+          uniqueSites[uniqueSites.indexOf(site)] = siteName;
         }
       }
       if (site.includes(" - Apies River")) {
         const parts = site.split(" - Apies River");
         if (parts.length > 1) {
-          const cleaned = parts[0].trim();
-          uniqueSites[uniqueSites.indexOf(site)] = cleaned;
+          const siteName = parts[0].trim();
+          uniqueSites[uniqueSites.indexOf(site)] = siteName;
         }
       }
     }
