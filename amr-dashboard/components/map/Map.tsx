@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import "leaflet/dist/leaflet.css";
-import L from "leaflet";
+import L, { map } from "leaflet";
 
 import { useMapContext } from "./MapContext";
 import Site from "./Site";
@@ -70,6 +70,20 @@ export default function Map({ points, selectedSite, onSelectSite, filters, onFil
     }
 
   }, [satelliteView]);
+
+  useEffect(() => {
+    if (!mapRef.current || !mapReady) return;
+
+    const filterPanel = mapRef.current.getContainer().querySelector(".leaflet-top.leaflet-right");
+    if (filterPanel) {
+      const panelExists = filterPanel.querySelector(".amr-filter");
+      if (panelExists) {
+        panelExists.remove();
+      }
+    }
+
+     addFilterPanel(mapRef.current, points, activeFilters, onFiltersChange);
+  }, [points, mapReady])
 
   const handleSwitchToSatelliteView = () => {
     setMapView(true);
