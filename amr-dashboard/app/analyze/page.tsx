@@ -94,13 +94,17 @@ export default function AnalyzePage() {
   };
 
   return (
-    <div className="container mx-auto p-8 max-w-6xl">
-      <h1 className="text-3xl font-bold mb-8">Algae Detection Analysis</h1>
+    <div className="container mx-auto p-8 max-w-6xl text-gray-900 bg-white rounded-xl shadow-md border border-gray-100 my-8">
+      <h1 className="text-3xl font-bold mb-8 text-gray-900">
+        Algae Detection Analysis
+      </h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Left Side: Upload and Preview */}
-        <div className="border rounded-lg p-6 shadow-sm bg-white dark:bg-gray-800">
-          <h2 className="text-xl font-semibold mb-4">Upload Image</h2>
+        <div className="border rounded-lg p-6 shadow-sm bg-white">
+          <h2 className="text-xl font-semibold mb-4 text-gray-900">
+            Upload Image
+          </h2>
 
           <div className="mb-4">
             <input
@@ -112,19 +116,18 @@ export default function AnalyzePage() {
                 file:rounded-md file:border-0
                 file:text-sm file:font-semibold
                 file:bg-blue-50 file:text-blue-700
-                hover:file:bg-blue-100
-                dark:file:bg-gray-700 dark:file:text-blue-400"
+                hover:file:bg-blue-100"
             />
           </div>
 
           {previewUrl && (
-            <div className="mt-4 border rounded-md overflow-hidden bg-gray-50 dark:bg-gray-900 flex justify-center items-center p-4">
+            <div className="mt-4 border rounded-md overflow-hidden bg-gray-50 flex justify-center items-center p-4">
               <div className="relative inline-block max-w-full">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={previewUrl}
                   alt="Preview"
-                  className="max-h-[60vh] w-auto block"
+                  className="max-h-[350px] w-auto block"
                 />
                 {result?.boxes?.map((box, i) => {
                   const [xmin, ymin, xmax, ymax] = box;
@@ -155,7 +158,7 @@ export default function AnalyzePage() {
             className={`mt-6 w-full py-3 px-4 rounded-md text-white font-medium transition-colors
               ${
                 !selectedFile || isProcessing
-                  ? "bg-gray-400 cursor-not-allowed dark:bg-gray-600"
+                  ? "bg-gray-400 cursor-not-allowed"
                   : "bg-blue-600 hover:bg-blue-700"
               }`}
           >
@@ -163,15 +166,15 @@ export default function AnalyzePage() {
           </button>
 
           {error && (
-            <div className="mt-4 p-3 bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded-md text-sm border border-red-200 dark:border-red-800">
+            <div className="mt-4 p-3 bg-red-50 text-red-700 rounded-md text-sm border border-red-200">
               {error}
             </div>
           )}
         </div>
 
         {/* Right Side: Results */}
-        <div className="border rounded-lg p-6 shadow-sm bg-white dark:bg-gray-800 flex flex-col items-center justify-center min-h-[400px]">
-          <h2 className="text-xl font-semibold mb-6 w-full text-left">
+        <div className="border rounded-lg p-6 shadow-sm bg-white flex flex-col items-center justify-center min-h-[350px]">
+          <h2 className="text-xl font-semibold mb-6 w-full text-left text-gray-900">
             Analysis Results
           </h2>
 
@@ -185,9 +188,7 @@ export default function AnalyzePage() {
           {isProcessing && (
             <div className="flex-1 flex flex-col items-center justify-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-              <p className="text-gray-600 dark:text-gray-400">
-                Running AI Model...
-              </p>
+              <p className="text-gray-600">Running AI Model...</p>
             </div>
           )}
 
@@ -196,16 +197,16 @@ export default function AnalyzePage() {
               <div
                 className={`text-3xl font-bold mb-4 px-6 py-4 rounded-xl shadow-sm ${
                   result.detected
-                    ? "bg-red-100 text-red-600 border border-red-200 dark:bg-red-900/20 dark:border-red-800 dark:text-red-500"
-                    : "bg-green-100 text-green-600 border border-green-200 dark:bg-green-900/20 dark:border-green-800 dark:text-green-500"
+                    ? "bg-red-100 text-red-600 border border-red-200"
+                    : "bg-green-100 text-green-600 border border-green-200"
                 }`}
               >
                 {result.detected ? "ALGAE DETECTED" : "NOT DETECTED"}
               </div>
 
               {result.detected && (
-                <div className="text-xl mt-4 bg-gray-50 dark:bg-gray-900 px-6 py-3 rounded-lg border border-gray-100 dark:border-gray-700">
-                  <span className="text-gray-600 dark:text-gray-400 font-medium">
+                <div className="text-xl mt-4 bg-gray-50 px-6 py-3 rounded-lg border border-gray-100">
+                  <span className="text-gray-600 font-medium">
                     Confidence:{" "}
                   </span>
                   <span className="font-bold text-red-500">
@@ -214,7 +215,7 @@ export default function AnalyzePage() {
                 </div>
               )}
 
-              <p className="mt-8 text-sm text-gray-500 dark:text-gray-400 text-center px-4 max-w-sm border-t border-gray-100 dark:border-gray-700 pt-6">
+              <p className="mt-8 text-sm text-gray-500 text-center px-4 max-w-sm border-t border-gray-100 pt-6">
                 {result.detected
                   ? "The AI model has identified visual elements highly consistent with algae blooms in the provided image."
                   : "The AI model did not find any significant evidence of algae blooms in the provided image."}
