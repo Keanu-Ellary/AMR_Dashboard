@@ -1,44 +1,101 @@
 "use client";
 
-import dynamic from "next/dynamic";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MapProvider } from "@/components/map/MapContext";
-import { samplingPoints } from "@/data/sites";
-import type { SamplingPoint } from "@/types/site_types";
+import type { SiteData } from "@/types/site_types";
 import SitesSidebar from "@/components/map/SitesSidebar";
-import { MapFilters } from "@/types/map_types";
+import { getDangerZoneLabel, MapFilters } from "@/types/map_types";
 import { DEFAULT_FILTERS } from "@/constants/map_constants";
-import SideNavBar from "@/components/SideNavBar";
-import TopNavBar from "@/components/TopNavBar";
 import { Map } from "@/components/map/LoadMap";
+import { getAllSites } from "@/app/services/siteService";
 
 export default function Home() {
-  const [selectedSite, setSelectedSite] = useState<SamplingPoint | null>(null);
+  const [selectedSite, setSelectedSite] = useState<SiteData | null>(null);
   const [filters, setFilters] = useState<MapFilters>(DEFAULT_FILTERS);
+  const [sites, setSites] = useState<SiteData[]>([]);
+
+  const handleGetAllSites = async () => {
+    const allSitesResponse = await getAllSites();
+
+    if (allSitesResponse.ok) {
+      const allSiteData = await allSitesResponse.json();
+      setSites(allSiteData.sites);
+
+    }
+  }
+
+  useEffect(() => {
+    handleGetAllSites();
+    filteredPoints;
+  }, []);
+
+  const filteredPoints = sites.filter((point) => {
+      if (!filters) return true;
   
+      if (filters.contaminationLevels) {
+        if (filters.contaminationLevels?.length > 0 &&
+          !filters.contaminationLevels.includes(getDangerZoneLabel(point.dangerZone as any)))
+        return false;
+      }
+  
+      if (filters.sites) {
+        const site= point.geoLocName;
+        let siteName = site;
+        if (point.sampleName) {
+          if (site.includes("Apies River - ")) {
+            const parts = site.split("Apies River - ");
+            if (parts.length > 1) {
+              siteName = parts[1].trim();
+            }
+          }
+          if (site.includes(" - Apies River")) {
+            const parts = site.split(" - Apies River");
+            if (parts.length > 1) {
+              siteName = parts[0].trim();
+            }
+          }
+        }
+        if (filters.sites?.length > 0 &&
+          !filters.sites.includes(siteName))
+        return false;
+      }
+  
+      const sampleDate = new Date(point.collectionDate);
+      if (filters.startDate && sampleDate < new Date(filters.startDate)) return false;
+      if (filters.endDate   && sampleDate > new Date(filters.endDate))   return false;
+  
+      return true;
+    });
+
+  
+  const totalHighRiskSites = sites.filter(p => p.dangerZone === "red").length;
+  const totalModerateRiskSites = sites.filter(p => p.dangerZone === "yellow").length;
   return (
-    <div className="flex h-screen bg-gray-100 font-sans">  
-      <SideNavBar />
-        <div className="flex-1 flex flex-col overflow-hidden">  
-          <TopNavBar />
     
           <main className="flex-1 overflow-auto p-6">
-            <div style={styles.grid}>
-              <span style={styles.card}>
-                <span style={styles.cardTitle}>Total Samples:</span>
-                <span style={styles.cardDesc}> 4 </span>
-              </span>
-              <span style={styles.card}>
-                <span style={styles.cardTitle}>Total Isolates:</span>
-                <span style={styles.cardDesc}> 9 </span>
-              </span>
+            <div className="flex flex-direction-column justify-between">
+              <div style={styles.grid}>
+                <span style={styles.card}>
+                  <span style={styles.cardTitle}>Total Samples:</span>
+                  <span style={styles.cardDesc}> {sites.length} </span>
+                </span>
+                <span style={styles.card}>
+                  <span style={styles.cardTitle}>High Risk Zones:</span>
+                  <span style={styles.cardDesc}> {totalHighRiskSites} </span>
+                </span>
+                <span style={styles.card}>
+                  <span style={styles.cardTitle}>Moderate Risk Zones:</span>
+                  <span style={styles.cardDesc}> {totalModerateRiskSites} </span>
+                </span>
+
+              </div>
             </div>
             <MapProvider>
               <div style={{ display: "flex", height: "100vh", background: "#ffffff" }}>
 
                 <div style={{ flex: 1, position: "relative" }}>
                   <Map
-                    points={samplingPoints}
+                    points={filteredPoints}
                     selectedSite={selectedSite}
                     onSelectSite={setSelectedSite}
                     filters={filters}
@@ -46,15 +103,13 @@ export default function Home() {
                   />
                 </div>
                 <SitesSidebar
-                  points={samplingPoints}
+                  points={filteredPoints}
                   selectedSite={selectedSite}
                   onSelectSite={setSelectedSite}
                 />
               </div>
             </MapProvider>
           </main>
-        </div>
-    </div>
   );
 }
 
@@ -76,9 +131,8 @@ const styles: Record<string, React.CSSProperties> = {
     display: "flex",
     flexDirection: "column",
     alignItems: "flex-start",
-    gap: "8px",
-    padding: "20px",
-    background: "#94c8ff",
+    padding: "16px",
+    background: "#badbff",
     borderRadius:"8px",
   },
   cardTitle: {
@@ -87,7 +141,7 @@ const styles: Record<string, React.CSSProperties> = {
     color: "#060606",
   },
   cardDesc: {
-    fontSize: "12px",
+    fontSize: "24px",
     color: "#141415",
     lineHeight: 1.6,
   },

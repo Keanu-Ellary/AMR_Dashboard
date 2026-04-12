@@ -40,11 +40,11 @@ const LEGEND_STYLES= {
 
 export default function addLegend(map: L.Map) {
   const div = L.DomUtil.create("div", "amr-legend");
-  const riskEntries = Object.entries(RISK_COLOUR);
+  const riskEntries = Object.entries(RISK_COLOUR).filter(([key]) => key !== "filtered");
 
   div.innerHTML = `
     <div style="${LEGEND_STYLES.wrapper}">
-      <div style="${LEGEND_STYLES.title}">AMR River Contamination</div>
+      <div style="${LEGEND_STYLES.title}">Danger Zone</div>
       ${riskEntries.map(([, v]) => `
         <div style="${LEGEND_STYLES.row}">
           <div style="${LEGEND_STYLES.swatch(v.fill)}"></div>

@@ -1,28 +1,86 @@
 "use client";
 
-import type { SamplingPoint } from "@/types/site_types";
-import { RISK_COLOUR } from "@/constants/map_constants";
-import { ContaminationLevel } from "@/types/map_types";
+import type { SiteData } from "@/types/site_types";
+import { RISK_COLOUR, CONTAMINATION_LEVEL_ORDER } from "@/constants/map_constants";
+import {  DangerZone, getDangerZoneLabel } from "@/types/map_types";
+import { Trash2Icon } from "lucide-react";
+import { deleteSite } from "@/app/services/siteService";
+import { toast } from "react-toastify";
+import ConfirmDelete from "../add-data/confirmDelete";
+import { useEffect, useState } from "react";
+import { getMe } from "@/app/services/authService";
+
 
 interface SiteListProps {
-  points: SamplingPoint[];
-  selectedSite: SamplingPoint | null;
-  onSelectSite: (site: SamplingPoint) => void;
+  points: SiteData[];
+  selectedSite: SiteData | null;
+  onSelectSite: (site: SiteData) => void;
 }
 
 export default function SiteList({ points, selectedSite, onSelectSite }: SiteListProps) {
-  const levelOrder: Record<ContaminationLevel, number> = {
-    high: 0,
-    moderate: 1,
-    low: 2,
-    unknown: 3,
-    filtered: 4,
-  };
+
+  const [siteToDelete, setSiteToDelete] = useState<SiteData | null>(null);
+  const getDanger = (zone?: DangerZone)=> zone ? getDangerZoneLabel(zone) : "unknown";
   const sortedPoints = [...points].sort(
-    (pointA, pointB) => (levelOrder[pointA.contaminationLevel] ?? 3) - (levelOrder[pointB.contaminationLevel] ?? 3)
+    (pointA, pointB) => (CONTAMINATION_LEVEL_ORDER[getDanger(pointA.dangerZone)] ?? 3) - (CONTAMINATION_LEVEL_ORDER[getDanger(pointB.dangerZone)] ?? 3)
   );
+  const [isAdminUser, setIsAdminUser] = useState(false);
+
+  useEffect(() => {
+    isAdmin();
+  },[]);
+
+  useEffect(() => {
+  }, [isAdminUser]);
+
+  const isAdmin = async () => {
+    try {
+      const response = await getMe();
+      if (response) {
+        setIsAdminUser(response.isAdmin ?? false);
+      }else{
+        setIsAdminUser(false);
+      }
+    }catch (error) {
+      toast.error("Could not authenticate user");
+    }
+  };
+
+  const handleDeleteSite = async (site: SiteData) => {
+    try {
+      if (!site.id) {
+        toast.error('Site ID is missing.');
+        return;
+      }
+      const response = await deleteSite(site.id);
+      if (response.ok) {
+        toast.success('Site deleted successfully!');
+        setSiteToDelete(null);
+      } else {
+        toast.error('Failed to delete site. Please try again.');
+      }
+    } catch (error) {
+      toast.error('An error occurred while deleting the site. Please try again.');
+    }
+  };
+
+  const handleCancel = () => {
+    setSiteToDelete(null);
+  };
+
+  const handleDeleteClick = (site: SiteData) => {
+    setSiteToDelete(site);
+  }
+
 
   return (
+    <div>
+    <ConfirmDelete
+               site={siteToDelete}
+               handleConfirm={handleDeleteSite.bind(null, siteToDelete!)}
+               handleCancel={handleCancel}
+            />
+
     <div style={styles.wrapper}>
 
       <div style={styles.header}>
@@ -33,8 +91,12 @@ export default function SiteList({ points, selectedSite, onSelectSite }: SiteLis
       <ul style={styles.list}>
         {sortedPoints.map((site) => {
           const isSelected = selectedSite?.id === site.id;
-          const riskColor  = RISK_COLOUR[site.contaminationLevel]?.fill ?? "#94a3b8";
-
+          let riskColor = RISK_COLOUR.unknown.fill;
+          if (site.dangerZone) {
+            const dangerZoneLabel = getDangerZoneLabel(site.dangerZone);
+            riskColor  = RISK_COLOUR[dangerZoneLabel]?.fill;
+          }
+          
           return (
             <li
               key={site.id}
@@ -54,17 +116,29 @@ export default function SiteList({ points, selectedSite, onSelectSite }: SiteLis
               />
 
               <div style={styles.itemBody}>
-                <div style={styles.siteName}>{site.name}</div>
+                <div style={styles.dataWrapper}>
+                  <div style={styles.siteName}>{site.geoLocName}</div>
 
-                <div style={styles.dateRow}>
-                  <span style={styles.dateLabel}>Last sampled</span>
-                  <span style={styles.dateValue}>{site.lastSampled}</span>
+                  <div style={styles.dateRow}>
+                    <span style={styles.dateLabel}>Last sampled:</span>
+                    <span style={styles.dateValue}>{new Date(site.collectionDate).toLocaleDateString("en-ZA", { year: "numeric", month: "short", day: "numeric" })}</span>
+                  </div>
+                </div>
+                 <div>
+                  {isAdminUser && (
+                    <button
+                      onClick={handleDeleteClick.bind(null, site)}
+                    >
+                      <Trash2Icon size={18} />
+                    </button>
+                  )}
                 </div>
               </div>
             </li>
           );
         })}
       </ul>
+    </div>
     </div>
   );
 }
@@ -129,7 +203,6 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: "stretch",
     borderRadius: "6px",
     border: "1px solid",
-    overflow: "hidden",
     transition: "all 0.15s ease",
   },
 
@@ -141,6 +214,13 @@ const styles: Record<string, React.CSSProperties> = {
   itemBody: {
     flex: 1,
     padding:"10px 12px",
+    display: "flex",
+    flexDirection: "row",
+    gap: "2px",
+    minWidth: 0,
+  },
+  dataWrapper: {
+    flex: 1,
     display: "flex",
     flexDirection: "column",
     gap: "2px",
