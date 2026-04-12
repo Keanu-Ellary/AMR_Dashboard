@@ -29,3 +29,40 @@ export async function addMutlipleSiteData(file: File) {
 
     return response;
 }
+
+export async function getAllSites() {
+
+    const response = await fetch('/api/site', {
+        method: 'GET',
+        headers: {'Content-Type': 'application/json'}
+    });
+
+    return response;
+}
+
+export async function deleteSite(siteId: number) {
+    const user = await getMe();
+    const token = user?.token;
+
+    const strId = siteId.toString();
+    const response = await fetch(`/api/site/${strId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    return response;
+}
+
+export async function updateSite(siteId: number, siteData: SiteData) {
+    const user = await getMe();
+    const token = user?.token;
+
+    const strId = siteId.toString();
+    const response = await fetch(`/api/site/${strId}`, {
+        method: 'PATCH',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify(siteData)
+    });
+
+    return response;
+}

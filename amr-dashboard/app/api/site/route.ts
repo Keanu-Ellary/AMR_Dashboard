@@ -65,7 +65,7 @@ export async function GET(req: Request) {
 
     const res = await getAllSites();
 
-    Response.json(res.body, {
+    return Response.json(res.body, {
         status: res.statusCode
     });
 };

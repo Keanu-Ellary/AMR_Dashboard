@@ -1,23 +1,139 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { MapProvider } from '@/components/map/MapContext';
 import SitesSidebar from '@/components/map/SitesSidebar';
-import { samplingPoints } from '@/data/sites';
 import { Map } from "@/components/map/LoadMap";
-import { SamplingPoint } from '@/types/site_types';
+import { SiteData } from '@/types/site_types';
 import { toast } from 'react-toastify';
-import { addSiteData, addMutlipleSiteData } from '@/app/services/siteService';
+import { addSiteData, addMutlipleSiteData, getAllSites, updateSite } from '@/app/services/siteService';
 import ConfirmFile from '@/components/add-data/confirmFile';
+import { DEFAULT_FILTERS } from '@/constants/map_constants';
+import { getDangerZoneLabel, MapFilters } from '@/types/map_types';
 
 export default function AddDataPage() {
-  const [dangerZone, setDangerZone] = useState('Choose Zone');
+  const [dangerZone, setDangerZone] = useState('Blue');
   const [showImportDropdown, setShowImportDropdown] = useState(false);
   const [acceptType, setAcceptType] = useState('.csv');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const [imageBase64, setImageBase64] = useState<string | undefined>(undefined);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [sites, setSites] = useState<SiteData[]>([]);
+  const [selectedSite, setSelectedSite] = useState<SiteData | null>(null);
+  const [filters, setFilters] = useState<MapFilters>(DEFAULT_FILTERS);
+  
+    const handleGetAllSites = async () => {
+      const allSitesResponse = await getAllSites();
+  
+      if (allSitesResponse.ok) {
+        const allSiteData = await allSitesResponse.json();
+        setSites(allSiteData.sites);
+  
+      }
+    }
+  
+    useEffect(() => {
+      handleGetAllSites();
+      filteredPoints;
+    }, []);
+
+    useEffect(() => {
+      if (!selectedSite) return;
+
+      setDangerZone("Blue");
+      setFormData({
+        sampleName: selectedSite.sampleName ?? '',
+        isolationSource: selectedSite.isolationSource ?? '',
+        collectionDate: selectedSite.collectionDate ? new Date(selectedSite.collectionDate).toISOString().split('T')[0] : '',
+        geoLocName: selectedSite.geoLocName ?? '',
+        latitude:selectedSite.latitude?.toString() ?? '',
+        longitude:selectedSite.longitude?.toString() ?? '',
+        amrResGenes:selectedSite.amrResGenes ?? '',
+        predictedSir:selectedSite.predictedSir ?? '',
+        sampleAnalysisType: selectedSite.sampleAnalysisType ?? '',
+        dangerZone: dangerZone.toLowerCase() ?? '',
+
+        isolateId:selectedSite.isolateId ?? '',
+        organism: selectedSite.orgamism ?? '',
+        sampleId: selectedSite.sampleId ?? '',
+        collectedBy:selectedSite.collectedBy ?? '',
+        sequenceName:selectedSite.sequenceName ?? '',
+        elementType: selectedSite.elementType ?? '',
+        class: selectedSite.class ?? '',
+        subclass: selectedSite.subclass ?? '',
+        targetLength: selectedSite.targetLength?.toString() ?? '',
+        referenceLength: selectedSite.referenceLength?.toString() ?? '',
+        coverage: selectedSite.coverage?.toString() ?? '',
+        identity:selectedSite.identity?.toString() ?? '',
+        alignmentLength: selectedSite.alignmentLength?.toString() ?? '',
+        accession: selectedSite.accession ?? '',
+        virtulenceGenes: selectedSite.virtulenceGenes ?? '',
+        plasmidReplicons:selectedSite.plasmidReplicons ?? '',
+        temperature: selectedSite.temperature?.toString() ?? '',
+        ph: selectedSite.ph?.toString() ?? '',
+        tds:selectedSite.tds?.toString() ?? '',
+        ec:selectedSite.ec?.toString() ?? '',
+        dissolvedO2:selectedSite.dissolvedO2?.toString() ?? '',
+      });
+
+    }, [selectedSite]);
+
+  const handleUpdateSite = async () => {
+    if (selectedSite && selectedSite.id) {
+      const updateResponse = await updateSite(selectedSite.id, {
+      // required
+      sampleName: formData.sampleName,
+      isolationSource: formData.isolationSource,
+      collectionDate: new Date(formData.collectionDate),
+      geoLocName: formData.geoLocName,
+      latitude: parseFloat(formData.latitude),
+      longitude: parseFloat(formData.longitude),
+      amrResGenes: formData.amrResGenes,
+      predictedSir: formData.predictedSir,
+      sampleAnalysisType: formData.sampleAnalysisType,
+      dangerZone: formData.dangerZone as 'red' | 'yellow' | 'green' | 'blue',
+
+      // water params
+      temperature: formData.temperature ? parseFloat(formData.temperature) : undefined,
+      ph: formData.ph ? parseFloat(formData.ph) : undefined,
+      tds: formData.tds ? parseFloat(formData.tds) : undefined,
+      ec: formData.ec ? parseFloat(formData.ec) : undefined,
+      dissolvedO2: formData.dissolvedO2 ? parseFloat(formData.dissolvedO2) : undefined,
+
+      // optional
+      isolateId: formData.isolateId || undefined,
+      orgamism: formData.organism || undefined,
+      sampleId: formData.sampleId || undefined,
+      collectedBy: formData.collectedBy || undefined,
+      sequenceName: formData.sequenceName || undefined,
+      elementType: formData.elementType || undefined,
+      class: formData.class || undefined,
+      subclass: formData.subclass || undefined,
+      targetLength: formData.targetLength ? parseFloat(formData.targetLength) : undefined,
+      referenceLength: formData.referenceLength ? parseFloat(formData.referenceLength) : undefined,
+      coverage: formData.coverage ? parseFloat(formData.coverage) : undefined,
+      identity: formData.identity ? parseFloat(formData.identity) : undefined,
+      alignmentLength: formData.alignmentLength ? parseFloat(formData.alignmentLength) : undefined,
+      accession: formData.accession || undefined,
+      virtulenceGenes: formData.virtulenceGenes || undefined,
+      plasmidReplicons: formData.plasmidReplicons || undefined,
+
+      // image
+      imageBase64,
+    });
+
+      if (updateResponse.ok) {
+        toast.success("Site data updated successfully");
+        setSelectedSite(null);
+      }else{
+        toast.error("Failed to update site data")
+      }
+
+      handleGetAllSites();
+      handleClear();
+    }
+  }
 
   const [formData, setFormData] = useState({
     // required
@@ -30,7 +146,7 @@ export default function AddDataPage() {
     amrResGenes: '',
     predictedSir: '',
     sampleAnalysisType: '',
-    dangerZone: '',
+    dangerZone: 'blue',
 
     // optional
     isolateId: '',
@@ -59,7 +175,8 @@ export default function AddDataPage() {
   });
 
   const handleClear = () => {
-    setDangerZone('Choose Zone');
+    setSelectedSite(null);
+    setDangerZone('Blue');
     setFormData({
       // required
     sampleName: '',
@@ -71,7 +188,7 @@ export default function AddDataPage() {
     amrResGenes: '',
     predictedSir: '',
     sampleAnalysisType: '',
-    dangerZone: '',
+    dangerZone: 'blue',
 
     // optional
     isolateId: '',
@@ -146,7 +263,7 @@ export default function AddDataPage() {
       amrResGenes: formData.amrResGenes,
       predictedSir: formData.predictedSir,
       sampleAnalysisType: formData.sampleAnalysisType,
-      dangerZone: formData.dangerZone as 'red' | 'yellow' | undefined,
+      dangerZone: formData.dangerZone as 'red' | 'yellow' | 'green' | 'blue',
 
       // water params
       temperature: formData.temperature ? parseFloat(formData.temperature) : undefined,
@@ -179,6 +296,8 @@ export default function AddDataPage() {
     if (response.status === 200 || response.status === 201) {
       toast.success('Site data added successfully!');
       handleClear();
+      handleGetAllSites();
+      filteredPoints;
     } else {
       toast.error('Failed to add site data. Please try again.');
     }
@@ -187,7 +306,6 @@ export default function AddDataPage() {
   }
 
   const handleAddFileData = async() => {
-    console.log('Adding file data...');
     if (!pendingFile) {
       toast.error('No file selected. Please select a file to import.');
       return;
@@ -201,6 +319,8 @@ export default function AddDataPage() {
       if (response.status === 200 || response.status === 201) {
         toast.success('File data added successfully!' );
         handleClear();
+        handleGetAllSites();
+        filteredPoints;
       } else {
         toast.error('Failed to add file data. Please try again.');
       }
@@ -213,13 +333,48 @@ export default function AddDataPage() {
       fileInputRef.current.value = '';
     }
   };
-
-
-   const [selectedSite, setSelectedSite] = useState<SamplingPoint | null>(null);
+   
+     const filteredPoints = sites.filter((point) => {
+         if (!filters) return true;
+     
+         if (filters.contaminationLevels) {
+           if (filters.contaminationLevels?.length > 0 &&
+             !filters.contaminationLevels.includes(getDangerZoneLabel(point.dangerZone as any)))
+           return false;
+         }
+     
+         if (filters.sites) {
+           const site= point.geoLocName;
+           let siteName = site;
+           if (point.sampleName) {
+             if (site.includes("Apies River - ")) {
+               const parts = site.split("Apies River - ");
+               if (parts.length > 1) {
+                 siteName = parts[1].trim();
+               }
+             }
+             if (site.includes(" - Apies River")) {
+               const parts = site.split(" - Apies River");
+               if (parts.length > 1) {
+                 siteName = parts[0].trim();
+               }
+             }
+           }
+           if (filters.sites?.length > 0 &&
+             !filters.sites.includes(siteName))
+           return false;
+         }
+     
+         const sampleDate = new Date(point.collectionDate);
+         if (filters.startDate && sampleDate < new Date(filters.startDate)) return false;
+         if (filters.endDate   && sampleDate > new Date(filters.endDate))   return false;
+     
+         return true;
+       });
 
   return (
 
-    <div className="flex h-screen p-2 font-sans text-sm">
+    <div className="flex p-2 font-sans text-sm" style={{ height: "100%"}}>
 
       <ConfirmFile
           file={pendingFile}
@@ -238,7 +393,7 @@ export default function AddDataPage() {
                 Close
               </button>
 
-              <div className="space-y-3 flex-1 overflow-visible">
+              <div className="space-y-3 flex-1 overflow-y-auto">
                 {/* Form Fields */}
 
                 <div>
@@ -291,6 +446,8 @@ export default function AddDataPage() {
                   <input type="text" placeholder="Value" value={formData.sampleAnalysisType} onChange={(e) => setFormData({...formData, sampleAnalysisType: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
                 </div>
 
+                <p className="text-black-500 text-xs border-b border-black-200 pb-2"> Optional </p>
+                
                 <div>
                   <label className="block text-gray-700 mb-1 text-xs">Danger Zone</label>
                   <select 
@@ -299,15 +456,79 @@ export default function AddDataPage() {
                     value={dangerZone}
                     onChange={(e) => setDangerZone(e.target.value)}
                   >
-                    <option>Choose Zone</option>
                     <option>Red</option>
                     <option>Yellow</option>
+                    <option>Green</option>
                     <option>Blue</option>
                   </select>
                 </div>
 
-                <p className="text-black-500 text-xs border-b border-black-200 pb-2"> Optional </p>
-                
+                <div>
+                  <label className="block text-gray-700 mb-0.5 text-xs">Isolate ID</label>
+                  <input type="text" placeholder="Value" value={formData.isolateId} onChange={(e) => setFormData({...formData, isolateId: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-0.5 text-xs">Organism</label>
+                  <input type="text" placeholder="Value" value={formData.organism} onChange={(e) => setFormData({...formData, organism: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-0.5 text-xs">Sample ID</label>
+                  <input type="text" placeholder="Value" value={formData.sampleId} onChange={(e) => setFormData({...formData, sampleId: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-0.5 text-xs">Collected By</label>
+                  <input type="text" placeholder="Value" value={formData.collectedBy} onChange={(e) => setFormData({...formData, collectedBy: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-0.5 text-xs">Sequence Name</label>
+                  <input type="text" placeholder="Value" value={formData.sequenceName} onChange={(e) => setFormData({...formData, sequenceName: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-0.5 text-xs">Element Type</label>
+                  <input type="text" placeholder="Value" value={formData.elementType} onChange={(e) => setFormData({...formData, elementType: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-0.5 text-xs">Class</label>
+                  <input type="text" placeholder="Value" value={formData.class} onChange={(e) => setFormData({...formData, class: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-0.5 text-xs">Sub Class</label>
+                  <input type="text" placeholder="Value" value={formData.subclass} onChange={(e) => setFormData({...formData, subclass: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-0.5 text-xs">Target Length</label>
+                  <input type="text" placeholder="Value" value={formData.targetLength} onChange={(e) => setFormData({...formData, targetLength: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-0.5 text-xs">Reference Length</label>
+                  <input type="text" placeholder="Value" value={formData.referenceLength} onChange={(e) => setFormData({...formData, referenceLength: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-0.5 text-xs">Coverage</label>
+                  <input type="text" placeholder="Value" value={formData.coverage} onChange={(e) => setFormData({...formData, coverage: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-0.5 text-xs">Identity</label>
+                  <input type="text" placeholder="Value" value={formData.identity} onChange={(e) => setFormData({...formData, identity: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-0.5 text-xs">Alignment Length</label>
+                  <input type="text" placeholder="Value" value={formData.alignmentLength} onChange={(e) => setFormData({...formData, alignmentLength: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-0.5 text-xs">Accession</label>
+                  <input type="text" placeholder="Value" value={formData.accession} onChange={(e) => setFormData({...formData, accession: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-0.5 text-xs">Virtulence Genes</label>
+                  <input type="text" placeholder="Value" value={formData.virtulenceGenes} onChange={(e) => setFormData({...formData, virtulenceGenes: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-0.5 text-xs">Plasmid Replicons</label>
+                  <input type="text" placeholder="Value" value={formData.plasmidReplicons} onChange={(e) => setFormData({...formData, plasmidReplicons: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
+                </div>
+
+
                 <div>
                   <label className="block text-gray-700 mb-0.5 text-xs">Water Temperature (°C)</label>
                   <input type="text" placeholder="Value" value={formData.temperature} onChange={(e) => setFormData({...formData, temperature: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
@@ -342,13 +563,23 @@ export default function AddDataPage() {
 
               </div>
 
-              <div className="mt-4 flex flex-col gap-2">
-                <button 
+              <div className="mt-4 flex flex-col gap-2 flex-shrink-0">
+                {selectedSite && (
+                  <button 
+                  className="w-full bg-[#22c55e] text-white py-1.5 rounded-md font-medium hover:bg-[#16a34a] transition text-sm"
+                  onClick={handleUpdateSite}
+                >
+                  Update
+                </button>
+                )}
+                {!selectedSite && (
+                  <button 
                   className="w-full bg-[#22c55e] text-white py-1.5 rounded-md font-medium hover:bg-[#16a34a] transition text-sm"
                   onClick={handleAddData}
                 >
                   Submit
                 </button>
+                )}
 
                 <div className="relative">
                   {/* Hidden file input */}
@@ -401,22 +632,22 @@ export default function AddDataPage() {
 
             {/* Map Column */}
             <MapProvider>
-              <div className="flex-1 flex overflow-hidden">
-                <div className="flex-1 relative">
-                  <Map
-                    points={samplingPoints}
+                <div className="flex-1 flex overflow-hidden">
+                  <div className="flex-1 relative">
+                              <Map
+                                points={filteredPoints}
+                                selectedSite={selectedSite}
+                                onSelectSite={setSelectedSite}
+                                filters={filters}
+                                onFiltersChange={setFilters}
+                              />
+                  </div>
+                  <SitesSidebar
+                    points={filteredPoints}
                     selectedSite={selectedSite}
                     onSelectSite={setSelectedSite}
-                    filters={{}}
-                    onFiltersChange={() => {}}
                   />
                 </div>
-                <SitesSidebar
-                  points={samplingPoints}
-                  selectedSite={selectedSite}
-                  onSelectSite={setSelectedSite}
-                />
-              </div>
             </MapProvider>
           </div>
 

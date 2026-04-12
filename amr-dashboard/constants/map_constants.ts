@@ -11,10 +11,17 @@ export const RISK_COLOUR: Record<ContaminationLevel, RiverColourData> = {
 export const DEFAULT_FILTERS: MapFilters = {
   contaminationLevels: ["low", "moderate", "high", "unknown", "filtered"],
   sites:               [],
-  regions:             [],
   startDate:           "",
   endDate:             "",
 };
+
+export const CONTAMINATION_LEVEL_ORDER: Record<ContaminationLevel, number> = {
+    high: 0,
+    moderate: 1,
+    low: 2,
+    unknown: 3,
+    filtered: 4,
+  };
 
 export const RIVER_SEGMENTS: RiverSegment[] = [
   {  //Fountains Valley source to AP-001 (unknown risk)
