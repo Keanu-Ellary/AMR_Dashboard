@@ -21,8 +21,6 @@ export interface MapProps {
   onSelectSite:  (site: SiteData) => void;
   filters?: MapFilters;
   onFiltersChange: (f: MapFilters) => void;
-  satelliteView: boolean;
-  onViewChange: (view: boolean) => void; 
 }
 
 export type ContaminationLevel = "low" | "moderate" | "high" | "unknown" | "filtered";
