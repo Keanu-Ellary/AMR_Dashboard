@@ -67,17 +67,23 @@ export default function Home() {
       return true;
     });
   
+  const totalHighRiskSites = sites.filter(p => p.dangerZone === "red").length;
+  const totalModerateRiskSites = sites.filter(p => p.dangerZone === "yellow").length;
   return (
     
           <main className="flex-1 overflow-auto p-6">
             <div style={styles.grid}>
               <span style={styles.card}>
                 <span style={styles.cardTitle}>Total Samples:</span>
-                <span style={styles.cardDesc}> 4 </span>
+                <span style={styles.cardDesc}> {sites.length} </span>
               </span>
               <span style={styles.card}>
-                <span style={styles.cardTitle}>Total Isolates:</span>
-                <span style={styles.cardDesc}> 9 </span>
+                <span style={styles.cardTitle}>High Risk Zones:</span>
+                <span style={styles.cardDesc}> {totalHighRiskSites} </span>
+              </span>
+              <span style={styles.card}>
+                <span style={styles.cardTitle}>Moderate Risk Zones:</span>
+                <span style={styles.cardDesc}> {totalModerateRiskSites} </span>
               </span>
             </div>
             <MapProvider>
