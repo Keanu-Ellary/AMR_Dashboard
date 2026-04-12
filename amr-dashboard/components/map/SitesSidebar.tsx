@@ -2,7 +2,14 @@
 
 import type { SiteData } from "@/types/site_types";
 import { RISK_COLOUR, CONTAMINATION_LEVEL_ORDER } from "@/constants/map_constants";
-import { ContaminationLevel, DangerZone, DangerZonesLabels, getDangerZoneLabel } from "@/types/map_types";
+import {  DangerZone, getDangerZoneLabel } from "@/types/map_types";
+import { Trash2Icon } from "lucide-react";
+import { deleteSite } from "@/app/services/siteService";
+import { toast } from "react-toastify";
+import ConfirmDelete from "../add-data/confirmDelete";
+import { useEffect, useState } from "react";
+import { getMe } from "@/app/services/authService";
+
 
 interface SiteListProps {
   points: SiteData[];
@@ -12,12 +19,61 @@ interface SiteListProps {
 
 export default function SiteList({ points, selectedSite, onSelectSite }: SiteListProps) {
 
+  const [siteToDelete, setSiteToDelete] = useState<SiteData | null>(null);
   const getDanger = (zone?: DangerZone)=> zone ? getDangerZoneLabel(zone) : "unknown";
   const sortedPoints = [...points].sort(
     (pointA, pointB) => (CONTAMINATION_LEVEL_ORDER[getDanger(pointA.dangerZone)] ?? 3) - (CONTAMINATION_LEVEL_ORDER[getDanger(pointB.dangerZone)] ?? 3)
   );
+  const [isAdminUser, setIsAdminUser] = useState(false);
+
+  useEffect(() => {
+    isAdmin();
+  });
+
+  const isAdmin = async () => {
+    const response = await getMe();
+    if (response) {
+      const userData = await response.json();
+      setIsAdminUser(userData.user.isAdmin);
+    }
+    setIsAdminUser(false);
+  };
+
+  const handleDeleteSite = async (site: SiteData) => {
+    try {
+      if (!site.id) {
+        toast.error('Site ID is missing.');
+        return;
+      }
+      const response = await deleteSite(site.id);
+      if (response.ok) {
+        toast.success('Site deleted successfully!');
+        setSiteToDelete(null);
+      } else {
+        toast.error('Failed to delete site. Please try again.');
+      }
+    } catch (error) {
+      toast.error('An error occurred while deleting the site. Please try again.');
+    }
+  };
+
+  const handleCancel = () => {
+    setSiteToDelete(null);
+  };
+
+  const handleDeleteClick = (site: SiteData) => {
+    setSiteToDelete(site);
+  }
+
 
   return (
+    <div>
+    <ConfirmDelete
+               site={siteToDelete}
+               handleConfirm={handleDeleteSite.bind(null, siteToDelete!)}
+               handleCancel={handleCancel}
+            />
+
     <div style={styles.wrapper}>
 
       <div style={styles.header}>
@@ -53,17 +109,29 @@ export default function SiteList({ points, selectedSite, onSelectSite }: SiteLis
               />
 
               <div style={styles.itemBody}>
-                <div style={styles.siteName}>{site.geoLocName}</div>
+                <div style={styles.dataWrapper}>
+                  <div style={styles.siteName}>{site.geoLocName}</div>
 
-                <div style={styles.dateRow}>
-                  <span style={styles.dateLabel}>Last sampled:</span>
-                  <span style={styles.dateValue}>{new Date(site.collectionDate).toLocaleDateString("en-ZA", { year: "numeric", month: "short", day: "numeric" })}</span>
+                  <div style={styles.dateRow}>
+                    <span style={styles.dateLabel}>Last sampled:</span>
+                    <span style={styles.dateValue}>{new Date(site.collectionDate).toLocaleDateString("en-ZA", { year: "numeric", month: "short", day: "numeric" })}</span>
+                  </div>
+                </div>
+                 <div>
+                  {isAdminUser && (
+                    <button
+                      onClick={handleDeleteClick.bind(null, site)}
+                    >
+                      <Trash2Icon size={18} />
+                    </button>
+                  )}
                 </div>
               </div>
             </li>
           );
         })}
       </ul>
+    </div>
     </div>
   );
 }
@@ -139,6 +207,13 @@ const styles: Record<string, React.CSSProperties> = {
   itemBody: {
     flex: 1,
     padding:"10px 12px",
+    display: "flex",
+    flexDirection: "row",
+    gap: "2px",
+    minWidth: 0,
+  },
+  dataWrapper: {
+    flex: 1,
     display: "flex",
     flexDirection: "column",
     gap: "2px",
