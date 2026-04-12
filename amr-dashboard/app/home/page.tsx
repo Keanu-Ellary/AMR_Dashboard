@@ -13,7 +13,6 @@ export default function Home() {
   const [selectedSite, setSelectedSite] = useState<SiteData | null>(null);
   const [filters, setFilters] = useState<MapFilters>(DEFAULT_FILTERS);
   const [sites, setSites] = useState<SiteData[]>([]);
-  const [view, setMapView] = useState<boolean>(false);
 
   const handleGetAllSites = async () => {
     const allSitesResponse = await getAllSites();
@@ -68,12 +67,6 @@ export default function Home() {
       return true;
     });
 
-  const handleSwitchToSatelliteView = () => {
-    setMapView(true);
-  }
-  const handleSwitchToStandardView = () => {
-    setMapView(false);
-  }
   
   const totalHighRiskSites = sites.filter(p => p.dangerZone === "red").length;
   const totalModerateRiskSites = sites.filter(p => p.dangerZone === "yellow").length;
@@ -96,21 +89,6 @@ export default function Home() {
                 </span>
 
               </div>
-              <div className="flex gap-2 self-start">
-                <button
-                  onClick = {handleSwitchToStandardView}
-                  className={`px-6 py-2 rounded-md bg-blue-200 text-slate-800 font-medium ${!view ? "bg-blue-300 transition-colors" : "bg-blue-200 transition-colors"}`}
-                >
-                  Standard
-                </button>
-                <button
-                  onClick = {handleSwitchToSatelliteView}
-                  className={`px-6 py-2 rounded-md bg-blue-200 text-slate-800 font-medium ${view ? "bg-blue-300 transition-colors" : "bg-blue-200 transition-colors"}`}
-                
-                >
-                  Satellite
-                </button>
-              </div>
             </div>
             <MapProvider>
               <div style={{ display: "flex", height: "100vh", background: "#ffffff" }}>
@@ -122,8 +100,6 @@ export default function Home() {
                     onSelectSite={setSelectedSite}
                     filters={filters}
                     onFiltersChange={setFilters}
-                    satelliteView={view}
-                    onViewChange={setMapView}
                   />
                 </div>
                 <SitesSidebar

@@ -39,7 +39,8 @@ export async function PATCH(
 
     const token = auth.split(" ")[1];
 
-    const siteId = parseInt(params.id);
+    const { id } = await params;
+    const siteId = parseInt(id);
     
     if (isNaN(siteId))
     {

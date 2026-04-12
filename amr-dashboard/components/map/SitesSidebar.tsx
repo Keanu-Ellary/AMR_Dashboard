@@ -28,15 +28,22 @@ export default function SiteList({ points, selectedSite, onSelectSite }: SiteLis
 
   useEffect(() => {
     isAdmin();
-  });
+  },[]);
+
+  useEffect(() => {
+  }, [isAdminUser]);
 
   const isAdmin = async () => {
-    const response = await getMe();
-    if (response) {
-      const userData = await response.json();
-      setIsAdminUser(userData.user.isAdmin);
+    try {
+      const response = await getMe();
+      if (response) {
+        setIsAdminUser(response.isAdmin ?? false);
+      }else{
+        setIsAdminUser(false);
+      }
+    }catch (error) {
+      toast.error("Could not authenticate user");
     }
-    setIsAdminUser(false);
   };
 
   const handleDeleteSite = async (site: SiteData) => {

@@ -44,7 +44,7 @@ export default function addLegend(map: L.Map) {
 
   div.innerHTML = `
     <div style="${LEGEND_STYLES.wrapper}">
-      <div style="${LEGEND_STYLES.title}">AMR River Contamination</div>
+      <div style="${LEGEND_STYLES.title}">Danger Zone</div>
       ${riskEntries.map(([, v]) => `
         <div style="${LEGEND_STYLES.row}">
           <div style="${LEGEND_STYLES.swatch(v.fill)}"></div>
