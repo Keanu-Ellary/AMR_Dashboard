@@ -12,7 +12,7 @@ import addFilterPanel from "./FilterPanel";
 import { type MapProps } from "@/types/map_types";
 import { DEFAULT_FILTERS } from "@/constants/map_constants";
 
-export default function Map({ points, selectedSite, onSelectSite, filters, onFiltersChange }: MapProps) {
+export default function Map({ points, selectedSite, onSelectSite, filters, onFiltersChange, allPoints }: MapProps) {
   const mapDivRef = useRef<HTMLDivElement>(null); // Leaflet owns this
   const mapRef = useRef<L.Map | null>(null);
   const tileLayerRef = useRef<L.TileLayer | null>(null);
@@ -82,8 +82,8 @@ export default function Map({ points, selectedSite, onSelectSite, filters, onFil
       }
     }
 
-     addFilterPanel(mapRef.current, points, activeFilters, onFiltersChange);
-  }, [points, mapReady])
+     addFilterPanel(mapRef.current, allPoints, activeFilters, onFiltersChange);
+  }, [allPoints, mapReady])
 
   const handleSwitchToSatelliteView = () => {
     setMapView(true);

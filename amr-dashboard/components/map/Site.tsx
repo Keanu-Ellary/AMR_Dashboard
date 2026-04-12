@@ -56,7 +56,7 @@ function siteTooltipHTML(point: SiteData): string {
   return `
     <div style="${TOOLTIP_STYLES.wrapper}">
 
-      <img src="/site.png" alt="${point.sampleName}" style="${TOOLTIP_STYLES.siteImage}" />
+      <img src="/form-image.jpg" alt="${point.sampleName}" style="${TOOLTIP_STYLES.siteImage}" />
       <div style="${TOOLTIP_STYLES.name}">${point.sampleName}</div>
       <div style="${TOOLTIP_STYLES.badge}">
         <span style="${TOOLTIP_STYLES.riskBadge(riskColor.glow, riskColor.fill)}">${riskColor.label}</span>
@@ -96,7 +96,7 @@ function siteTooltipHTML(point: SiteData): string {
         <span style="${TOOLTIP_STYLES.waterValue}">${point.tds?.toFixed(1)} mg/L</span>
       </div>
 
-      <div style="${TOOLTIP_STYLES.link}">View More</div>
+      <div style="${TOOLTIP_STYLES.link}">Click To View More</div>
 
     </div>`;
 }
@@ -146,9 +146,15 @@ export default function Site({
         opacity:   1,
         className: "amr-tooltip",
         offset:    [10, 0],
+        interactive: true,
+        permanent: false,
       });
 
-      marker.on("click", () => onSelectSite(point));
+      const handleViewSiteStats = (point: SiteData) => {
+        window.location.href = `/statistics?site=${point.id}`
+      }
+
+      marker.on("click", () => handleViewSiteStats(point));
       marker.addTo(layer);
       if (point.id)
         markersRef.current[point.id] = marker;

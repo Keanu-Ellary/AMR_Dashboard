@@ -2,8 +2,9 @@ import { addPhotosToSite } from "@/functions/site/addPhotosToSite";
 
 export async function POST(
     req: Request,
-    {params}: {params: {id: string}}
+    {params}: {params: Promise<{id: string}>}
 ) {
+    const {id} = await params;
     const auth = req.headers.get("authorization");
 
     if (!auth)
@@ -16,7 +17,7 @@ export async function POST(
 
     const token = auth.split(" ")[1];
 
-    const siteId = parseInt(params.id);
+    const siteId = parseInt(id);
     
     if (isNaN(siteId))
     {

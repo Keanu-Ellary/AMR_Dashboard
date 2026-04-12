@@ -110,7 +110,7 @@ export async function updateSite(
 
         const siteToUpdate = await prisma.siteData.update({
             where: {id: siteId},
-            data: {fieldsToUpdate, dangerZone},
+            data: {...fieldsToUpdate, dangerZone},
         });
 
         return {

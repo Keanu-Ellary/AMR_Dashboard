@@ -1,12 +1,10 @@
 import { timeInUnsafe } from "@/functions/statistics/timeInUnsafe";
 
-export async function GET(
-    _req: Request,
-    {params}: {params: {id: string}}
-) {
-    const siteId = parseInt(params.id);
+export async function GET(req: Request) {
+    const { searchParams } = new URL(req.url);
+    const siteId = searchParams.get("siteId") ? parseInt(searchParams.get("siteId")!) : undefined;
     
-    if (isNaN(siteId))
+    if (!siteId || isNaN(siteId))
     {
         return Response.json(
             {error: "Invalid Site ID"},

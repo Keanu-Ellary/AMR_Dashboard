@@ -134,7 +134,7 @@ export default function River({ map, activeRisks, selectedYear, points }: RiverP
       river.clearLayers();
       map.removeLayer(river);
     };
-  }, [map, activeRisks, selectedYear]);
+  }, [map, activeRisks, selectedYear, points]);
 
   return null;
 }
