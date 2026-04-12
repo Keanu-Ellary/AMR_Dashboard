@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import clsx from "clsx";
 import { NAV_ITEMS } from "@/constants/navbar_constants";
 import { NavItem } from "@/types/navbar_types";
-import { LogOutIcon } from "lucide-react";
+import { LogOutIcon, UserIcon } from "lucide-react";
 import { logout } from "@/app/services/authService";
 
 
@@ -34,9 +34,7 @@ export default function SideNavBar({isLoggedIn}: { isLoggedIn: boolean }) {
     <div className="w-64 bg-white border-r flex flex-col p-4">
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center font-bold">
-            U
-          </div>
+          <UserIcon size={18}></UserIcon>
           <Link
             href="/login"
             className="font-semibold text-gray-700 hover:text-green-600 transition-colors"
