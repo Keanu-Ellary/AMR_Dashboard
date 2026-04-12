@@ -6,7 +6,7 @@ import SitesSidebar from '@/components/map/SitesSidebar';
 import { Map } from "@/components/map/LoadMap";
 import { SiteData } from '@/types/site_types';
 import { toast } from 'react-toastify';
-import { addSiteData, addMutlipleSiteData, getAllSites } from '@/app/services/siteService';
+import { addSiteData, addMutlipleSiteData, getAllSites, updateSite } from '@/app/services/siteService';
 import ConfirmFile from '@/components/add-data/confirmFile';
 import { DEFAULT_FILTERS } from '@/constants/map_constants';
 import { getDangerZoneLabel, MapFilters } from '@/types/map_types';
@@ -19,7 +19,9 @@ export default function AddDataPage() {
   const imageInputRef = useRef<HTMLInputElement>(null);
   const [imageBase64, setImageBase64] = useState<string | undefined>(undefined);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
-   const [sites, setSites] = useState<SiteData[]>([]);
+  const [sites, setSites] = useState<SiteData[]>([]);
+  const [selectedSite, setSelectedSite] = useState<SiteData | null>(null);
+  const [filters, setFilters] = useState<MapFilters>(DEFAULT_FILTERS);
   
     const handleGetAllSites = async () => {
       const allSitesResponse = await getAllSites();
@@ -35,6 +37,103 @@ export default function AddDataPage() {
       handleGetAllSites();
       filteredPoints;
     }, []);
+
+    useEffect(() => {
+      if (!selectedSite) return;
+
+      setDangerZone("Blue");
+      setFormData({
+        sampleName: selectedSite.sampleName ?? '',
+        isolationSource: selectedSite.isolationSource ?? '',
+        collectionDate: selectedSite.collectionDate ? new Date(selectedSite.collectionDate).toISOString().split('T')[0] : '',
+        geoLocName: selectedSite.geoLocName ?? '',
+        latitude:selectedSite.latitude?.toString() ?? '',
+        longitude:selectedSite.longitude?.toString() ?? '',
+        amrResGenes:selectedSite.amrResGenes ?? '',
+        predictedSir:selectedSite.predictedSir ?? '',
+        sampleAnalysisType: selectedSite.sampleAnalysisType ?? '',
+        dangerZone: dangerZone.toLowerCase() ?? '',
+
+        isolateId:selectedSite.isolateId ?? '',
+        organism: selectedSite.orgamism ?? '',
+        sampleId: selectedSite.sampleId ?? '',
+        collectedBy:selectedSite.collectedBy ?? '',
+        sequenceName:selectedSite.sequenceName ?? '',
+        elementType: selectedSite.elementType ?? '',
+        class: selectedSite.class ?? '',
+        subclass: selectedSite.subclass ?? '',
+        targetLength: selectedSite.targetLength?.toString() ?? '',
+        referenceLength: selectedSite.referenceLength?.toString() ?? '',
+        coverage: selectedSite.coverage?.toString() ?? '',
+        identity:selectedSite.identity?.toString() ?? '',
+        alignmentLength: selectedSite.alignmentLength?.toString() ?? '',
+        accession: selectedSite.accession ?? '',
+        virtulenceGenes: selectedSite.virtulenceGenes ?? '',
+        plasmidReplicons:selectedSite.plasmidReplicons ?? '',
+        temperature: selectedSite.temperature?.toString() ?? '',
+        ph: selectedSite.ph?.toString() ?? '',
+        tds:selectedSite.tds?.toString() ?? '',
+        ec:selectedSite.ec?.toString() ?? '',
+        dissolvedO2:selectedSite.dissolvedO2?.toString() ?? '',
+      });
+
+    }, [selectedSite]);
+
+  const handleUpdateSite = async () => {
+    if (selectedSite && selectedSite.id) {
+      const updateResponse = await updateSite(selectedSite.id, {
+      // required
+      sampleName: formData.sampleName,
+      isolationSource: formData.isolationSource,
+      collectionDate: new Date(formData.collectionDate),
+      geoLocName: formData.geoLocName,
+      latitude: parseFloat(formData.latitude),
+      longitude: parseFloat(formData.longitude),
+      amrResGenes: formData.amrResGenes,
+      predictedSir: formData.predictedSir,
+      sampleAnalysisType: formData.sampleAnalysisType,
+      dangerZone: formData.dangerZone as 'red' | 'yellow' | 'green' | 'blue',
+
+      // water params
+      temperature: formData.temperature ? parseFloat(formData.temperature) : undefined,
+      ph: formData.ph ? parseFloat(formData.ph) : undefined,
+      tds: formData.tds ? parseFloat(formData.tds) : undefined,
+      ec: formData.ec ? parseFloat(formData.ec) : undefined,
+      dissolvedO2: formData.dissolvedO2 ? parseFloat(formData.dissolvedO2) : undefined,
+
+      // optional
+      isolateId: formData.isolateId || undefined,
+      orgamism: formData.organism || undefined,
+      sampleId: formData.sampleId || undefined,
+      collectedBy: formData.collectedBy || undefined,
+      sequenceName: formData.sequenceName || undefined,
+      elementType: formData.elementType || undefined,
+      class: formData.class || undefined,
+      subclass: formData.subclass || undefined,
+      targetLength: formData.targetLength ? parseFloat(formData.targetLength) : undefined,
+      referenceLength: formData.referenceLength ? parseFloat(formData.referenceLength) : undefined,
+      coverage: formData.coverage ? parseFloat(formData.coverage) : undefined,
+      identity: formData.identity ? parseFloat(formData.identity) : undefined,
+      alignmentLength: formData.alignmentLength ? parseFloat(formData.alignmentLength) : undefined,
+      accession: formData.accession || undefined,
+      virtulenceGenes: formData.virtulenceGenes || undefined,
+      plasmidReplicons: formData.plasmidReplicons || undefined,
+
+      // image
+      imageBase64,
+    });
+
+      if (updateResponse.ok) {
+        toast.success("Site data updated successfully");
+        setSelectedSite(null);
+      }else{
+        toast.error("Failed to update site data")
+      }
+
+      handleGetAllSites();
+      handleClear();
+    }
+  }
 
   const [formData, setFormData] = useState({
     // required
@@ -76,6 +175,7 @@ export default function AddDataPage() {
   });
 
   const handleClear = () => {
+    setSelectedSite(null);
     setDangerZone('Blue');
     setFormData({
       // required
@@ -233,10 +333,6 @@ export default function AddDataPage() {
       fileInputRef.current.value = '';
     }
   };
-
-
-   const [selectedSite, setSelectedSite] = useState<SiteData | null>(null);
-    const [filters, setFilters] = useState<MapFilters>(DEFAULT_FILTERS);
    
      const filteredPoints = sites.filter((point) => {
          if (!filters) return true;
@@ -468,12 +564,22 @@ export default function AddDataPage() {
               </div>
 
               <div className="mt-4 flex flex-col gap-2 flex-shrink-0">
-                <button 
+                {selectedSite && (
+                  <button 
+                  className="w-full bg-[#22c55e] text-white py-1.5 rounded-md font-medium hover:bg-[#16a34a] transition text-sm"
+                  onClick={handleUpdateSite}
+                >
+                  Update
+                </button>
+                )}
+                {!selectedSite && (
+                  <button 
                   className="w-full bg-[#22c55e] text-white py-1.5 rounded-md font-medium hover:bg-[#16a34a] transition text-sm"
                   onClick={handleAddData}
                 >
                   Submit
                 </button>
+                )}
 
                 <div className="relative">
                   {/* Hidden file input */}
