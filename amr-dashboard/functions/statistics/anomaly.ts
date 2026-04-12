@@ -30,6 +30,7 @@ export async function anomaliesPerSite() {
             {
                 anomalies.push({
                     id: currSite.id,
+                    sampleName: currSite.sampleName,
                     issues: "Sudden temperature change",
                     changes: jumpTemp
                 });
@@ -39,6 +40,7 @@ export async function anomaliesPerSite() {
             {
                 anomalies.push({
                     id: currSite.id,
+                    sampleName: currSite.sampleName,
                     issues: "Sudden pH change",
                     changes: jumppH
                 });
@@ -48,6 +50,7 @@ export async function anomaliesPerSite() {
             {
                 anomalies.push({
                     id: currSite.id,
+                    sampleName: currSite.sampleName,
                     issues: "Sudden TDS change",
                     changes: jumpTDS
                 });

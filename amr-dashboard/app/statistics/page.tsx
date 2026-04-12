@@ -22,6 +22,7 @@ interface TrendData {
 
 interface Anomaly {
   id: number;
+  sampleName: string;
   issues: string;
   changes: number;
 }
@@ -440,7 +441,7 @@ function StatisticsContent() {
               {anomalies.map((anomaly, index) => (
                 <div key={index} className="bg-yellow-50 p-4 rounded-lg border border-yellow-200 flex justify-between items-center">
                   <div>
-                    <p className="font-semibold text-gray-800">Site ID: {anomaly.id}</p>
+                    <p className="font-semibold text-gray-800">{anomaly.sampleName}</p>
                     <p className="text-sm text-gray-600">{anomaly.issues}</p>
                   </div>
                   <div className="text-right">
