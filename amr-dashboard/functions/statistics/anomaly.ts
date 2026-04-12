@@ -35,7 +35,7 @@ export async function anomaliesPerSite() {
                 });
             }
 
-            if (jumppH > 2)
+            if (jumppH > 5)
             {
                 anomalies.push({
                     id: currSite.id,
@@ -111,7 +111,7 @@ export async function anomalyUpdateCheck(siteId: number, data: {
             });
         }
 
-        if (jumppH > 2)
+        if (jumppH > 5)
         {
             anomalies.push({
                 id: siteId,

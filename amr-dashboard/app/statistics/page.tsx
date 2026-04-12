@@ -69,7 +69,7 @@ function StatisticsContent() {
 
         if (anomalyRes.ok) {
           const anomalyDataRes = await anomalyRes.json();
-          setAnomalies(anomalyDataRes);
+          setAnomalies(anomalyDataRes.anomalies || []);
         }
 
         if (wqiRes.ok) {
