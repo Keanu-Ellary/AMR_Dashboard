@@ -39,3 +39,16 @@ export async function getAllSites() {
 
     return response;
 }
+
+export async function deleteSite(siteId: number) {
+    const user = await getMe();
+    const token = user?.token;
+
+    const strId = siteId.toString();
+    const response = await fetch(`/api/site/${strId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    return response;
+}
