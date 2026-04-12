@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { MapPin, TrendingUp, TrendingDown } from "lucide-react";
+import { MapPin, TrendingUp, TrendingDown, Download } from "lucide-react";
 import type { SiteData } from "@/types/site_types";
+import { exportStatistics, ExportFormat } from "@/functions/statistics/exportData";
 
 export const dynamic = "force-dynamic";
 
@@ -46,6 +47,171 @@ function StatisticsContent() {
   const [siteAnomalies, setSiteAnomalies] = useState<Anomaly[]>([]);
   const [wqiData, setWqiData] = useState<WQIData[]>([]);
   const [timeInUnsafe, setTimeInUnsafe] = useState<number | null>(null);
+  const [showExportMenu, setShowExportMenu] = useState(false);
+
+  
+  const handleExportSiteSpecific = (format: ExportFormat) => {
+    const exportData = [
+      {
+        field: "Sample Name",
+        value: siteData?.sampleName || "N/A",
+      },
+      {
+        field: "Location",
+        value: siteData?.geoLocName || "N/A",
+      },
+      {
+        field: "Collection Date",
+        value: siteData?.collectionDate ? new Date(siteData.collectionDate).toLocaleDateString() : "N/A",
+      },
+      {
+        field: "Latitude",
+        value: siteData?.latitude?.toFixed(5) || "N/A",
+      },
+      {
+        field: "Longitude",
+        value: siteData?.longitude?.toFixed(5) || "N/A",
+      },
+      {
+        field: "Water Temperature (°C)",
+        value: siteData?.temperature?.toFixed(1) || "N/A",
+      },
+      {
+        field: "pH Level",
+        value: siteData?.ph?.toFixed(1) || "N/A",
+      },
+      {
+        field: "TDS (mg/L)",
+        value: siteData?.tds?.toFixed(1) || "N/A",
+      },
+      {
+        field: "Dissolved O₂ (mg/L)",
+        value: siteData?.dissolvedO2?.toFixed(2) || "N/A",
+      },
+      {
+        field: "EC (µS/cm)",
+        value: siteData?.ec?.toFixed(1) || "N/A",
+      },
+      {
+        field: "Water Quality %",
+        value: waterQualityPercent.toFixed(1),
+      },
+      {
+        field: "Time in Unsafe Zone (hours)",
+        value: timeInUnsafe?.toFixed(1) || "N/A",
+      },
+      {
+        field: "Isolation Source",
+        value: siteData?.isolationSource || "N/A",
+      },
+      {
+        field: "AMR Resistance Genes",
+        value: siteData?.amrResGenes || "N/A",
+      },
+      {
+        field: "Predicted SIR",
+        value: siteData?.predictedSir || "N/A",
+      },
+      {
+        field: "Sample Analysis Type",
+        value: siteData?.sampleAnalysisType || "N/A",
+      },
+    ];
+
+   
+    if (siteAnomalies.length > 0) {
+      exportData.push({ field: "---Anomalies---", value: "" });
+      siteAnomalies.forEach((anomaly) => {
+        exportData.push({
+          field: anomaly.issues,
+          value: anomaly.changes.toFixed(2),
+        });
+      });
+    }
+
+    exportStatistics(exportData, format, `site_${siteData?.sampleName || "statistics"}`);
+    setShowExportMenu(false);
+  };
+
+  const handleExportSystemWide = (format: ExportFormat) => {
+    const exportData: any[] = [];
+
+ 
+    if (averageMetrics) {
+      exportData.push({
+        section: "System Averages",
+        metric: "Average pH",
+        value: averageMetrics.avgpH.toFixed(1),
+      },
+      {
+        section: "System Averages",
+        metric: "Average Temperature (°C)",
+        value: averageMetrics.avgTemp.toFixed(1),
+      },
+      {
+        section: "System Averages",
+        metric: "Average Dissolved O₂ (mg/L)",
+        value: averageMetrics.avgDiss.toFixed(2),
+      },
+      {
+        section: "System Averages",
+        metric: "Average TDS (mg/L)",
+        value: averageMetrics.avgTDS.toFixed(1),
+      });
+    }
+
+   
+    if (trendData) {
+      exportData.push(
+        {
+          section: "Water Quality Trend (Last 7 Days)",
+          metric: "Current Score (%)",
+          value: (trendData.currScore * 100).toFixed(1),
+        },
+        {
+          section: "Water Quality Trend (Last 7 Days)",
+          metric: "Previous Score (%)",
+          value: (trendData.prevScore * 100).toFixed(1),
+        },
+        {
+          section: "Water Quality Trend (Last 7 Days)",
+          metric: "Overall Trend",
+          value: trendData.trend,
+        },
+        {
+          section: "Water Quality Trend (Last 7 Days)",
+          metric: "Change (%)",
+          value: ((trendData.currScore - trendData.prevScore) * 100).toFixed(1),
+        }
+      );
+    }
+
+ 
+    if (anomalies.length > 0) {
+      anomalies.forEach((anomaly) => {
+        exportData.push({
+          section: "Detected Anomalies",
+          metric: anomaly.sampleName,
+          submetric: anomaly.issues,
+          value: anomaly.changes.toFixed(2),
+        });
+      });
+    }
+
+
+    if (wqiData.length > 0) {
+      wqiData.forEach((site) => {
+        exportData.push({
+          section: "Water Quality Index (All Sites)",
+          metric: `Site ${site.id}`,
+          value: site.WQI.toFixed(1),
+        });
+      });
+    }
+
+    exportStatistics(exportData, format, "system_statistics");
+    setShowExportMenu(false);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -138,13 +304,54 @@ function StatisticsContent() {
     );
   }
 
+ 
+  const ExportDropdown = ({ onExport }: { onExport: (format: ExportFormat) => void }) => (
+    <div className="relative inline-block">
+      <button
+        onClick={() => setShowExportMenu(!showExportMenu)}
+        className="flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors font-medium"
+      >
+        <Download size={18} />
+        Export
+      </button>
+
+      {showExportMenu && (
+        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-10">
+          <div className="py-2">
+            <button
+              onClick={() => onExport("csv")}
+              className="w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-700"
+            >
+              Export as CSV
+            </button>
+            <button
+              onClick={() => onExport("tsv")}
+              className="w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-700"
+            >
+              Export as TSV
+            </button>
+            <button
+              onClick={() => onExport("json")}
+              className="w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-700"
+            >
+              {} Export as JSON
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
   // SITE-SPECIFIC VIEW
   if (siteId && siteData) {
     return (
       <main className="flex-1 overflow-auto p-6">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">{siteData.sampleName} - Statistics</h1>
-          <p className="text-gray-600 mt-2">Detailed metrics for this sampling site</p>
+        <div className="mb-6 flex items-start justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">{siteData.sampleName} - Statistics</h1>
+            <p className="text-gray-600 mt-2">Detailed metrics for this sampling site</p>
+          </div>
+          <ExportDropdown onExport={handleExportSiteSpecific} />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-[1400px] mx-auto w-full">
@@ -303,9 +510,12 @@ function StatisticsContent() {
   // SYSTEM-WIDE VIEW (no site selected)
   return (
     <main className="flex-1 overflow-auto p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">System Statistics</h1>
-        <p className="text-gray-600 mt-2">Overall metrics across all sampling sites</p>
+      <div className="mb-8 flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">System Statistics</h1>
+          <p className="text-gray-600 mt-2">Overall metrics across all sampling sites</p>
+        </div>
+        <ExportDropdown onExport={handleExportSystemWide} />
       </div>
 
       <div className="space-y-6 max-w-[1400px] mx-auto w-full">
