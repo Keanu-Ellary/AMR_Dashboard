@@ -12,9 +12,10 @@ import addFilterPanel from "./FilterPanel";
 import { getDangerZoneLabel, type MapProps } from "@/types/map_types";
 import { DEFAULT_FILTERS } from "@/constants/map_constants";
 
-export default function Map({ points, selectedSite, onSelectSite, filters, onFiltersChange }: MapProps) {
+export default function Map({ points, selectedSite, onSelectSite, filters, onFiltersChange, satelliteView }: MapProps) {
   const mapDivRef = useRef<HTMLDivElement>(null); // Leaflet owns this
-  const mapRef    = useRef<L.Map | null>(null);
+  const mapRef = useRef<L.Map | null>(null);
+  const tileLayerRef = useRef<L.TileLayer | null>(null);
   const { setMap } = useMapContext();
 
   const activeFilters = filters ?? DEFAULT_FILTERS;
@@ -29,9 +30,12 @@ export default function Map({ points, selectedSite, onSelectSite, filters, onFil
       zoom:   11,
     });
 
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 18,
-    }).addTo(map);
+    if (satelliteView)
+    {
+      tileLayerRef.current = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 18,
+      }).addTo(map);
+    }
 
     map.whenReady(() => {
       addLegend(map);
@@ -49,11 +53,28 @@ export default function Map({ points, selectedSite, onSelectSite, filters, onFil
     };
   }, []);
 
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+
+    if (satelliteView)
+    {
+      tileLayerRef.current = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 18,
+      }).addTo(mapRef.current);
+    }else{
+      if (tileLayerRef.current && mapRef.current) {
+        mapRef.current.removeLayer(tileLayerRef.current);
+      }
+    }
+
+  }, [satelliteView]);
+
   return (
     <div style={{ width: "100%", height: "100%", position: "relative" }}>
 
       {/* Inner div for Leaflet */}
-      <div ref={mapDivRef} style={{ width: "100%", height: "100%" }} />
+      <div ref={mapDivRef} style={{ width: "100%", height: "100%", background: satelliteView? "transparent" : "#eeffe3" }} />
 
       {mapReady && mapRef.current && (
         <>
