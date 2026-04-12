@@ -9,6 +9,7 @@ function renderHTML(
   filters:       MapFilters,
   uniqueSites:   string[],
 ): string {
+  const riskEntries = Object.entries(RISK_COLOUR).filter(([key]) => key !== "filtered");
   return `
     <div style="${FILTER_STYLES.wrapper}">
 
@@ -16,7 +17,7 @@ function renderHTML(
 
       <div style="${FILTER_STYLES.section}">
         <div style="${FILTER_STYLES.sectionTitle}">Contamination Level</div>
-        ${Object.entries(RISK_COLOUR).map(([level, v]) => `
+        ${riskEntries.map(([level, v]) => `
           <div style="${FILTER_STYLES.row}">
             <input type="checkbox" data-level="${level}"
               ${filters.contaminationLevels?.includes(level as ContaminationLevel) ? "checked" : ""}
