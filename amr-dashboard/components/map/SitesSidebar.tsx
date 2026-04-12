@@ -9,6 +9,7 @@ import { toast } from "react-toastify";
 import ConfirmDelete from "../add-data/confirmDelete";
 import { useEffect, useState } from "react";
 import { getMe } from "@/app/services/authService";
+import { unique } from "next/dist/build/utils";
 
 
 interface SiteListProps {
@@ -21,7 +22,19 @@ export default function SiteList({ points, selectedSite, onSelectSite }: SiteLis
 
   const [siteToDelete, setSiteToDelete] = useState<SiteData | null>(null);
   const getDanger = (zone?: DangerZone)=> zone ? getDangerZoneLabel(zone) : "unknown";
-  const sortedPoints = [...points].sort(
+
+  const uniqueSites = Object.values(
+    points.reduce<Record<string, SiteData>>((uniquePoints, point ) => {
+      const coords = `${point.latitude}, ${point.longitude}`;
+      const uniquePoint = uniquePoints[coords];
+      if (!uniquePoint || new Date(point.collectionDate) > new Date(uniquePoint.collectionDate)) {
+        uniquePoints[coords] = point;
+      }
+      return uniquePoints;
+    }, {} as Record<string, SiteData>)
+  );
+
+  const sortedPoints = [...uniqueSites].sort(
     (pointA, pointB) => (CONTAMINATION_LEVEL_ORDER[getDanger(pointA.dangerZone)] ?? 3) - (CONTAMINATION_LEVEL_ORDER[getDanger(pointB.dangerZone)] ?? 3)
   );
   const [isAdminUser, setIsAdminUser] = useState(false);
@@ -85,7 +98,7 @@ export default function SiteList({ points, selectedSite, onSelectSite }: SiteLis
 
       <div style={styles.header}>
         <span style={styles.headerTitle}>Sampling Sites</span>
-        <span style={styles.headerCount}>{points.length} sites</span>
+        <span style={styles.headerCount}>{uniqueSites.length} sites</span>
       </div>
 
       <ul style={styles.list}>
