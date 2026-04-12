@@ -35,7 +35,8 @@ interface WQIData {
 
 function StatisticsContent() {
   const searchParams = useSearchParams();
-  const siteId = searchParams.get("site");
+  const siteIdParam = searchParams.get("site");
+  const siteId = siteIdParam ? parseInt(siteIdParam) : null;
   
   const [siteData, setSiteData] = useState<SiteData | null>(null);
   const [loading, setLoading] = useState(true);
