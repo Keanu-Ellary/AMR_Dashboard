@@ -2,6 +2,67 @@ import {prisma} from "../../lib/db"
 import { adminNeeded } from "../../lib/middleware/authMiddleware";
 import { minioClient, BUCKET } from "../../lib/minio";
 
+function checkSIR(predictedSir: string)
+{
+    if(predictedSir.includes("R"))
+    {
+        return "red"
+    }
+    else if (predictedSir.includes("I"))
+    {
+        return "yellow"
+    }
+    else
+    {
+        return "green"
+    }
+}
+
+function checkGene(amrResGenes:string) 
+{
+    const redGenes = ["blaNDM-1", "mcr-1", "blaKPC", "vanA", "mecA"];
+    const yellowGenes = ["tet(A)", "blaTEM-1", "qnrS1", "erm(B)", "strA"];
+    const greenGenes = ["ampC_intrinsic", "acrB", "bacA", "tolC", "merA"];
+
+    if (redGenes.find((gene) => gene === amrResGenes))
+    {
+        return "red"
+    }
+    else if (yellowGenes.find((gene) => gene ===  amrResGenes))
+    {
+        return "yellow";
+    }
+    else if (greenGenes.find((gene) => gene ===  amrResGenes))
+    {
+        return "green"
+    }
+}
+
+export function determineDangerZone(sir:string, resGene: string) {
+    const amrColour = checkSIR(sir);
+    const geneColour = checkGene(resGene);
+    if (amrColour === "red" || geneColour === "red")
+    {
+        return "red"
+    }
+    else if (amrColour === "yellow" && geneColour === "yellow")
+    {
+        return "yellow"
+    }
+    else if (amrColour === "yellow" && geneColour === "green")
+    {
+        return "yellow"
+    }
+    else if (amrColour === "green" && geneColour === "yellow")
+    {
+        return "yellow"
+    }
+    else 
+    {
+        return "green"
+    }
+}
+
 export async function uploadSiteData(token: string, 
     data: {
         // required:
@@ -37,9 +98,6 @@ export async function uploadSiteData(token: string,
         tds?: number;
         ec?: number;
         dissolvedO2?: number;
-        
-        // extra
-        dangerZone?: "red" | "yellow";
     },
     imageBase64?: string
 ) {
@@ -68,6 +126,8 @@ export async function uploadSiteData(token: string,
             throw new Error("Invalid pH level");
         }
 
+        const dangerZone = determineDangerZone(data.predictedSir, data.amrResGenes);
+
         let imageURL: string | null = null;
 
         if (imageBase64)
@@ -91,6 +151,7 @@ export async function uploadSiteData(token: string,
         const newSite = await prisma.siteData.create({
             data: {
                 ...data,
+                dangerZone,
                 adminId: authorize.user.userId,
                 images: imageURL
                 ? {

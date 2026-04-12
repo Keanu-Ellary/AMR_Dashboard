@@ -39,7 +39,6 @@ describe("uploadSiteData", () => {
             amrResGenes: "geneA, geneB",
             predictedSir: "Resistant",
             sampleAnalysisType: "Metagenomic",
-            dangerZone: "red"
         }, base64Image);
 
         expect(res.statusCode).toBe(201);
@@ -86,7 +85,6 @@ describe("uploadSiteData", () => {
             amrResGenes: "geneA, geneB",
             predictedSir: "Resistant",
             sampleAnalysisType: "Metagenomic",
-            dangerZone: "red"
         });
 
         expect(res.statusCode).toBe(201);
@@ -119,7 +117,6 @@ describe("uploadSiteData", () => {
             amrResGenes: "geneA, geneB",
             predictedSir: "Resistant",
             sampleAnalysisType: "Metagenomic",
-            dangerZone: "red"
         });
 
         expect(res.statusCode).toBe(401);

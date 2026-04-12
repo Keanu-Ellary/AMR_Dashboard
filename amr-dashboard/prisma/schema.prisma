@@ -63,7 +63,7 @@ model SiteData {
   ec               Float? // Electirical Conductivity
   dissolvedO2      Float?
 
-  dangerZone String? // "red" | "yellow"
+  dangerZone String // "red" | "yellow" | "green"
 
   createdAt DateTime    @default(now())
   adminId   Int
