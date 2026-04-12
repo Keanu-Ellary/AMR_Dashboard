@@ -142,3 +142,73 @@ export async function anomalyUpdateCheck(siteId: number, data: {
         };
     }
 }
+
+export async function anomalyForSite(siteId: number) {
+    try {
+        const sites = await prisma.siteData.findMany({
+            where: { id: { lte: siteId } },
+            orderBy: { createdAt: "asc" },
+        });
+
+        const anomalies = [];
+
+        for (let j = 1; j < sites.length; j++) {
+            const prevSite = sites[j - 1];
+            const currSite = sites[j];
+
+            // Only check anomalies for the specific site
+            if (currSite.id !== siteId) continue;
+
+            if (
+                prevSite.temperature == null ||
+                currSite.temperature == null ||
+                prevSite.ph == null ||
+                currSite.ph == null ||
+                prevSite.tds == null ||
+                currSite.tds == null
+            ) {
+                continue;
+            }
+
+            const jumpTemp = Math.abs(currSite.temperature - prevSite.temperature);
+            const jumppH = Math.abs(currSite.ph - prevSite.ph);
+            const jumpTDS = Math.abs(currSite.tds - prevSite.tds);
+
+            if (jumpTemp > 5) {
+                anomalies.push({
+                    id: currSite.id,
+                    issues: "Sudden temperature change",
+                    changes: jumpTemp
+                });
+            }
+
+            if (jumppH > 5) {
+                anomalies.push({
+                    id: currSite.id,
+                    issues: "Sudden pH change",
+                    changes: jumppH
+                });
+            }
+
+            if (jumpTDS > 5) {
+                anomalies.push({
+                    id: currSite.id,
+                    issues: "Sudden TDS change",
+                    changes: jumpTDS
+                });
+            }
+        }
+
+        return {
+            statusCode: 200,
+            body: anomalies
+        };
+    } catch (error) {
+        console.error(error);
+
+        return {
+            statusCode: 500,
+            body: { error: "Failed to get anomalies for site" }
+        };
+    }
+}

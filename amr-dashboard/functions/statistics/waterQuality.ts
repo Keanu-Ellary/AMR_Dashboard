@@ -19,8 +19,92 @@ function getDistance(
     return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-export async function waterQuality() {
+export async function waterQuality(siteId?: number) {
     try {
+        // water quality calc for specific site 
+        if (siteId) {
+            const site = await prisma.siteData.findUnique({
+                where: { id: siteId }
+            });
+
+            if (!site) {
+                return {
+                    statusCode: 404,
+                    body: { error: "Site not found" }
+                };
+            }
+
+            let qualityScore = 100;
+
+            // pH assessment 
+            if (site.ph !== null) {
+                if (site.ph >= 6.5 && site.ph <= 8.5) {
+                    
+                } else if (site.ph >= 6 && site.ph <= 9) {
+                    qualityScore -= 10; 
+                } else {
+                    qualityScore -= 25; 
+                }
+            }
+
+            // Temperature assessment
+            if (site.temperature !== null) {
+                if (site.temperature >= 15 && site.temperature <= 25) {
+                    
+                } else if (site.temperature >= 10 && site.temperature <= 30) {
+                    qualityScore -= 10;
+                } else {
+                    qualityScore -= 20;
+                }
+            }
+
+            // TDS assessment 
+            if (site.tds !== null) {
+                if (site.tds < 500) {
+                    
+                } else if (site.tds < 1000) {
+                    qualityScore -= 15;
+                } else {
+                    qualityScore -= 30;
+                }
+            }
+
+            // Dissolved Oxygen assessment
+            if (site.dissolvedO2 !== null) {
+                if (site.dissolvedO2 > 5) {
+                } else if (site.dissolvedO2 > 3) {
+                    qualityScore -= 15;
+                } else {
+                    qualityScore -= 30;
+                }
+            }
+
+            // Danger zone assessment
+            if (site.dangerZone === "red") {
+                qualityScore -= 25;
+            } else if (site.dangerZone === "yellow") {
+                qualityScore -= 10;
+            }
+
+           
+            const percentageClean = Math.max(0, Math.min(100, qualityScore));
+
+            return {
+                statusCode: 200,
+                body: {
+                    percentageClean: Number(percentageClean.toFixed(2)),
+                    dangerZone: site.dangerZone || "unknown",
+                    parameters: {
+                        ph: site.ph,
+                        temperature: site.temperature,
+                        tds: site.tds,
+                        dissolvedO2: site.dissolvedO2
+                    }
+                }
+            };
+        }
+
+        // System-wide water quality calculation (all sites)
         const sites = await prisma.siteData.findMany({
             orderBy: {
                 latitude: "asc"
@@ -38,17 +122,19 @@ export async function waterQuality() {
         const totalDistance = 16;
         let contaminatedDistance = 0;
 
-        for (let j = 0; j < sites.length; j++)
+        for (let j = 0; j < sites.length - 1; j++)
         {
             const curr = sites[j];
             const next = sites[j + 1];
 
-            contaminatedDistance = getDistance(
-                curr.latitude,
-                curr.longitude,
-                next.latitude,
-                next.longitude
-            );
+            if (curr.dangerZone === "red" || next.dangerZone === "red") {
+                contaminatedDistance += getDistance(
+                    curr.latitude,
+                    curr.longitude,
+                    next.latitude,
+                    next.longitude
+                );
+            }
         }
 
         const percentageClean = 100 - ((contaminatedDistance / totalDistance) * 100);
@@ -66,7 +152,7 @@ export async function waterQuality() {
 
         return {
             statusCode: 500,
-            body: {error: "Failed to calculate water quality"}
+            body: { error: "Failed to calculate water quality" }
         }
     }
 }

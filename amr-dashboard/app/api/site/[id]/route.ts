@@ -4,9 +4,10 @@ import { deleteSite } from "@/functions/site/deleteSite";
 
 export async function GET(
     _req : Request,
-    {params}: {params: {id: string}}
+    {params}: {params: Promise<{id: string}>}
 ) {
-    const siteId = parseInt(params.id);
+    const {id} = await params;
+    const siteId = parseInt(id);
     
     if (isNaN(siteId))
     {
@@ -25,7 +26,7 @@ export async function GET(
 
 export async function PATCH(
     req : Request,
-    {params}: {params: {id: string}}
+    {params}: {params: Promise<{id: string}>}
 ) {
     const auth = req.headers.get("authorization");
 
@@ -61,8 +62,9 @@ export async function PATCH(
 
 export async function DELETE(
     req : Request,
-    {params}: {params: {id: string}}
+    {params}: {params: Promise<{id: string}>}
 ) {
+    const {id} = await params;
     const auth = req.headers.get("authorization");
 
     if (!auth)
@@ -75,7 +77,6 @@ export async function DELETE(
 
     const token = auth.split(" ")[1];
 
-     const { id } = await params;
     const siteId = parseInt(id);
     
     if (isNaN(siteId))

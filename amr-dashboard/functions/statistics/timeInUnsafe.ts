@@ -5,6 +5,7 @@ export async function timeInUnsafe(siteId: number) {
         const data = await prisma.siteData.findUnique({
             where: {id: siteId},
             select: {
+                dangerZone: true,
                 createdAt: true
            }
         });
@@ -17,14 +18,22 @@ export async function timeInUnsafe(siteId: number) {
             }
         };
 
-        const now = new Date();
-        const timeStartedAtRed = data.createdAt.getTime();
-        const timeStoppedRed = now.getTime() - timeStartedAtRed;
+        if (data.dangerZone === "red") {
+            const now = new Date();
+            const timeInRedZone = now.getTime() - data.createdAt.getTime();
+            
+            return {
+                statusCode: 200,
+                body: {
+                    totalRedTime: timeInRedZone / (1000 * 60 * 60)
+                }
+            };
+        }
 
         return {
             statusCode: 200,
             body: {
-                totalRedTime: timeStoppedRed / (1000 * 60 * 60)
+                totalRedTime: 0
             }
         };
     } catch (error) {

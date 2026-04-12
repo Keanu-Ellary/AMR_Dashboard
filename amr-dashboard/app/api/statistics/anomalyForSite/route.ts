@@ -1,4 +1,4 @@
-import { anomalyUpdateCheck } from "@/functions/statistics/anomaly";
+import { anomalyForSite } from "@/functions/statistics/anomaly";
 
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
@@ -12,17 +12,7 @@ export async function GET(req: Request) {
         );
     }
 
-    const body = await req.json()
-
-    if (!body.temperature || !body.tds || !body.ph)
-    {
-        return Response.json(
-            {"error": "Cannot perform anomaly check with missing data"},
-            {status: 500}
-        );
-    }
-
-    const res = await anomalyUpdateCheck(siteId, body);
+    const res = await anomalyForSite(siteId);
 
     return Response.json(res.body, {
         status: res.statusCode
