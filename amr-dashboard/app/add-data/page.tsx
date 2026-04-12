@@ -640,8 +640,6 @@ export default function AddDataPage() {
                                 onSelectSite={setSelectedSite}
                                 filters={filters}
                                 onFiltersChange={setFilters}
-                                satelliteView={false}
-                                onViewChange={() => {}}
                               />
                   </div>
                   <SitesSidebar

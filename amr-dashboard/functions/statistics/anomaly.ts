@@ -35,7 +35,7 @@ export async function anomaliesPerSite() {
                 });
             }
 
-            if (jumppH > 5)
+            if (jumppH > 2)
             {
                 anomalies.push({
                     id: currSite.id,
@@ -44,7 +44,7 @@ export async function anomaliesPerSite() {
                 });
             }
 
-            if (jumpTDS > 5)
+            if (jumpTDS > 100)
             {
                 anomalies.push({
                     id: currSite.id,
@@ -56,7 +56,7 @@ export async function anomaliesPerSite() {
 
         return {
             statusCode: 200,
-            body: anomalies
+            body: {anomalies}
         }
     } catch (error) {
         console.error(error);
@@ -131,7 +131,7 @@ export async function anomalyUpdateCheck(siteId: number, data: {
 
         return {
             statusCode: 200,
-            body: anomalies
+            body: {anomalies}
         };
     } catch (error) {
         console.error(error);

@@ -1,5 +1,7 @@
 import { prisma } from "../../lib/db"
 import { adminNeeded } from "../../lib/middleware/authMiddleware";
+import { timeInUnsafe } from "../statistics/timeInUnsafe";
+import { determineDangerZone } from "./uploadSiteData";
 
 export async function updateSite(
     token: string,
@@ -38,9 +40,6 @@ export async function updateSite(
         tds?: number;
         ec?: number;
         dissolvedO2?: number;
-        
-        // extra
-        dangerZone?: "red" | "yellow";
     }
 ) {
     const authorize = adminNeeded(token);
@@ -66,12 +65,27 @@ export async function updateSite(
             };
         }
 
+        let dangerZone = siteExists.dangerZone;
+
         if (updates.ph !== undefined && (updates.ph < 0 || updates.ph > 14))
         {
             return {
                 statusCode: 400,
                 body: {error: "Invalid pH level"}
             };
+        }
+
+        if(updates.predictedSir !== undefined && updates.amrResGenes !== undefined)
+        {
+            dangerZone = determineDangerZone(updates.predictedSir, updates.amrResGenes);
+        } 
+        else if (updates.predictedSir === undefined && updates.amrResGenes !== undefined)
+        {
+            dangerZone = determineDangerZone(siteExists.predictedSir, updates.amrResGenes);
+        }
+        else if (updates.predictedSir !== undefined && updates.amrResGenes === undefined)
+        {
+            dangerZone = determineDangerZone(updates.predictedSir, siteExists.amrResGenes);
         }
 
         const fieldsToUpdate = Object.fromEntries(
@@ -86,14 +100,25 @@ export async function updateSite(
             };
         }
 
+        let totalRedTime = null;
+        const timeChange = await timeInUnsafe(siteExists.id);
+
+        if (timeChange.statusCode ===  200)
+        {
+            totalRedTime = timeChange.body.totalRedTime;
+        }
+
         const siteToUpdate = await prisma.siteData.update({
             where: {id: siteId},
-            data: fieldsToUpdate,
+            data: {fieldsToUpdate, dangerZone},
         });
 
         return {
             statusCode: 200,
-            body: {siteToUpdate}
+            body: {
+                siteToUpdate, 
+                totalRedTime,
+            }
         };
     } catch (error) {
         console.error(error);

@@ -119,7 +119,7 @@ export async function waterQuality(siteId?: number) {
             };
         }
 
-        const totalDistance = 16;
+        let totalDistance = 0;
         let contaminatedDistance = 0;
 
         for (let j = 0; j < sites.length - 1; j++)
@@ -137,7 +137,7 @@ export async function waterQuality(siteId?: number) {
             }
         }
 
-        const percentageClean = 100 - ((contaminatedDistance / totalDistance) * 100);
+        const percentageClean = totalDistance === 0 ? 100 : 100 - ((contaminatedDistance / totalDistance) * 100);
 
         return {
             statusCode: 200,
