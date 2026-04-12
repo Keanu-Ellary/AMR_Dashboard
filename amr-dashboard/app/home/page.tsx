@@ -127,8 +127,7 @@ const styles: Record<string, React.CSSProperties> = {
     display: "flex",
     flexDirection: "column",
     alignItems: "flex-start",
-    gap: "8px",
-    padding: "20px",
+    padding: "16px",
     background: "#94c8ff",
     borderRadius:"8px",
   },
@@ -138,7 +137,7 @@ const styles: Record<string, React.CSSProperties> = {
     color: "#060606",
   },
   cardDesc: {
-    fontSize: "12px",
+    fontSize: "24px",
     color: "#141415",
     lineHeight: 1.6,
   },
