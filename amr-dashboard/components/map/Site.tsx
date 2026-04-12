@@ -56,7 +56,7 @@ function siteTooltipHTML(point: SiteData): string {
   return `
     <div style="${TOOLTIP_STYLES.wrapper}">
 
-      <img src="/site.png" alt="${point.sampleName}" style="${TOOLTIP_STYLES.siteImage}" />
+      <img src="/form-image.jpg" alt="${point.sampleName}" style="${TOOLTIP_STYLES.siteImage}" />
       <div style="${TOOLTIP_STYLES.name}">${point.sampleName}</div>
       <div style="${TOOLTIP_STYLES.badge}">
         <span style="${TOOLTIP_STYLES.riskBadge(riskColor.glow, riskColor.fill)}">${riskColor.label}</span>
