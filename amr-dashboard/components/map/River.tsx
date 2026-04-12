@@ -68,9 +68,9 @@ export default function River({ map, activeRisks, selectedYear, points }: RiverP
       const pointCoords: [number, number][] = orderedPoints.map(point => [Number(point.latitude), Number(point.longitude)]);
 
       L.polyline(pointCoords, {
-        color: "#007bff",
+        color: RISK_COLOUR.unknown.fill,
         weight: 4,
-        opacity: 0.8,
+        opacity: 1.0,
         lineCap: "round",
         lineJoin: "round",
       }).addTo(river);
