@@ -47,7 +47,7 @@ export default function AddDataPage() {
     amrResGenes: '',
     predictedSir: '',
     sampleAnalysisType: '',
-    dangerZone: '',
+    dangerZone: 'blue',
 
     // optional
     isolateId: '',
@@ -76,7 +76,7 @@ export default function AddDataPage() {
   });
 
   const handleClear = () => {
-    setDangerZone('Choose Zone');
+    setDangerZone('Blue');
     setFormData({
       // required
     sampleName: '',
@@ -88,7 +88,7 @@ export default function AddDataPage() {
     amrResGenes: '',
     predictedSir: '',
     sampleAnalysisType: '',
-    dangerZone: '',
+    dangerZone: 'blue',
 
     // optional
     isolateId: '',
@@ -163,7 +163,7 @@ export default function AddDataPage() {
       amrResGenes: formData.amrResGenes,
       predictedSir: formData.predictedSir,
       sampleAnalysisType: formData.sampleAnalysisType,
-      dangerZone: formData.dangerZone as 'red' | 'yellow' | 'green' | 'blue' | undefined,
+      dangerZone: formData.dangerZone as 'red' | 'yellow' | 'green' | 'blue',
 
       // water params
       temperature: formData.temperature ? parseFloat(formData.temperature) : undefined,
@@ -206,7 +206,6 @@ export default function AddDataPage() {
   }
 
   const handleAddFileData = async() => {
-    console.log('Adding file data...');
     if (!pendingFile) {
       toast.error('No file selected. Please select a file to import.');
       return;
@@ -361,7 +360,6 @@ export default function AddDataPage() {
                     value={dangerZone}
                     onChange={(e) => setDangerZone(e.target.value)}
                   >
-                    <option>Choose Zone</option>
                     <option>Red</option>
                     <option>Yellow</option>
                     <option>Green</option>
