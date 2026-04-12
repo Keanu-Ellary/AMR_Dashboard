@@ -8,6 +8,8 @@ import { SiteData } from '@/types/site_types';
 import { toast } from 'react-toastify';
 import { addSiteData, addMutlipleSiteData, getAllSites } from '@/app/services/siteService';
 import ConfirmFile from '@/components/add-data/confirmFile';
+import { DEFAULT_FILTERS } from '@/constants/map_constants';
+import { getDangerZoneLabel, MapFilters } from '@/types/map_types';
 
 export default function AddDataPage() {
   const [dangerZone, setDangerZone] = useState('Choose Zone');
@@ -31,6 +33,7 @@ export default function AddDataPage() {
   
     useEffect(() => {
       handleGetAllSites();
+      filteredPoints;
     }, []);
 
   const [formData, setFormData] = useState({
@@ -193,6 +196,8 @@ export default function AddDataPage() {
     if (response.status === 200 || response.status === 201) {
       toast.success('Site data added successfully!');
       handleClear();
+      handleGetAllSites();
+      filteredPoints;
     } else {
       toast.error('Failed to add site data. Please try again.');
     }
@@ -215,6 +220,8 @@ export default function AddDataPage() {
       if (response.status === 200 || response.status === 201) {
         toast.success('File data added successfully!' );
         handleClear();
+        handleGetAllSites();
+        filteredPoints;
       } else {
         toast.error('Failed to add file data. Please try again.');
       }
@@ -230,6 +237,45 @@ export default function AddDataPage() {
 
 
    const [selectedSite, setSelectedSite] = useState<SiteData | null>(null);
+    const [filters, setFilters] = useState<MapFilters>(DEFAULT_FILTERS);
+   
+     const filteredPoints = sites.filter((point) => {
+         if (!filters) return true;
+     
+         if (filters.contaminationLevels) {
+           if (filters.contaminationLevels?.length > 0 &&
+             !filters.contaminationLevels.includes(getDangerZoneLabel(point.dangerZone as any)))
+           return false;
+         }
+     
+         if (filters.sites) {
+           const site= point.geoLocName;
+           let siteName = site;
+           if (point.sampleName) {
+             if (site.includes("Apies River - ")) {
+               const parts = site.split("Apies River - ");
+               if (parts.length > 1) {
+                 siteName = parts[1].trim();
+               }
+             }
+             if (site.includes(" - Apies River")) {
+               const parts = site.split(" - Apies River");
+               if (parts.length > 1) {
+                 siteName = parts[0].trim();
+               }
+             }
+           }
+           if (filters.sites?.length > 0 &&
+             !filters.sites.includes(siteName))
+           return false;
+         }
+     
+         const sampleDate = new Date(point.collectionDate);
+         if (filters.startDate && sampleDate < new Date(filters.startDate)) return false;
+         if (filters.endDate   && sampleDate > new Date(filters.endDate))   return false;
+     
+         return true;
+       });
 
   return (
 
@@ -415,22 +461,22 @@ export default function AddDataPage() {
 
             {/* Map Column */}
             <MapProvider>
-              <div className="flex-1 flex overflow-hidden">
-                <div className="flex-1 relative">
-                  <Map
-                    points={sites}
+                <div className="flex-1 flex overflow-hidden">
+                  <div className="flex-1 relative">
+                              <Map
+                                points={filteredPoints}
+                                selectedSite={selectedSite}
+                                onSelectSite={setSelectedSite}
+                                filters={filters}
+                                onFiltersChange={setFilters}
+                              />
+                  </div>
+                  <SitesSidebar
+                    points={filteredPoints}
                     selectedSite={selectedSite}
                     onSelectSite={setSelectedSite}
-                    filters={{}}
-                    onFiltersChange={() => {}}
                   />
                 </div>
-                <SitesSidebar
-                  points={sites}
-                  selectedSite={selectedSite}
-                  onSelectSite={setSelectedSite}
-                />
-              </div>
             </MapProvider>
           </div>
 
