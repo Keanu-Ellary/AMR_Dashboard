@@ -1,13 +1,12 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { MapProvider } from '@/components/map/MapContext';
 import SitesSidebar from '@/components/map/SitesSidebar';
-import { samplingPoints } from '@/data/sites';
 import { Map } from "@/components/map/LoadMap";
-import { SamplingPoint } from '@/types/site_types';
+import { SiteData } from '@/types/site_types';
 import { toast } from 'react-toastify';
-import { addSiteData, addMutlipleSiteData } from '@/app/services/siteService';
+import { addSiteData, addMutlipleSiteData, getAllSites } from '@/app/services/siteService';
 import ConfirmFile from '@/components/add-data/confirmFile';
 
 export default function AddDataPage() {
@@ -18,6 +17,21 @@ export default function AddDataPage() {
   const imageInputRef = useRef<HTMLInputElement>(null);
   const [imageBase64, setImageBase64] = useState<string | undefined>(undefined);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
+   const [sites, setSites] = useState<SiteData[]>([]);
+  
+    const handleGetAllSites = async () => {
+      const allSitesResponse = await getAllSites();
+  
+      if (allSitesResponse.ok) {
+        const allSiteData = await allSitesResponse.json();
+        setSites(allSiteData.sites);
+  
+      }
+    }
+  
+    useEffect(() => {
+      handleGetAllSites();
+    }, []);
 
   const [formData, setFormData] = useState({
     // required
@@ -215,7 +229,7 @@ export default function AddDataPage() {
   };
 
 
-   const [selectedSite, setSelectedSite] = useState<SamplingPoint | null>(null);
+   const [selectedSite, setSelectedSite] = useState<SiteData | null>(null);
 
   return (
 
@@ -404,7 +418,7 @@ export default function AddDataPage() {
               <div className="flex-1 flex overflow-hidden">
                 <div className="flex-1 relative">
                   <Map
-                    points={samplingPoints}
+                    points={sites}
                     selectedSite={selectedSite}
                     onSelectSite={setSelectedSite}
                     filters={{}}
@@ -412,7 +426,7 @@ export default function AddDataPage() {
                   />
                 </div>
                 <SitesSidebar
-                  points={samplingPoints}
+                  points={sites}
                   selectedSite={selectedSite}
                   onSelectSite={setSelectedSite}
                 />

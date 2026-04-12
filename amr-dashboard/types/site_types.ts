@@ -1,4 +1,4 @@
-import type { ContaminationLevel } from "@/types/map_types";
+import type { ContaminationLevel, DangerZone } from "@/types/map_types";
 
 export interface SamplingPoint {
   id: string;
@@ -40,6 +40,7 @@ export interface WaterMetadata {
 
 
 export interface SiteData {
+        id?: number;
         // required:
         sampleName: string,
         isolationSource: string,
@@ -75,6 +76,6 @@ export interface SiteData {
         dissolvedO2?: number;
         
         // extra
-        dangerZone?: "red" | "yellow";
+        dangerZone?: DangerZone;
         imageBase64?: string;
 }

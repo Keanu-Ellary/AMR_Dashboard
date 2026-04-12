@@ -29,3 +29,13 @@ export async function addMutlipleSiteData(file: File) {
 
     return response;
 }
+
+export async function getAllSites() {
+
+    const response = await fetch('/api/site', {
+        method: 'GET',
+        headers: {'Content-Type': 'application/json'}
+    });
+
+    return response;
+}

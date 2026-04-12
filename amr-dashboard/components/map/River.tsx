@@ -2,16 +2,18 @@
 
 import { useEffect, useRef } from "react";
 import L from "leaflet";
-import { RIVER_SEGMENTS, RISK_COLOUR } from "@/constants/map_constants";
+import { RISK_COLOUR } from "@/constants/map_constants";
 import type { RiverSegment, ContaminationLevel } from "@/types/map_types";
+import { SiteData } from "@/types/site_types";
 
 interface RiverProps {
   map: L.Map;
   activeRisks?: ContaminationLevel[];
   selectedYear?: number;
+  points: SiteData[];
 }
 
-export default function River({ map, activeRisks, selectedYear }: RiverProps) {
+export default function River({ map, activeRisks, selectedYear, points }: RiverProps) {
   const layerRef = useRef<L.LayerGroup | null>(null);
 
   function segmentTooltipHTML(seg: RiverSegment): string {
@@ -38,7 +40,21 @@ export default function River({ map, activeRisks, selectedYear }: RiverProps) {
     const river = L.layerGroup().addTo(map);
     layerRef.current = river;
 
-    const segmentsToRender = activeRisks && activeRisks.length > 0
+    if (points && points.length > 1) {
+      const siteCoords: [number, number][] = points
+        .filter(p => p.latitude && p.longitude)
+        .map(p => [p.latitude, p.longitude]);
+
+      L.polyline(siteCoords, {
+        color: "#007bff",
+        weight: 4,
+        opacity: 0.8,
+        lineCap: "round",
+        lineJoin: "round",
+      }).addTo(river);
+    }
+   
+    /*const segmentsToRender = activeRisks && activeRisks.length > 0
         ? RIVER_SEGMENTS.filter((seg) => activeRisks.includes(seg.risk))
         : RIVER_SEGMENTS; 
 
@@ -65,7 +81,7 @@ export default function River({ map, activeRisks, selectedYear }: RiverProps) {
         opacity: 1,
         className: "amr-tooltip",
       });
-    });
+    });*/
 
     return () => {
       river.clearLayers();

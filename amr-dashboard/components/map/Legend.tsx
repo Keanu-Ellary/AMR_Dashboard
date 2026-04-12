@@ -40,7 +40,7 @@ const LEGEND_STYLES= {
 
 export default function addLegend(map: L.Map) {
   const div = L.DomUtil.create("div", "amr-legend");
-  const riskEntries = Object.entries(RISK_COLOUR);
+  const riskEntries = Object.entries(RISK_COLOUR).filter(([key]) => key !== "filtered");
 
   div.innerHTML = `
     <div style="${LEGEND_STYLES.wrapper}">
