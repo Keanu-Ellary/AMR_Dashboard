@@ -278,7 +278,7 @@ export default function AddDataPage() {
 
   return (
 
-    <div className="flex h-screen p-2 font-sans text-sm">
+    <div className="flex p-2 font-sans text-sm" style={{ height: "100%"}}>
 
       <ConfirmFile
           file={pendingFile}
@@ -467,7 +467,7 @@ export default function AddDataPage() {
 
               </div>
 
-              <div className="mt-4 flex flex-col gap-2 flex-shrink-0 pb-10">
+              <div className="mt-4 flex flex-col gap-2 flex-shrink-0">
                 <button 
                   className="w-full bg-[#22c55e] text-white py-1.5 rounded-md font-medium hover:bg-[#16a34a] transition text-sm"
                   onClick={handleAddData}
