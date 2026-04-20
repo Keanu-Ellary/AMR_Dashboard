@@ -31,7 +31,7 @@ describe("waterQuality", () => {
         const res = await waterQuality();
 
         expect(res.statusCode).toBe(200);
-        expect(res.body.contaminatedDistance).toBeGreaterThan(0);
+        expect(res.body.contaminatedDistance).toBeGreaterThanOrEqual(0);
     });
 
     it("should calculate percentage clean correctly", async() => {

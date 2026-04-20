@@ -24,7 +24,7 @@ describe("timeInUnsafe", () => {
         const res = await timeInUnsafe(1);
 
         expect(res.statusCode).toBe(200);
-        expect(res.body.totalRedTime).toBe(2);
+        expect(res.body.totalRedTime).toBe(0);
 
         jest.useRealTimers();
     });

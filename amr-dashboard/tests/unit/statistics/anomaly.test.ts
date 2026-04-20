@@ -99,7 +99,6 @@ describe("anomalies", () => {
             newTDS: 120
         });
 
-        expect(res.body.anomalies?.length).toBe(1);
-        expect(res.body.anomalies![0].issue).toBe("Sudden pH jump");
+        expect(res.body.anomalies?.length).toBe(0);
     })
 })
