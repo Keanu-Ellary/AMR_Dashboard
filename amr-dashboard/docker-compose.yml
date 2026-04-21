@@ -1,0 +1,42 @@
+services:
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: amr_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  minio:
+    image: minio/minio
+    restart: always
+    container_name: minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: AMR_dashboard
+      MINIO_ROOT_PASSWORD: SecretPassword
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+
+  ai-lambda:
+    build:
+      context: ./ai-lambda
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      # You can add environment variables your lambda needs here
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_DEFAULT_REGION=us-east-1
+
+volumes:
+  postgres_data:
+  minio_data:

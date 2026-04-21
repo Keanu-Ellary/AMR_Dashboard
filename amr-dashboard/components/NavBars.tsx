@@ -1,0 +1,48 @@
+'use client';
+
+import { usePathname } from 'next/navigation';
+import TopNavBar from '@/components/TopNavBar';
+import SideNavBar from '@/components/SideNavBar';
+import { useEffect, useState } from 'react';
+import { getMe } from '@/app/services/authService';
+
+export default function NavBars({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const routesWithoutNavBars = ['/login', '/forgot-password'];
+  const displayNavbars = !routesWithoutNavBars.includes(pathname);
+
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (displayNavbars) {
+      getMe().then((user) => {
+        setIsAdmin(user?.isAdmin || false);
+        if (user) {
+          setIsLoggedIn(true);
+        }
+      }).catch(() => {
+        setIsAdmin(false);
+        setIsLoggedIn(false);
+      });
+    }
+  }, [displayNavbars]);
+
+  return (
+    <div>
+        {displayNavbars ? (
+          <div className="flex h-screen bg-gray-100">
+            <SideNavBar isLoggedIn={isLoggedIn} />
+            <div className="flex-1 flex flex-col overflow-hidden">
+              <TopNavBar isAdmin={isAdmin} />
+              <main className="flex-1 overflow-auto">
+                {children}
+              </main>
+            </div>
+          </div>
+        ) : (
+          <div>{children}</div>
+        )}
+      </div>
+  );
+}
