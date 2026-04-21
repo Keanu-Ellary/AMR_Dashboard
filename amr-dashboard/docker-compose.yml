@@ -25,6 +25,18 @@ services:
       - minio_data:/data
     command: server /data --console-address ":9001"
 
+  ai-lambda:
+    build:
+      context: ./ai-lambda
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      # You can add environment variables your lambda needs here
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_DEFAULT_REGION=us-east-1
+
 volumes:
   postgres_data:
   minio_data:
