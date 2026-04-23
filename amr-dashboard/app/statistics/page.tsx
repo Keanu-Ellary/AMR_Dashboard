@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { MapPin, TrendingUp, TrendingDown, Download } from "lucide-react";
 import type { SiteData } from "@/types/site_types";
 import { exportStatistics, ExportFormat } from "@/functions/statistics/exportData";
+import { toast } from "react-toastify";
 
 export const dynamic = "force-dynamic";
 
@@ -130,7 +131,12 @@ function StatisticsContent() {
       });
     }
 
-    exportStatistics(exportData, format, `site_${siteData?.sampleName || "statistics"}`);
+    const res = exportStatistics(exportData, format, `site_${siteData?.sampleName || "statistics"}`);
+    if (res && res.status==200) {
+      toast.success("Statistics exported successfully")
+    } else {
+      toast.error( "Could not export statistics")
+    }
     setShowExportMenu(false);
   };
 
@@ -210,7 +216,12 @@ function StatisticsContent() {
       });
     }
 
-    exportStatistics(exportData, format, "system_statistics");
+    const res = exportStatistics(exportData, format, "system_statistics");
+    if (res && res.status==200) {
+      toast.success("Statistics exported successfully")
+    } else {
+      toast.error( "Could not export statistics")
+    }
     setShowExportMenu(false);
   };
 

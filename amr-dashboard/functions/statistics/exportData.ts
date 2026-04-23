@@ -1,3 +1,5 @@
+import { NextResponse } from "next/server";
+
 export type ExportFormat = 'csv' | 'tsv' | 'json';
 
 interface ExportData {
@@ -91,5 +93,23 @@ export function exportStatistics(
   const timestamp = new Date().toISOString().split('T')[0];
   const fullFilename = `${filename}_${timestamp}.${extension}`;
 
-  downloadFile(content, fullFilename, mimeType);
+  try {
+    downloadFile(content, fullFilename, mimeType);
+    return NextResponse.json(
+      { 
+        success: true,
+        message: "Statistics exported successfully",
+        error: null,
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    return NextResponse.json(
+      { 
+        success: false,
+        message: null,
+        error: "Could not export statistics" },
+      { status: 500 }
+    );
+  }
 }
