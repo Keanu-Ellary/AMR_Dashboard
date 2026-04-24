@@ -32,15 +32,30 @@ export default function SideNavBar({isLoggedIn}: { isLoggedIn: boolean }) {
   return (
     <div className="w-64 bg-white border-r flex flex-col p-4">
       <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-2">
-          <UserIcon size={18}></UserIcon>
-          <Link
-            href="/login"
-            className="font-semibold text-gray-700 hover:text-green-600 transition-colors"
-          >
-            Login
-          </Link>
-        </div>
+          {!isLoggedIn && (
+            <div className="flex items-center gap-2">
+              <UserIcon size={18} />
+              <Link
+                href="/login"
+                className="font-semibold text-gray-700 hover:text-green-600 transition-colors"
+              > 
+                Login
+              </Link>
+            </div>
+          )}
+          {isLoggedIn && (
+            <div className="flex items-center gap-2">
+              <LogOutIcon size={18} />
+              <button
+                onClick={async () => { await logout();
+                  window.location.href = "/home";
+                }}
+                className="font-semibold text-gray-700 hover:text-green-600 transition-colors"
+              > 
+                Logout
+              </button>
+            </div>
+          )}
       </div>
 
       <div className="text-xs text-gray-500 uppercase font-semibold mb-4">
@@ -65,16 +80,6 @@ export default function SideNavBar({isLoggedIn}: { isLoggedIn: boolean }) {
           )}
       </nav>
 
-      {isLoggedIn && (
-          <button
-            onClick={async () => { await logout();
-              window.location.href = "/login";
-            }}
-            className="flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-gray-600 hover:bg-gray-100 w-full"
-        >
-          <LogOutIcon size={18} /> Logout
-        </button>
-      )}
     </div>
   );
 }
