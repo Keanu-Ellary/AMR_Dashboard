@@ -141,8 +141,9 @@ export default function SiteList({ points, selectedSite, onSelectSite }: SiteLis
                   {isAdminUser && (
                     <button
                       onClick={handleDeleteClick.bind(null, site)}
+                      className="cursor-pointer group"
                     >
-                      <Trash2Icon size={18} />
+                      <Trash2Icon size={18} className="group-hover:text-red-700 transition-colors"/>
                     </button>
                   )}
                 </div>
