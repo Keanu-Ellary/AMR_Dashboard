@@ -163,7 +163,7 @@ const styles: Record<string, React.CSSProperties> = {
     width: "260px",
     height: "100%",
     background: "#f9fbff",
-    border: "1px solid rgba(11, 11, 11, 0.12)",
+    border: "1px solid rgba(80,140,255,0.12)",
     flexShrink:0,
     overflow:"hidden",
   },
