@@ -31,9 +31,12 @@ function createMarkerIcon(
   isSelected: boolean
 ): L.DivIcon {
 
-  const markerColour = RISK_COLOUR[riskLevel] ?? RISK_COLOUR.moderate;
+  let markerColour = RISK_COLOUR[riskLevel] ?? RISK_COLOUR.moderate;
   const markerInner = isSelected ? 20 : 15;
   const markerBox  = markerInner + 12;
+  if (isSelected) {
+    markerColour = RISK_COLOUR.filtered
+  }
 
   return L.divIcon({
     html: `

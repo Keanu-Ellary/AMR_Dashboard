@@ -102,7 +102,7 @@ export default function Map({
   };
 
   return (
-    <div style={{ width: "100%", height: "100%", position: "relative" }}>
+    <div style={{ width: "100%", height: "100%", position: "relative", border: "1px solid rgba(3, 9, 20, 0.12)" }}>
       {/* Inner div for Leaflet */}
       <div
         ref={mapDivRef}
