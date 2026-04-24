@@ -48,7 +48,7 @@ export default function SideNavBar({isLoggedIn}: { isLoggedIn: boolean }) {
       </div>
 
       <nav className="flex flex-col gap-2 flex-1">
-        {NAV_ITEMS.filter(item => item.href !== "/add-data" && item.href !== "/analyze")
+        {NAV_ITEMS.filter(item => item.href !== "/add-data")
           .map((item) => (
             <NavLink
               key={item.href}

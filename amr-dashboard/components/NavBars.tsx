@@ -1,7 +1,6 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import TopNavBar from '@/components/TopNavBar';
 import SideNavBar from '@/components/SideNavBar';
 import { useEffect, useState } from 'react';
 import { getMe } from '@/app/services/authService';
@@ -34,7 +33,6 @@ export default function NavBars({ children }: { children: React.ReactNode }) {
           <div className="flex h-screen bg-gray-100">
             <SideNavBar isLoggedIn={isLoggedIn} />
             <div className="flex-1 flex flex-col overflow-hidden">
-              <TopNavBar isAdmin={isAdmin} />
               <main className="flex-1 overflow-auto">
                 {children}
               </main>
