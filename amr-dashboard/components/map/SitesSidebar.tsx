@@ -16,9 +16,10 @@ interface SiteListProps {
   points: SiteData[];
   selectedSite: SiteData | null;
   onSelectSite: (site: SiteData) => void;
+  onRefresh: () => void;
 }
 
-export default function SiteList({ points, selectedSite, onSelectSite }: SiteListProps) {
+export default function SiteList({ points, selectedSite, onSelectSite, onRefresh }: SiteListProps) {
 
   const [siteToDelete, setSiteToDelete] = useState<SiteData | null>(null);
   const getDanger = (zone?: DangerZone)=> zone ? getDangerZoneLabel(zone) : "unknown";
@@ -69,6 +70,7 @@ export default function SiteList({ points, selectedSite, onSelectSite }: SiteLis
       if (response.ok) {
         toast.success('Site deleted successfully!');
         setSiteToDelete(null);
+        onRefresh();
       } else {
         toast.error('Failed to delete site. Please try again.');
       }
@@ -141,8 +143,9 @@ export default function SiteList({ points, selectedSite, onSelectSite }: SiteLis
                   {isAdminUser && (
                     <button
                       onClick={handleDeleteClick.bind(null, site)}
+                      className="cursor-pointer group"
                     >
-                      <Trash2Icon size={18} />
+                      <Trash2Icon size={18} className="group-hover:text-red-700 transition-colors"/>
                     </button>
                   )}
                 </div>
