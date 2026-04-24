@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import "leaflet/dist/leaflet.css";
-import L, { map } from "leaflet";
+import L from "leaflet";
 
 import { useMapContext } from "./MapContext";
 import Site from "./Site";
@@ -49,6 +49,7 @@ export default function Map({
     map.whenReady(() => {
       addLegend(map);
       addFilterPanel(map, points, activeFilters, onFiltersChange);
+      mapDivRef.current?.focus();
     });
 
     mapRef.current = map;
