@@ -624,6 +624,7 @@ export default function AddDataPage() {
                     points={filteredPoints}
                     selectedSite={selectedSite}
                     onSelectSite={setSelectedSite}
+                    onRefresh={handleGetAllSites}
                   />
                 </div>
             </MapProvider>

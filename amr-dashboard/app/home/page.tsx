@@ -107,6 +107,7 @@ export default function Home() {
                   points={filteredPoints}
                   selectedSite={selectedSite}
                   onSelectSite={setSelectedSite}
+                  onRefresh={handleGetAllSites}
                 />
               </div>
             </MapProvider>
