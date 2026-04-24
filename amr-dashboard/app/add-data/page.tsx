@@ -6,7 +6,7 @@ import SitesSidebar from '@/components/map/SitesSidebar';
 import { Map } from "@/components/map/LoadMap";
 import { SiteData } from '@/types/site_types';
 import { toast } from 'react-toastify';
-import { addSiteData, addMutlipleSiteData, getAllSites, updateSite } from '@/app/services/siteService';
+import { addSiteData, addMutlipleSiteData, getAllSites, updateSite, addSiteImage } from '@/app/services/siteService';
 import ConfirmFile from '@/components/add-data/confirmFile';
 import { DEFAULT_FILTERS } from '@/constants/map_constants';
 import { getDangerZoneLabel, MapFilters } from '@/types/map_types';
@@ -115,19 +115,28 @@ export default function AddDataPage() {
       virtulenceGenes: formData.virtulenceGenes || undefined,
       plasmidReplicons: formData.plasmidReplicons || undefined,
 
-      // image
-      imageBase64,
     });
 
       if (updateResponse.ok) {
-        toast.success("Site data updated successfully");
-        setSelectedSite(null);
+        if (imageBase64) {
+          const imageUpdateResponse = await addSiteImage(selectedSite.id, [imageBase64]);
+          if (imageUpdateResponse.ok) {
+            toast.success("Site data updated successfully");
+          }else{
+            toast.error("Failed to update site image")
+          }
+          setSelectedSite(null);
+          handleGetAllSites();
+          handleClear();
+        }else{
+          toast.success("Site data updated successfully");
+          setSelectedSite(null);
+          handleGetAllSites();
+          handleClear();
+        }
       }else{
         toast.error("Failed to update site data")
       }
-
-      handleGetAllSites();
-      handleClear();
     }
   }
 
@@ -282,14 +291,27 @@ export default function AddDataPage() {
       virtulenceGenes: formData.virtulenceGenes || undefined,
       plasmidReplicons: formData.plasmidReplicons || undefined,
 
-      // image
-      imageBase64,
     });
+
     if (response.status === 200 || response.status === 201) {
-      toast.success('Site data added successfully!');
-      handleClear();
-      handleGetAllSites();
-      filteredPoints;
+      if (imageBase64) {
+          const resData = await response.json();
+          const imageUpdateResponse = await addSiteImage(resData.id, [imageBase64]);
+          if (imageUpdateResponse.ok) {
+            toast.success("Site data added successfully");
+          }else{
+            toast.error("Failed to add site image")
+            return
+          }
+          handleClear();
+          handleGetAllSites();
+          filteredPoints;
+        }else{
+          toast.success('Site data added successfully!');
+          handleClear();
+          handleGetAllSites();
+          filteredPoints;
+        }
     } else {
       toast.error('Failed to add site data. Please try again.');
     }
@@ -398,7 +420,7 @@ export default function AddDataPage() {
                 </div>
                 <div>
                   <label className="block text-gray-700 mb-0.5 text-xs">Collection Date </label>
-                  <input type="text" placeholder="Value" value={formData.collectionDate} onChange={(e) => setFormData({...formData, collectionDate: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
+                  <input type="text" placeholder="yyyy/mm/dd" value={formData.collectionDate} onChange={(e) => setFormData({...formData, collectionDate: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
                 </div>
                 <div>
                   <label className="block text-gray-700 mb-0.5 text-xs">Geographic Location Name</label>

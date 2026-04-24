@@ -41,8 +41,9 @@ export async function addPhotosToSite(
         const imagesToUpload = [];
 
         for (const baseString of imagesBase64)
-        {
-            const buffer = Buffer.from(baseString, "base64");
+        { 
+            const base64Data = baseString.replace(/^data:image\/\w+;base64,/, '');
+            const buffer = Buffer.from(base64Data, "base64");
             const fileName = `site-${siteId}-${Date.now()}.jpg`
 
             await minioClient.putObject(

@@ -152,7 +152,9 @@ export async function uploadSiteData(token: string,
             data: {
                 ...data,
                 dangerZone,
-                adminId: authorize.user.userId,
+                admin: {
+                    connect: { id: authorize.user.userId }
+                },
                 images: imageURL
                 ? {
                     create: [
@@ -167,7 +169,7 @@ export async function uploadSiteData(token: string,
 
         return {
             statusCode: 201,
-            body: {newSite}
+            body: {newSite, id: newSite.id}
         };
     } catch (error) {
         console.error(error);

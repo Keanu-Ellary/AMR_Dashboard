@@ -66,3 +66,17 @@ export async function updateSite(siteId: number, siteData: SiteData) {
 
     return response;
 }
+
+export async function addSiteImage(siteId: number, siteImage: string[]) {
+    const user = await getMe();
+    const token = user?.token;
+
+    const strId = siteId.toString();
+    const response = await fetch(`/api/site/${strId}/photos`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({images: siteImage})
+    });
+
+    return response;
+}
