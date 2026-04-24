@@ -5,7 +5,6 @@ import { useEffect, useRef } from "react";
 import { getDangerZoneLabel, type ContaminationLevel, type DangerZone } from "@/types/map_types";
 import type { SiteData } from "@/types/site_types";
 import { RISK_COLOUR } from "@/constants/map_constants";
-import siteImage from "../../assets/site.png";
 
 interface SiteProps {
   map: L.Map;
@@ -15,13 +14,25 @@ interface SiteProps {
   activeDangerZones?: DangerZone[];
 }
 
+declare global {
+  interface Window {
+    __handleViewSite: (id: string) => void;
+  }
+}
+
+if (typeof window !== "undefined") {
+  window.__handleViewSite = (id: string) => {
+    window.location.href = `/statistics?site=${id}`;
+  };
+}
+
 function createMarkerIcon(
   riskLevel: ContaminationLevel,
   isSelected: boolean
 ): L.DivIcon {
 
   const markerColour = RISK_COLOUR[riskLevel] ?? RISK_COLOUR.moderate;
-  const markerInner = isSelected ? 20 : 14;
+  const markerInner = isSelected ? 20 : 15;
   const markerBox  = markerInner + 12;
 
   return L.divIcon({
@@ -43,10 +54,11 @@ function createMarkerIcon(
     className: "",
     iconSize: [markerBox, markerBox],
     iconAnchor: [markerBox / 2, markerBox / 2],
+    popupAnchor: [175, 410],   
   });
 }
 
-function siteTooltipHTML(point: SiteData): string {
+function sitePopupHTML(point: SiteData): string {
   let riskColor = RISK_COLOUR.unknown;
   if (point.dangerZone) {
     const dangerZoneLabel = getDangerZoneLabel(point.dangerZone);
@@ -96,7 +108,14 @@ function siteTooltipHTML(point: SiteData): string {
         <span style="${TOOLTIP_STYLES.waterValue}">${point.tds?.toFixed(1)} mg/L</span>
       </div>
 
-      <div style="${TOOLTIP_STYLES.link}">Click To View More</div>
+      <div style="text-align: center; margin-top: 8px;">
+        <button
+          onclick="window.__handleViewSite('${point.id}')"
+          style="${TOOLTIP_STYLES.link}"
+        >
+          Click To View More
+        <button>
+      </div>
 
     </div>`;
 }
@@ -140,21 +159,57 @@ export default function Site({
           zIndexOffset: 500,
         });
 
-      marker.bindTooltip(siteTooltipHTML(point), {
-        sticky:    false,
-        direction: "right",
-        opacity:   1,
-        className: "amr-tooltip",
-        offset:    [10, 0],
-        interactive: true,
-        permanent: false,
+      const sitePopup = L.popup({
+        closeButton: false,
+        className: "amr-popup",
+        offset: [0,0],
+        autoClose: false,
+        closeOnClick: false,
+        autoPan: false,
+      }).setContent(sitePopupHTML(point))
+
+      marker.bindPopup(sitePopup)
+
+      let hideTimeout: ReturnType<typeof setTimeout> | null = null;
+
+      const cancelHide = () => {
+        if (hideTimeout) {
+          clearTimeout(hideTimeout);
+          hideTimeout = null;
+        }
+      };
+
+      const scheduleHide = () => {
+        hideTimeout = setTimeout(() => {
+          marker.closePopup();
+        }, 150);
+      };
+
+      marker.on("mouseover", () => {
+        cancelHide();
+        marker.openPopup();
+      });
+      
+      marker.on("mouseout", scheduleHide);
+
+      marker.on("popupopen", () => {
+        const popupEl = sitePopup.getElement();
+        if (!popupEl) return;
+        popupEl.addEventListener("mouseenter", cancelHide);
+        popupEl.addEventListener("mouseleave", scheduleHide);
       });
 
-      const handleViewSiteStats = (point: SiteData) => {
-        window.location.href = `/statistics?site=${point.id}`
-      }
+       marker.on("popupclose", () => {
+        const popupEl = sitePopup.getElement();
+        if (!popupEl) return;
+        popupEl.removeEventListener("mouseenter", cancelHide);
+        popupEl.removeEventListener("mouseleave", scheduleHide);
+      });
 
-      marker.on("click", () => handleViewSiteStats(point));
+      marker.on("click", () => {
+        window.location.href = `/statistics?site=${point.id}`;
+      });
+
       marker.addTo(layer);
       if (point.id)
         markersRef.current[point.id] = marker;
@@ -240,10 +295,11 @@ const TOOLTIP_STYLES = {
   `,
   link: `
     margin-top: 8px;
-    font-size: 9px;
+    font-size: 12px;
     color: #3b82f6;
     text-align: center;
     opacity: 0.8;
+    cursor: pointer;
   `,
   divider: `
     border-top: 1px solid rgba(80,140,255,0.12);
@@ -269,4 +325,5 @@ const TOOLTIP_STYLES = {
     color: #94a3b8;
     font-size: 12px;
   `,
+  
 } as const;
