@@ -18,15 +18,6 @@ export default function TopNavBar({isAdmin}: { isAdmin: boolean }) {
             <div className="relative">
                 {pathname === "/home" && (
                 <div className="flex gap-2" >
-                    {isAdmin && (
-                        <button 
-                            onClick={() => window.location.href = "/add-data"}
-                            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2 transition-colors"
-                        >
-                    Upload Data
-                    </button>
-                     )}
-
                     <button 
                         onClick={() => window.location.href = "/analyze"}
                         className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2 transition-colors"

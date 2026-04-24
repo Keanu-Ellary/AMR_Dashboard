@@ -9,7 +9,6 @@ import { NavItem } from "@/types/navbar_types";
 import { LogOutIcon, UserIcon } from "lucide-react";
 import { logout } from "@/app/services/authService";
 
-
 function NavLink({ href, icon: Icon, label, isActive }: NavItem & { isActive: boolean }) {
   return (
     <a
@@ -47,6 +46,7 @@ export default function SideNavBar({isLoggedIn}: { isLoggedIn: boolean }) {
       <div className="text-xs text-gray-500 uppercase font-semibold mb-4">
         Dashboards
       </div>
+
       <nav className="flex flex-col gap-2 flex-1">
         {NAV_ITEMS.filter(item => item.href !== "/add-data" && item.href !== "/analyze")
           .map((item) => (
@@ -56,6 +56,13 @@ export default function SideNavBar({isLoggedIn}: { isLoggedIn: boolean }) {
               isActive={pathname === item.href}
             />
           ))}
+          {isLoggedIn && (
+            <NavLink
+              key={NAV_ITEMS[1].href}
+              {...NAV_ITEMS[1]}
+              isActive={pathname === NAV_ITEMS[1].href}
+            />
+          )}
       </nav>
 
       {isLoggedIn && (
