@@ -167,7 +167,7 @@ export default function Site({
         className: "amr-popup",
         offset: [0,0],
         autoClose: false,
-        closeOnClick: false,
+        closeOnClick: true,
         autoPan: false,
       }).setContent(sitePopupHTML(point))
 
@@ -196,17 +196,17 @@ export default function Site({
       marker.on("mouseout", scheduleHide);
 
       marker.on("popupopen", () => {
-        const popupEl = sitePopup.getElement();
-        if (!popupEl) return;
-        popupEl.addEventListener("mouseenter", cancelHide);
-        popupEl.addEventListener("mouseleave", scheduleHide);
+        const popupThing = sitePopup.getElement();
+        if (!popupThing) return;
+        popupThing.addEventListener("mouseenter", cancelHide);
+        popupThing.addEventListener("mouseleave", scheduleHide);
       });
 
        marker.on("popupclose", () => {
-        const popupEl = sitePopup.getElement();
-        if (!popupEl) return;
-        popupEl.removeEventListener("mouseenter", cancelHide);
-        popupEl.removeEventListener("mouseleave", scheduleHide);
+        const popupThing = sitePopup.getElement();
+        if (!popupThing) return;
+        popupThing.removeEventListener("mouseenter", cancelHide);
+        popupThing.removeEventListener("mouseleave", scheduleHide);
       });
 
       marker.on("click", () => {
