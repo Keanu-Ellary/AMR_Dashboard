@@ -32,11 +32,11 @@ function FilterPanel({ filters, uniqueSites, onFiltersChange }: FilterPanelProps
   };
 
   return (
-    <div className="bg-white rounded-lg p-3 text-xs min-w-[200px] max-h-80 overflow-y-auto shadow-md font-sans">
-      <div className="font-bold tracking-widest text-gray-900 mb-2 uppercase text-[11px]">Filters</div>
+    <div className="bg-white rounded-lg p-4 text-sm min-w-[200px] max-h-80 overflow-y-auto shadow-md font-sans m-2 min-w-[250px]">
+      <div className="font-bold tracking-widest text-gray-900 mb-2 uppercase text-md flex justify-center">Filters</div>
 
       <div className="mb-2">
-        <div className="font-bold text-[11px] text-gray-900 mb-1 mt-2 uppercase tracking-wide">Danger Zone</div>
+        <div className="font-medium text-sm text-gray-900 mb-1 mt-2 uppercase">Danger Zone</div>
         {riskEntries.map(([dangerZone, dangerColour]) => (
           <label key={dangerZone} className="flex items-center gap-2 mb-1 cursor-pointer">
             <input
@@ -54,7 +54,7 @@ function FilterPanel({ filters, uniqueSites, onFiltersChange }: FilterPanelProps
       </div>
 
       <div className="mb-2">
-        <div className="font-bold text-[11px] text-gray-900 mb-1 mt-2 uppercase tracking-wide">Sites</div>
+        <div className="font-medium text-sm text-gray-900 mb-1 mt-2 uppercase">Sites</div>
         {uniqueSites.map((site) => (
           <label key={site} className="flex items-center gap-2 mb-1 cursor-pointer">
             <input
@@ -67,19 +67,19 @@ function FilterPanel({ filters, uniqueSites, onFiltersChange }: FilterPanelProps
         ))}
       </div>
 
-      <div>
-        <div className="font-bold text-[11px] text-gray-900 mb-1 mt-2 uppercase tracking-wide">Date Range</div>
+      <div className="flex flex-col">
+        <div className="font-medium text-sm text-gray-900 mb-1 mt-2 uppercase">Date Range</div>
         <input
           type="date"
           value={filters.startDate ?? ""}
           onChange={(e) => onFiltersChange({ ...filters, startDate: e.target.value })}
-          className="w-full mb-1 px-2 py-1 border border-gray-200 rounded text-[11px] focus:outline-none focus:border-blue-400"
+          className="w-full mb-1 px-2 py-1 border border-gray-200 rounded text-sm focus:outline-none focus:border-blue-400"
         />
         <input
           type="date"
           value={filters.endDate ?? ""}
           onChange={(e) => onFiltersChange({ ...filters, endDate: e.target.value })}
-          className="w-full px-2 py-1 border border-gray-200 rounded text-[11px] focus:outline-none focus:border-blue-400"
+          className="w-full px-2 py-1 border border-gray-200 rounded text-sm focus:outline-none focus:border-blue-400"
         />
       </div>
     </div>
