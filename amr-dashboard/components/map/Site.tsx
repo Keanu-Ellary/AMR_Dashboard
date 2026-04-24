@@ -113,7 +113,7 @@ function sitePopupHTML(point: SiteData): string {
           onclick="window.__handleViewSite('${point.id}')"
           style="${TOOLTIP_STYLES.link}"
         >
-          Click To View More
+          Click To View Statistics
         <button>
       </div>
 
