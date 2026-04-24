@@ -66,12 +66,18 @@ function sitePopupHTML(point: SiteData): string {
   if (point.dangerZone) {
     const dangerZoneLabel = getDangerZoneLabel(point.dangerZone);
     riskColor  = RISK_COLOUR[dangerZoneLabel];
- }
+  }
+
+  let imageUrl = '/form-image.jpg'
+  if (point.images && point.images.length > 0) {
+    const lastImage = point.images.length - 1
+    imageUrl =`/api/image?url=${encodeURIComponent(point.images[lastImage].url)}`;
+  }
 
   return `
     <div style="${TOOLTIP_STYLES.wrapper}">
 
-      <img src="/form-image.jpg" alt="${point.sampleName}" style="${TOOLTIP_STYLES.siteImage}" />
+      <img src="${imageUrl}" alt="${point.sampleName}" style="${TOOLTIP_STYLES.siteImage}" />
       <div style="${TOOLTIP_STYLES.name}">${point.sampleName}</div>
       <div style="${TOOLTIP_STYLES.badge}">
         <span style="${TOOLTIP_STYLES.riskBadge(riskColor.glow, riskColor.fill)}">${riskColor.label}</span>
