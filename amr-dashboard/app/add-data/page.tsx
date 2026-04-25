@@ -347,8 +347,19 @@ export default function AddDataPage() {
       fileInputRef.current.value = '';
     }
   };
+
+  const uniqueSites = Object.values(
+    sites.reduce<Record<string, SiteData>>((uniquePoints, point) => {
+      const coords = `${point.latitude},${point.longitude}`;
+      const existing = uniquePoints[coords];
+      if (!existing || new Date(point.collectionDate) > new Date(existing.collectionDate)) {
+        uniquePoints[coords] = point;
+      }
+      return uniquePoints;
+    }, {})
+  );
    
-     const filteredPoints = sites.filter((point) => {
+     const filteredPoints = uniqueSites.filter((point) => {
          if (!filters) return true;
      
          if (filters.contaminationLevels) {
