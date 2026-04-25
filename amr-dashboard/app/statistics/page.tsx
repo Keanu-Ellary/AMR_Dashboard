@@ -11,6 +11,8 @@ import { toast } from "react-toastify";
 
 export const dynamic = "force-dynamic";
 
+
+
 interface AverageMetrics {
   avgpH: number;
   avgTemp: number;
@@ -440,6 +442,7 @@ function StatisticsContent() {
                 <p className="font-bold mt-2">Isolation Source: <span className="font-normal">{siteData.isolationSource}</span></p>
               </div>
             </div>
+            
 
             {/* Water Quality Donut */}
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 flex flex-col items-center justify-center text-center h-full min-h-[300px]">
@@ -462,10 +465,8 @@ function StatisticsContent() {
                   />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-xl font-bold text-slate-800">
-                    {waterQualityPercent >= 0 && waterQualityPercent <= 100
-                      ? waterQualityPercent.toFixed(0)
-                      : "N/A"}%
+                  <span className={`text-xl font-bold ${Math.round(waterQualityPercent) < 70 ? "text-red-600" : "text-slate-800"}`}>
+                    {waterQualityPercent >= 0 && waterQualityPercent <= 100 ? waterQualityPercent.toFixed(0) : "N/A"}%
                   </span>
                 </div>
               </div>
