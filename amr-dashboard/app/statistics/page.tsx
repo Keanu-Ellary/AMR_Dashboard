@@ -260,7 +260,7 @@ function StatisticsContent() {
 
           const siteDataRes = await siteRes.json();
           setSiteData(siteDataRes.site);
-
+          
           if (waterQualityRes.ok) {
             const waterRes = await waterQualityRes.json();
             setWaterQualityPercent(waterRes.percentageClean || 0);
@@ -304,6 +304,11 @@ function StatisticsContent() {
       </main>
     );
   }
+
+  const getDefaultImage = () => {
+    // Use the login background image as default placeholder
+    return "/login-bg.jpg";
+  };
 
  
   const ExportDropdown = ({ onExport }: { onExport: (format: ExportFormat) => void }) => (
@@ -363,13 +368,11 @@ function StatisticsContent() {
             {/* Location Info Card */}
             <div className="bg-blue-50 rounded-2xl p-4 shadow-sm border border-blue-100">
               <div className="rounded-xl overflow-hidden mb-4 h-40 bg-gray-200">
-                {siteData.imageBase64 ? (
-                  <img src={siteData.imageBase64} alt={siteData.sampleName} className="w-full h-full object-cover"/>
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gray-300 text-gray-600">
-                    No image available
-                  </div>
-                )}
+                <img 
+                  src={siteData.imageBase64 || getDefaultImage()} 
+                  alt={siteData.sampleName} 
+                  className="w-full h-full object-cover"
+                />
               </div>
               <h3 className="font-bold text-gray-800 flex items-center gap-2">
                 <MapPin size={16} className="text-gray-700"/>
