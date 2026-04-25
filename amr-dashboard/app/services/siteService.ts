@@ -67,7 +67,7 @@ export async function updateSite(siteId: number, siteData: SiteData) {
     return response;
 }
 
-export async function addSiteImage(siteId: number, siteImage: string[]) {
+export async function addSiteImage(siteId: number, siteImage: string[], dateTaken?: string, checkAlgae?: boolean) {
     const user = await getMe();
     const token = user?.token;
 
@@ -75,7 +75,7 @@ export async function addSiteImage(siteId: number, siteImage: string[]) {
     const response = await fetch(`/api/site/${strId}/photos`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({images: siteImage})
+        body: JSON.stringify({images: siteImage, dateTaken, checkAlgae})
     });
 
     return response;

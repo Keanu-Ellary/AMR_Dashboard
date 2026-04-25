@@ -65,18 +65,32 @@ model SiteData {
 
   dangerZone String // "red" | "yellow" | "green"
 
-  createdAt DateTime    @default(now())
-  adminId   Int
-  admin     AdminUser   @relation(fields: [adminId], references: [id])
-  images    SiteImage[]
+  createdAt    DateTime         @default(now())
+  adminId      Int
+  admin        AdminUser        @relation(fields: [adminId], references: [id])
+  images       SiteImage[]
+  imageBatches SiteImageBatch[]
+}
+
+model SiteImageBatch {
+  id            Int         @id @default(autoincrement())
+  siteId        Int
+  site          SiteData    @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  dateTaken     DateTime
+  algaeDetected Boolean     @default(false)
+  algaeScanRun  Boolean     @default(false)
+  createdAt     DateTime    @default(now())
+  images        SiteImage[]
 }
 
 model SiteImage {
-  id        Int      @id @default(autoincrement())
+  id        Int             @id @default(autoincrement())
   url       String
-  createdAt DateTime @default(now())
+  createdAt DateTime        @default(now())
   siteId    Int
-  site      SiteData @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  site      SiteData        @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  batchId   Int?
+  batch     SiteImageBatch? @relation(fields: [batchId], references: [id], onDelete: Cascade)
 }
 
 datasource db {

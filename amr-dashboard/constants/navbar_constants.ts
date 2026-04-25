@@ -4,6 +4,7 @@ import { LayoutDashboard, PieChartIcon, PlusCircleIcon, FileScan } from "lucide-
 export const NAV_ITEMS: NavItem[] = [
   { href: "/home", icon: LayoutDashboard, label: "Overview" },
   { href: "/add-data", icon: PlusCircleIcon, label: "Add Data" },
-  { href: "/analyze", icon: FileScan, label: "Analyze Image" },
+  { href: "/add-images", icon: PlusCircleIcon, label: "Add Images" },
+  { href: "/analyze", icon: FileScan, label: "Analyze Single Image" },
   { href: "/statistics", icon: PieChartIcon, label: "Statistics" },
 ];
