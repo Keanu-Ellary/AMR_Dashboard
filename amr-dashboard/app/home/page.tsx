@@ -72,8 +72,8 @@ export default function Home() {
   const totalModerateRiskSites = sites.filter(p => p.dangerZone === "yellow").length;
   return (
     
-          <main className="flex-1 overflow-auto p-6">
-            <div className="flex flex-direction-column justify-between">
+          <main className="flex-1 overflow-auto">
+            <div className="flex flex-direction-column justify-between pt-4 px-4">
               <div style={styles.grid}>
                 <span style={styles.card}>
                   <span style={styles.cardTitle}>Total Samples:</span>
@@ -107,6 +107,7 @@ export default function Home() {
                   points={filteredPoints}
                   selectedSite={selectedSite}
                   onSelectSite={setSelectedSite}
+                  onRefresh={handleGetAllSites}
                 />
               </div>
             </MapProvider>
@@ -126,7 +127,7 @@ const styles: Record<string, React.CSSProperties> = {
     display:"grid",
     gridTemplateColumns:"repeat(3, 200px)",
     gap:"12px",
-    marginBottom:"48px",
+    marginBottom:"16px",
   },
   card: {
     display: "flex",

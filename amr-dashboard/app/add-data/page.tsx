@@ -6,7 +6,7 @@ import SitesSidebar from '@/components/map/SitesSidebar';
 import { Map } from "@/components/map/LoadMap";
 import { SiteData } from '@/types/site_types';
 import { toast } from 'react-toastify';
-import { addSiteData, addMutlipleSiteData, getAllSites, updateSite } from '@/app/services/siteService';
+import { addSiteData, addMutlipleSiteData, getAllSites, updateSite, addSiteImage } from '@/app/services/siteService';
 import ConfirmFile from '@/components/add-data/confirmFile';
 import { DEFAULT_FILTERS } from '@/constants/map_constants';
 import { getDangerZoneLabel, MapFilters } from '@/types/map_types';
@@ -15,8 +15,7 @@ export default function AddDataPage() {
   const [showImportDropdown, setShowImportDropdown] = useState(false);
   const [acceptType, setAcceptType] = useState('.csv');
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const imageInputRef = useRef<HTMLInputElement>(null);
-  const [imageBase64, setImageBase64] = useState<string | undefined>(undefined);
+
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [sites, setSites] = useState<SiteData[]>([]);
   const [selectedSite, setSelectedSite] = useState<SiteData | null>(null);
@@ -115,19 +114,16 @@ export default function AddDataPage() {
       virtulenceGenes: formData.virtulenceGenes || undefined,
       plasmidReplicons: formData.plasmidReplicons || undefined,
 
-      // image
-      imageBase64,
     });
 
       if (updateResponse.ok) {
         toast.success("Site data updated successfully");
         setSelectedSite(null);
+        handleGetAllSites();
+        handleClear();
       }else{
         toast.error("Failed to update site data")
       }
-
-      handleGetAllSites();
-      handleClear();
     }
   }
 
@@ -208,7 +204,6 @@ export default function AddDataPage() {
     ec: '',
     dissolvedO2: '',
     });
-    setImageBase64(undefined);
   };
 
   const handleImportClick = (type: string) => {
@@ -231,18 +226,7 @@ export default function AddDataPage() {
     }
   };
 
-   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        setImageBase64(base64String);
-        toast.success('Image loaded successfully!');
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+
 
   const handleAddData = async () => {
     const response = await addSiteData({
@@ -282,14 +266,12 @@ export default function AddDataPage() {
       virtulenceGenes: formData.virtulenceGenes || undefined,
       plasmidReplicons: formData.plasmidReplicons || undefined,
 
-      // image
-      imageBase64,
     });
+
     if (response.status === 200 || response.status === 201) {
       toast.success('Site data added successfully!');
       handleClear();
       handleGetAllSites();
-      filteredPoints;
     } else {
       toast.error('Failed to add site data. Please try again.');
     }
@@ -398,7 +380,7 @@ export default function AddDataPage() {
                 </div>
                 <div>
                   <label className="block text-gray-700 mb-0.5 text-xs">Collection Date </label>
-                  <input type="text" placeholder="Value" value={formData.collectionDate} onChange={(e) => setFormData({...formData, collectionDate: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
+                  <input type="text" placeholder="yyyy/mm/dd" value={formData.collectionDate} onChange={(e) => setFormData({...formData, collectionDate: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
                 </div>
                 <div>
                   <label className="block text-gray-700 mb-0.5 text-xs">Geographic Location Name</label>
@@ -527,16 +509,7 @@ export default function AddDataPage() {
                   <input type="text" placeholder="Value" value={formData.dissolvedO2} onChange={(e) => setFormData({...formData, dissolvedO2: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
                 </div>
 
-                 <p className="block text-gray-700 mb-0.5 text-xs">Site Image</p>
-                  <div>
-                    <input type="file" ref={imageInputRef} accept="image/*" onChange={handleImageChange} className="text-xs" />
-                    <button
-                      onClick={() => imageInputRef.current?.click()}
-                      className="w-full border border-dashed border-gray-300 rounded-md py-2 text-xs text-gray-500 hover:border-blue-400 hover:text-blue-500 transition"
-                    >
-                      {imageBase64 ? 'Image selected' : 'Click to upload image'}
-                    </button>
-                  </div>
+
 
               </div>
 
@@ -624,6 +597,7 @@ export default function AddDataPage() {
                     points={filteredPoints}
                     selectedSite={selectedSite}
                     onSelectSite={setSelectedSite}
+                    onRefresh={handleGetAllSites}
                   />
                 </div>
             </MapProvider>

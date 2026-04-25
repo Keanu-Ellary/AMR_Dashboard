@@ -78,4 +78,5 @@ export interface SiteData {
         // extra
         dangerZone?: DangerZone;
         imageBase64?: string;
+        images?: {url: string}[];
 }

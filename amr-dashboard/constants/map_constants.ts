@@ -5,7 +5,7 @@ export const RISK_COLOUR: Record<ContaminationLevel, RiverColourData> = {
   low: { fill: "#15f80d", stroke: "#0fbc09", glow: "#74ff6f" ,  label: "Low Risk" },
   moderate: { fill: "#fff048", stroke: "#fdeb1e", glow: "#fff7a7",  label: "Moderate Risk" },
   high: { fill: "#ef4444", stroke: "#dc2626", glow: "#ff9797",   label: "High Risk" },
-  filtered: { fill: "#94a3b8", stroke: "#64748b", glow: "#cbd5e1",   label: "Filtered Out" },
+  filtered: { fill: "#0c0c0e", stroke: "#0a0b0c", glow: "#ffffff",   label: "Filtered Out" },
 };
 
 export const DEFAULT_FILTERS: MapFilters = {

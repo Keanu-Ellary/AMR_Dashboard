@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { resetPassword } from "../services/authService";
+import { toast } from "react-toastify";
 
 export default function ForgotPasswordPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -31,7 +32,7 @@ export default function ForgotPasswordPage() {
     try {
       await resetPassword(email, password);
 
-      setSuccess("Password reset successfully. Redirecting to login...");
+      toast.success("Password reset successfully. Redirecting to login...");
       setTimeout(() => {
         router.push("/login");
       }, 2000);
