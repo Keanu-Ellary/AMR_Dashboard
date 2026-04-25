@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, Suspense } from "react";
+import TimeSeriesDashboard from "@/components/TimeSeriesDashboard";
+import TimeSeriesDashboardOverall from "@/components/TimeSeriesDashboardOverall";
 import { useSearchParams } from "next/navigation";
 import { MapPin, TrendingUp, TrendingDown, Download, AlertTriangle } from "lucide-react";
 import type { SiteData } from "@/types/site_types";
@@ -8,6 +10,8 @@ import { exportStatistics, ExportFormat } from "@/functions/statistics/exportDat
 import { toast } from "react-toastify";
 
 export const dynamic = "force-dynamic";
+
+
 
 interface AverageMetrics {
   avgpH: number;
@@ -271,10 +275,10 @@ function StatisticsContent() {
 
           const siteDataRes = await siteRes.json();
           setSiteData(siteDataRes.site);
-
+          
           if (waterQualityRes.ok) {
             const waterRes = await waterQualityRes.json();
-            setWaterQualityPercent(waterRes.percentageClean || 0);
+            setWaterQualityPercent(waterRes.results?.[0]?.WQI || 0);
           }
           if (timeInUnsafeRes.ok) {
             const timeRes = await timeInUnsafeRes.json();
@@ -316,7 +320,12 @@ function StatisticsContent() {
     );
   }
 
+  const getDefaultImage = () => {
+    // Use the login background image as default placeholder
+    return "/login-bg.jpg";
+  };
 
+ 
   const ExportDropdown = ({ onExport }: { onExport: (format: ExportFormat) => void }) => (
     <div className="relative inline-block">
       <button
@@ -398,12 +407,9 @@ function StatisticsContent() {
                   return latestImage ? (
                     <img src={`/api/image?url=${encodeURIComponent(latestImage)}`} alt={siteData.sampleName} className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gray-300 text-gray-600">
-                      No image available
-                    </div>
+                    <img src={siteData.imageBase64 || getDefaultImage()} alt={siteData.sampleName} className="w-full h-full object-cover" />
                   );
                 })()}
-
               </div>
               <h3 className="font-bold text-gray-800 flex items-center gap-2">
                 <MapPin size={16} className="text-gray-700" />
@@ -436,6 +442,7 @@ function StatisticsContent() {
                 <p className="font-bold mt-2">Isolation Source: <span className="font-normal">{siteData.isolationSource}</span></p>
               </div>
             </div>
+            
 
             {/* Water Quality Donut */}
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 flex flex-col items-center justify-center text-center h-full min-h-[300px]">
@@ -458,10 +465,8 @@ function StatisticsContent() {
                   />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-xl font-bold text-slate-800">
-                    {waterQualityPercent >= 0 && waterQualityPercent <= 100
-                      ? waterQualityPercent.toFixed(0)
-                      : "N/A"}%
+                  <span className={`text-xl font-bold ${Math.round(waterQualityPercent) < 70 ? "text-red-600" : "text-slate-800"}`}>
+                    {waterQualityPercent >= 0 && waterQualityPercent <= 100 ? waterQualityPercent.toFixed(0) : "N/A"}%
                   </span>
                 </div>
               </div>
@@ -552,6 +557,9 @@ function StatisticsContent() {
 
           </div>
         </div>
+        <div className="mt-8">
+          <TimeSeriesDashboard siteId={siteId} />
+        </div>
       </main>
     );
   }
@@ -568,6 +576,7 @@ function StatisticsContent() {
       </div>
 
       <div className="space-y-6 max-w-[1400px] mx-auto w-full">
+        
 
         {/* System-wide Averages */}
         {averageMetrics && (
@@ -687,6 +696,8 @@ function StatisticsContent() {
           </div>
         )}
 
+        <TimeSeriesDashboardOverall />
+        
         {/* Detected Anomalies */}
         {anomalies.length > 0 && (
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
