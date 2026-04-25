@@ -162,7 +162,7 @@ export default function Site({
           markerDangerZone = getDangerZoneLabel(point.dangerZone);
         }
         const marker = L.marker([point.latitude, point.longitude], {
-          icon:         createMarkerIcon(markerDangerZone, false),
+          icon: createMarkerIcon(markerDangerZone, selectedSite?.id === point.id),
           zIndexOffset: 500,
         });
 
@@ -226,7 +226,7 @@ export default function Site({
       layer.clearLayers();
     };
 
-  }, [map, points, activeDangerZones]);
+  }, [map, points, activeDangerZones, selectedSite]);
 
   useEffect(() => {
     if (!map) return;
