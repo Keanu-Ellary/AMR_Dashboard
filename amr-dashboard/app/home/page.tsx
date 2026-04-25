@@ -29,7 +29,18 @@ export default function Home() {
     filteredPoints;
   }, []);
 
-  const filteredPoints = sites.filter((point) => {
+  const uniqueSites = Object.values(
+    sites.reduce<Record<string, SiteData>>((uniquePoints, point) => {
+      const coords = `${point.latitude},${point.longitude}`;
+      const existing = uniquePoints[coords];
+      if (!existing || new Date(point.collectionDate) > new Date(existing.collectionDate)) {
+        uniquePoints[coords] = point;
+      }
+      return uniquePoints;
+    }, {})
+  );
+
+  const filteredPoints = uniqueSites.filter((point) => {
       if (!filters) return true;
   
       if (filters.contaminationLevels) {

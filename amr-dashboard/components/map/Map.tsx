@@ -112,6 +112,7 @@ export default function Map({
           height: "100%",
           background: satelliteView ? "transparent" : "#eeffe3",
         }}
+        className="outline-none"
       />
 
       {mapReady && mapRef.current && (
