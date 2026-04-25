@@ -16,8 +16,7 @@ export default function AddDataPage() {
   const [showImportDropdown, setShowImportDropdown] = useState(false);
   const [acceptType, setAcceptType] = useState('.csv');
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const imageInputRef = useRef<HTMLInputElement>(null);
-  const [imageBase64, setImageBase64] = useState<string | undefined>(undefined);
+
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [sites, setSites] = useState<SiteData[]>([]);
   const [selectedSite, setSelectedSite] = useState<SiteData | null>(null);
@@ -119,22 +118,10 @@ export default function AddDataPage() {
     });
 
       if (updateResponse.ok) {
-        if (imageBase64) {
-          const imageUpdateResponse = await addSiteImage(selectedSite.id, [imageBase64]);
-          if (imageUpdateResponse.ok) {
-            toast.success("Site data updated successfully");
-          }else{
-            toast.error("Failed to update site image")
-          }
-          setSelectedSite(null);
-          handleGetAllSites();
-          handleClear();
-        }else{
-          toast.success("Site data updated successfully");
-          setSelectedSite(null);
-          handleGetAllSites();
-          handleClear();
-        }
+        toast.success("Site data updated successfully");
+        setSelectedSite(null);
+        handleGetAllSites();
+        handleClear();
       }else{
         toast.error("Failed to update site data")
       }
@@ -218,7 +205,6 @@ export default function AddDataPage() {
     ec: '',
     dissolvedO2: '',
     });
-    setImageBase64(undefined);
   };
 
   const handleImportClick = (type: string) => {
@@ -294,24 +280,9 @@ export default function AddDataPage() {
     });
 
     if (response.status === 200 || response.status === 201) {
-      if (imageBase64) {
-          const resData = await response.json();
-          const imageUpdateResponse = await addSiteImage(resData.id, [imageBase64]);
-          if (imageUpdateResponse.ok) {
-            toast.success("Site data added successfully");
-          }else{
-            toast.error("Failed to add site image")
-            return
-          }
-          handleClear();
-          handleGetAllSites();
-          filteredPoints;
-        }else{
-          toast.success('Site data added successfully!');
-          handleClear();
-          handleGetAllSites();
-          filteredPoints;
-        }
+      toast.success('Site data added successfully!');
+      handleClear();
+      handleGetAllSites();
     } else {
       toast.error('Failed to add site data. Please try again.');
     }
@@ -555,16 +526,7 @@ export default function AddDataPage() {
                   <input type="text" placeholder="Value" value={formData.dissolvedO2} onChange={(e) => setFormData({...formData, dissolvedO2: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
                 </div>
 
-                 <p className="block text-gray-700 mb-0.5 text-xs">Site Image</p>
-                  <div>
-                    <input type="file" ref={imageInputRef} accept="image/*" onChange={handleImageChange} className="text-xs" />
-                    <button
-                      onClick={() => imageInputRef.current?.click()}
-                      className="w-full border border-dashed border-gray-300 rounded-md py-2 text-xs text-gray-500 hover:border-blue-400 hover:text-blue-500 transition"
-                    >
-                      {imageBase64 ? 'Image selected' : 'Click to upload image'}
-                    </button>
-                  </div>
+
 
               </div>
 

@@ -17,12 +17,16 @@ interface SiteProps {
 declare global {
   interface Window {
     __handleViewSite: (id: string) => void;
+    __handleViewGallery: (id: string) => void;
   }
 }
 
 if (typeof window !== "undefined") {
   window.__handleViewSite = (id: string) => {
     window.location.href = `/statistics?site=${id}`;
+  };
+  window.__handleViewGallery = (id: string) => {
+    window.location.href = `/gallery?site=${id}`;
   };
 }
 
@@ -67,16 +71,25 @@ function sitePopupHTML(point: SiteData): string {
   }
 
   let imageUrl = '/form-image.jpg'
-  if (point.images && point.images.length > 0) {
-    const lastImage = point.images.length - 1
-    imageUrl =`/api/image?url=${encodeURIComponent(point.images[lastImage].url)}`;
+  // Prefer the latest image from the most recent batch, fall back to legacy images array
+  if (point.imageBatches && point.imageBatches.length > 0 && point.imageBatches[0].images && point.imageBatches[0].images.length > 0) {
+    imageUrl = `/api/image?url=${encodeURIComponent(point.imageBatches[0].images[0].url)}`;
+  } else if (point.images && point.images.length > 0) {
+    const lastImage = point.images.length - 1;
+    imageUrl = `/api/image?url=${encodeURIComponent(point.images[lastImage].url)}`;
   }
+
+  // Check if the latest batch has algae detected
+  const algaeWarning = point.imageBatches && point.imageBatches.length > 0 && point.imageBatches[0].algaeDetected 
+    ? `<div style="background: #fee2e2; color: #b91c1c; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; margin-bottom: 6px; display: flex; align-items: center; gap: 4px;">⚠️ Algae Detected in latest photos</div>`
+    : "";
 
   return `
     <div style="${TOOLTIP_STYLES.wrapper}">
 
       <img src="${imageUrl}" alt="${point.sampleName}" style="${TOOLTIP_STYLES.siteImage}" />
       <div style="${TOOLTIP_STYLES.name}">${point.sampleName}</div>
+      ${algaeWarning}
       <div style="${TOOLTIP_STYLES.badge}">
         <span style="${TOOLTIP_STYLES.riskBadge(riskColor.glow, riskColor.fill)}">${riskColor.label}</span>
       </div>
@@ -115,13 +128,19 @@ function sitePopupHTML(point: SiteData): string {
         <span style="${TOOLTIP_STYLES.waterValue}">${point.tds?.toFixed(1)} mg/L</span>
       </div>
 
-      <div style="text-align: center; margin-top: 8px;">
+      <div style="text-align: center; margin-top: 8px; display: flex; flex-direction: column; gap: 4px;">
         <button
           onclick="window.__handleViewSite('${point.id}')"
           style="${TOOLTIP_STYLES.link}"
         >
           Click To View Statistics
-        <button>
+        </button>
+        <button
+          onclick="window.__handleViewGallery('${point.id}')"
+          style="${TOOLTIP_STYLES.link}"
+        >
+          View Photo Gallery
+        </button>
       </div>
 
     </div>`;

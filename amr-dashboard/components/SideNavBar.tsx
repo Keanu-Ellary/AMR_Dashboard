@@ -63,7 +63,7 @@ export default function SideNavBar({isLoggedIn}: { isLoggedIn: boolean }) {
       </div>
 
       <nav className="flex flex-col gap-2 flex-1">
-        {NAV_ITEMS.filter(item => item.href !== "/add-data")
+        {NAV_ITEMS.filter(item => item.href !== "/add-data" && item.href !== "/add-images")
           .map((item) => (
             <NavLink
               key={item.href}
@@ -72,11 +72,18 @@ export default function SideNavBar({isLoggedIn}: { isLoggedIn: boolean }) {
             />
           ))}
           {isLoggedIn && (
-            <NavLink
-              key={NAV_ITEMS[1].href}
-              {...NAV_ITEMS[1]}
-              isActive={pathname === NAV_ITEMS[1].href}
-            />
+            <>
+              <NavLink
+                key="/add-data"
+                {...NAV_ITEMS.find(i => i.href === "/add-data")!}
+                isActive={pathname === "/add-data"}
+              />
+              <NavLink
+                key="/add-images"
+                {...NAV_ITEMS.find(i => i.href === "/add-images")!}
+                isActive={pathname === "/add-images"}
+              />
+            </>
           )}
       </nav>
 
