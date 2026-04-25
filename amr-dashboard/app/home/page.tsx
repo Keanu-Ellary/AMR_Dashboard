@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { MapProvider } from "@/components/map/MapContext";
 import type { SiteData } from "@/types/site_types";
 import SitesSidebar from "@/components/map/SitesSidebar";
@@ -16,6 +16,25 @@ import Slider from "rc-slider";
 import "rc-slider/assets/index.css";
 import { getAveragedColor } from "@/utils/colorUtils";
 
+const SPEED_OPTIONS = [1, 2, 5, 10] as const;
+type Speed = (typeof SPEED_OPTIONS)[number];
+
+// Each speed reduces the delay between 1-day advances
+const SPEED_DELAY_MS: Record<Speed, number> = {
+  1: 500,  // 1× — one day every 500 ms
+  2: 250,  // 2× — one day every 250 ms
+  5: 100,  // 5× — one day every 100 ms
+  10: 50,  // 10× — one day every 50 ms
+};
+
+const DAY_MS = 86_400_000;
+const THIRTY_DAYS_MS = 30 * DAY_MS;
+
+function toISODateString(ts: number) {
+  const d = new Date(ts);
+  return d.toISOString().split("T")[0];
+}
+
 export default function Home() {
   const {
     isAddDataOpen,
@@ -29,30 +48,67 @@ export default function Home() {
   const [timeWindow, setTimeWindow] = useState<[number, number]>([0, 0]);
   const [sliderBounds, setSliderBounds] = useState<[number, number]>([0, 0]);
 
+  // Playback state
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [speed, setSpeed] = useState<Speed>(1);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // ------- keyboard shortcuts -------
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === "Space") {
+        // Don't toggle if user is typing in an input
+        if (
+          e.target instanceof HTMLInputElement ||
+          e.target instanceof HTMLTextAreaElement ||
+          e.target instanceof HTMLSelectElement
+        ) {
+          return;
+        }
+        e.preventDefault();
+        
+        // Use the same logic as the button
+        const atEnd = timeWindow[1] >= sliderBounds[1];
+        if (atEnd) {
+          const windowSize = timeWindow[1] - timeWindow[0];
+          setTimeWindow([sliderBounds[0], sliderBounds[0] + windowSize]);
+          setIsPlaying(true);
+        } else {
+          setIsPlaying((p) => !p);
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [timeWindow, sliderBounds]);
+
+  // ------- data loading -------
   const handleGetAllSites = async () => {
     const allSitesResponse = await getAllSites();
     if (allSitesResponse.ok) {
       const allSiteData = await allSitesResponse.json();
-      const loadedSites = allSiteData.sites || [];
+      const loadedSites: SiteData[] = allSiteData.sites || [];
       setSites(loadedSites);
 
       if (loadedSites.length > 0) {
         let minTime = Infinity;
         let maxTime = -Infinity;
-        loadedSites.forEach((site: SiteData) => {
-          const time = new Date(site.collectionDate).getTime();
-          if (time < minTime) minTime = time;
-          if (time > maxTime) maxTime = time;
+        loadedSites.forEach((site) => {
+          const t = new Date(site.collectionDate).getTime();
+          if (t < minTime) minTime = t;
+          if (t > maxTime) maxTime = t;
         });
 
-        // Give some padding if min == max
         if (minTime === maxTime) {
-          minTime -= 86400000;
-          maxTime += 86400000;
+          minTime -= DAY_MS;
+          maxTime += DAY_MS;
         }
 
         setSliderBounds([minTime, maxTime]);
-        setTimeWindow([minTime, maxTime]);
+
+        // Default window: last 30 days of available data
+        const windowStart = Math.max(minTime, maxTime - THIRTY_DAYS_MS);
+        setTimeWindow([windowStart, maxTime]);
       }
     }
   };
@@ -61,14 +117,48 @@ export default function Home() {
     handleGetAllSites();
   }, []);
 
+  // ------- playback tick -------
+  const tick = useCallback(() => {
+    setTimeWindow((prev) => {
+      const windowSize = prev[1] - prev[0];
+      const newEnd = prev[1] + DAY_MS; // always advance exactly 1 day
+
+      if (newEnd >= sliderBounds[1]) {
+        // Reached the end — snap and stop
+        setIsPlaying(false);
+        return [sliderBounds[1] - windowSize, sliderBounds[1]];
+      }
+
+      return [prev[0] + DAY_MS, prev[1] + DAY_MS];
+    });
+  }, [sliderBounds]);
+
+  useEffect(() => {
+    if (isPlaying) {
+      // Speed controls the delay between day-advances, not the step size
+      intervalRef.current = setInterval(tick, SPEED_DELAY_MS[speed]);
+    } else {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    }
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [isPlaying, tick, speed]);
+
+  // Auto-pause when window reaches bound
+  useEffect(() => {
+    if (timeWindow[1] >= sliderBounds[1] && isPlaying) {
+      setIsPlaying(false);
+    }
+  }, [timeWindow, sliderBounds, isPlaying]);
+
+  // ------- unique site points -------
   const uniqueSitePoints = useMemo(() => {
-    // 1. Time Filter
     const timeFiltered = sites.filter((point) => {
       const time = new Date(point.collectionDate).getTime();
       return time >= timeWindow[0] && time <= timeWindow[1];
     });
 
-    // 2. Group and Average
     const groupedData = timeFiltered.reduce<
       Record<string, { base: SiteData; totalScore: number; count: number }>
     >((acc, point) => {
@@ -78,13 +168,11 @@ export default function Home() {
       const dz = getDangerZoneLabel(point.dangerZone as any);
       if (dz === "high") score = 2;
       else if (dz === "moderate") score = 1;
-      else if (dz === "low") score = 0;
 
       if (!acc[key]) {
         acc[key] = { base: { ...point }, totalScore: 0, count: 0 };
       }
 
-      // Update with newest point base details just in case
       if (
         new Date(point.collectionDate) > new Date(acc[key].base.collectionDate)
       ) {
@@ -114,7 +202,6 @@ export default function Home() {
       },
     );
 
-    // 3. Map over all unique sites in base dataset to handle UI filtering
     const allUniqueBases = sites.reduce<Record<string, SiteData>>(
       (acc, point) => {
         const key = `${point.latitude},${point.longitude}`;
@@ -144,13 +231,9 @@ export default function Home() {
             blendedColor: "#0c0c0e",
           };
 
-      // Filter logic
       let passesFilter = true;
       if (filters) {
-        if (
-          filters.contaminationLevels &&
-          filters.contaminationLevels.length > 0
-        ) {
+        if (filters.contaminationLevels && filters.contaminationLevels.length > 0) {
           const mappedLevel = getDangerZoneLabel(result.dangerZone as any);
           if (!filters.contaminationLevels.includes(mappedLevel))
             passesFilter = false;
@@ -185,46 +268,158 @@ export default function Home() {
     return {
       total: uniqueSitePoints.length,
       highRisk: uniqueSitePoints.filter((p) => p.dangerZone === "red").length,
-      moderateRisk: uniqueSitePoints.filter((p) => p.dangerZone === "yellow")
-        .length,
+      moderateRisk: uniqueSitePoints.filter((p) => p.dangerZone === "yellow").length,
     };
   }, [uniqueSitePoints]);
 
+  const hasSlider = sliderBounds[0] !== sliderBounds[1];
+  const atEnd = timeWindow[1] >= sliderBounds[1];
+
   return (
     <main className="flex flex-col h-full bg-background overflow-hidden relative">
-      {/* Stats Header */}
+      {/* Stats + Slider Header */}
       <div className="p-6 pb-2">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4 max-w-4xl">
-          <StatCard label="Unique Sampling Sites" value={stats.total} />
-          <StatCard
-            label="High Risk Sites"
-            value={stats.highRisk}
-            variant="risk-high"
-          />
-          <StatCard
-            label="Moderate Risk Sites"
-            value={stats.moderateRisk}
-            variant="risk-moderate"
-          />
-        </div>
-        {sliderBounds[0] !== sliderBounds[1] && (
-          <div className="mb-4 max-w-4xl px-2">
-            <label className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2 block">
-              Time Window: {new Date(timeWindow[0]).toLocaleDateString()} -{" "}
-              {new Date(timeWindow[1]).toLocaleDateString()}
-            </label>
-            <Slider
-              range
-              min={sliderBounds[0]}
-              max={sliderBounds[1]}
-              value={timeWindow}
-              onChange={(val) => setTimeWindow(val as [number, number])}
-              step={86400000}
-              allowCross={false}
-              pushable={86400000}
+        <div className="flex flex-col xl:flex-row gap-4 items-stretch">
+          {/* Stat Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 shrink-0">
+            <StatCard label="Unique Sampling Sites" value={stats.total} />
+            <StatCard
+              label="High Risk Sites"
+              value={stats.highRisk}
+              variant="risk-high"
+            />
+            <StatCard
+              label="Moderate Risk Sites"
+              value={stats.moderateRisk}
+              variant="risk-moderate"
             />
           </div>
-        )}
+
+          {/* Time Window Control */}
+          {hasSlider && (
+            <div className="flex-1 bg-white border border-border rounded-xl shadow-subtle px-5 py-4 flex flex-col justify-between min-w-0">
+              {/* Header row: label + play controls */}
+              <div className="flex items-center justify-between mb-3 gap-4">
+                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  Time Window
+                </span>
+
+                {/* Playback controls */}
+                <div className="flex items-center gap-2 shrink-0">
+                  {/* Speed toggle */}
+                  <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
+                    {SPEED_OPTIONS.map((s) => (
+                      <button
+                        key={s}
+                        id={`speed-${s}x`}
+                        onClick={() => setSpeed(s)}
+                        className={clsx(
+                          "px-2 py-1 rounded-md text-[11px] font-bold transition-all duration-150",
+                          speed === s
+                            ? "bg-white text-blue-600 shadow-sm"
+                            : "text-gray-500 hover:text-gray-700",
+                        )}
+                      >
+                        {s}×
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Play / Pause button */}
+                  <button
+                    id="time-play-pause"
+                    onClick={() => {
+                      if (atEnd) {
+                        // Restart from beginning of window
+                        const windowSize = timeWindow[1] - timeWindow[0];
+                        setTimeWindow([sliderBounds[0], sliderBounds[0] + windowSize]);
+                        setIsPlaying(true);
+                      } else {
+                        setIsPlaying((p) => !p);
+                      }
+                    }}
+                    className={clsx(
+                      "w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 shadow-sm text-white text-sm",
+                      atEnd
+                        ? "bg-gray-400 hover:bg-gray-500"
+                        : isPlaying
+                          ? "bg-amber-500 hover:bg-amber-600"
+                          : "bg-blue-500 hover:bg-blue-600",
+                    )}
+                    title={atEnd ? "Restart" : isPlaying ? "Pause" : "Play"}
+                  >
+                    {atEnd ? (
+                      /* Restart icon */
+                      <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                        <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z" />
+                      </svg>
+                    ) : isPlaying ? (
+                      /* Pause icon */
+                      <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                        <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+                      </svg>
+                    ) : (
+                      /* Play icon */
+                      <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Slider */}
+              <div className="px-1">
+                <Slider
+                  range={{ draggableTrack: true }}
+                  min={sliderBounds[0]}
+                  max={sliderBounds[1]}
+                  value={timeWindow}
+                  onChange={(val) => {
+                    setTimeWindow(val as [number, number]);
+                    if (isPlaying) setIsPlaying(false);
+                  }}
+                  step={DAY_MS}
+                  allowCross={false}
+                  pushable={DAY_MS}
+                />
+              </div>
+
+              {/* Date labels / inputs */}
+              <div className="flex justify-between items-center mt-2 px-1">
+                <input
+                  type="date"
+                  value={toISODateString(timeWindow[0])}
+                  min={toISODateString(sliderBounds[0])}
+                  max={toISODateString(timeWindow[1])}
+                  onChange={(e) => {
+                    const newTs = new Date(e.target.value).getTime();
+                    if (!isNaN(newTs)) {
+                      setTimeWindow([newTs, timeWindow[1]]);
+                      if (isPlaying) setIsPlaying(false);
+                    }
+                  }}
+                  className="text-[11px] font-semibold text-blue-600 bg-blue-50 px-1 py-0.5 rounded-md border border-transparent hover:border-blue-200 focus:outline-none focus:ring-1 focus:ring-blue-400 cursor-pointer"
+                />
+                <span className="text-[10px] text-gray-400 mx-2">→</span>
+                <input
+                  type="date"
+                  value={toISODateString(timeWindow[1])}
+                  min={toISODateString(timeWindow[0])}
+                  max={toISODateString(sliderBounds[1])}
+                  onChange={(e) => {
+                    const newTs = new Date(e.target.value).getTime();
+                    if (!isNaN(newTs)) {
+                      setTimeWindow([timeWindow[0], newTs]);
+                      if (isPlaying) setIsPlaying(false);
+                    }
+                  }}
+                  className="text-[11px] font-semibold text-blue-600 bg-blue-50 px-1 py-0.5 rounded-md border border-transparent hover:border-blue-200 focus:outline-none focus:ring-1 focus:ring-blue-400 cursor-pointer text-right"
+                />
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       <MapProvider>

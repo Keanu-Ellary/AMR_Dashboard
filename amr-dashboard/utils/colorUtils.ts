@@ -25,10 +25,10 @@ export function blendHexColors(color1: string, color2: string, weight: number): 
   const rgb1 = parseHex(color1);
   const rgb2 = parseHex(color2);
 
-  // Interpolate each channel
-  const r = Math.round(rgb1.r + (rgb2.r - rgb1.r) * w);
-  const g = Math.round(rgb1.g + (rgb2.g - rgb1.g) * w);
-  const b = Math.round(rgb1.b + (rgb2.b - rgb1.b) * w);
+  // Use square-root interpolation (linearizing light) to avoid "muddy" middle
+  const r = Math.round(Math.sqrt(Math.pow(rgb1.r, 2) * (1 - w) + Math.pow(rgb2.r, 2) * w));
+  const g = Math.round(Math.sqrt(Math.pow(rgb1.g, 2) * (1 - w) + Math.pow(rgb2.g, 2) * w));
+  const b = Math.round(Math.sqrt(Math.pow(rgb1.b, 2) * (1 - w) + Math.pow(rgb2.b, 2) * w));
 
   // Convert back to hex
   const toHex = (c: number) => {

@@ -13,21 +13,21 @@ export const RISK_COLOUR: Record<ContaminationLevel, RiverColourData> = {
     label: "Unknown Risk",
   },
   low: {
-    fill: "#15f80d",
-    stroke: "#0fbc09",
-    glow: "#74ff6f",
+    fill: "#22c55e",
+    stroke: "#16a34a",
+    glow: "#86efac",
     label: "Low Risk",
   },
   moderate: {
-    fill: "#fff048",
-    stroke: "#fdeb1e",
-    glow: "#fff7a7",
+    fill: "#eab308",
+    stroke: "#ca8a04",
+    glow: "#fde047",
     label: "Moderate Risk",
   },
   high: {
     fill: "#ef4444",
     stroke: "#dc2626",
-    glow: "#ff9797",
+    glow: "#fca5a5",
     label: "High Risk",
   },
   filtered: {

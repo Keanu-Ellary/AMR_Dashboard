@@ -129,37 +129,7 @@ function FilterPanel({
         </div>
       </div>
 
-      <div className="space-y-3 pt-2 border-t border-gray-50">
-        <div className="font-bold text-[10px] text-gray-400 uppercase tracking-widest">
-          Temporal Range
-        </div>
-        <div>
-          <label className="text-[9px] font-bold text-gray-400 uppercase ml-1">
-            From
-          </label>
-          <input
-            type="date"
-            value={filters.startDate ?? ""}
-            onChange={(e) =>
-              onFiltersChange({ ...filters, startDate: e.target.value })
-            }
-            className="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all"
-          />
-        </div>
-        <div>
-          <label className="text-[9px] font-bold text-gray-400 uppercase ml-1">
-            To
-          </label>
-          <input
-            type="date"
-            value={filters.endDate ?? ""}
-            onChange={(e) =>
-              onFiltersChange({ ...filters, endDate: e.target.value })
-            }
-            className="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all"
-          />
-        </div>
-      </div>
+
     </div>
   );
 }

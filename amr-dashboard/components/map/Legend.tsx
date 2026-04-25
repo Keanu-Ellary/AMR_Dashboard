@@ -28,10 +28,24 @@ const LEGEND_STYLES= {
   `,
   swatch: (fill: string) => `
     width: 28px;
-    height: 5px;
+    height: 12px;
     border-radius: 3px;
     background: ${fill};
     flex-shrink: 0;
+  `,
+  gradientBar: `
+    width: 100%;
+    height: 12px;
+    border-radius: 3px;
+    background: linear-gradient(to right, #22c55e, #eab308, #ef4444);
+    margin-bottom: 4px;
+  `,
+  gradientLabels: `
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: #64748b;
+    margin-bottom: 12px;
   `,
   label: `
     color: #0f0f0f;
@@ -40,17 +54,25 @@ const LEGEND_STYLES= {
 
 export default function addLegend(map: L.Map) {
   const div = L.DomUtil.create("div", "amr-legend");
-  const riskEntries = Object.entries(RISK_COLOUR).filter(([key]) => key !== "filtered");
+  
+  const riverColor = RISK_COLOUR.unknown.fill;
 
   div.innerHTML = `
     <div style="${LEGEND_STYLES.wrapper}">
-      <div style="${LEGEND_STYLES.title}">Legend</div>
-      ${riskEntries.map(([, key]) => `
-        <div style="${LEGEND_STYLES.row}">
-          <div style="${LEGEND_STYLES.swatch(key.fill)}"></div>
-           <span style="${LEGEND_STYLES.label}">${key.label === "Unknown Risk" ? "River" : key.label}</span>
-        </div>
-      `).join("")}
+      <div style="${LEGEND_STYLES.title}">Risk Level</div>
+      
+      <div style="${LEGEND_STYLES.gradientBar}"></div>
+      <div style="${LEGEND_STYLES.gradientLabels}">
+        <span>Low</span>
+        <span>Moderate</span>
+        <span>High</span>
+      </div>
+
+      <div style="${LEGEND_STYLES.title}">Map Features</div>
+      <div style="${LEGEND_STYLES.row}">
+        <div style="${LEGEND_STYLES.swatch(riverColor)}"></div>
+        <span style="${LEGEND_STYLES.label}">River</span>
+      </div>
     </div>
   `;
 
