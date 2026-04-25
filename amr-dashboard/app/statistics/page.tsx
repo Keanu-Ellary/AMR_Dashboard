@@ -3,9 +3,19 @@
 import React, { useState, useEffect, Suspense, useMemo } from "react";
 import TimeSeriesDashboard from "@/components/TimeSeriesDashboard";
 import { useSearchParams } from "next/navigation";
-import { MapPin, TrendingUp, TrendingDown, Download, AlertTriangle, ArrowLeft } from "lucide-react";
+import {
+  MapPin,
+  TrendingUp,
+  TrendingDown,
+  Download,
+  AlertTriangle,
+  ArrowLeft,
+} from "lucide-react";
 import type { SiteData } from "@/types/site_types";
-import { exportStatistics, ExportFormat } from "@/functions/statistics/exportData";
+import {
+  exportStatistics,
+  ExportFormat,
+} from "@/functions/statistics/exportData";
 import { toast } from "react-toastify";
 import Link from "next/link";
 import clsx from "clsx";
@@ -46,7 +56,9 @@ function StatisticsContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [waterQualityPercent, setWaterQualityPercent] = useState(0);
-  const [averageMetrics, setAverageMetrics] = useState<AverageMetrics | null>(null);
+  const [averageMetrics, setAverageMetrics] = useState<AverageMetrics | null>(
+    null,
+  );
   const [trendData, setTrendData] = useState<TrendData | null>(null);
   const [anomalies, setAnomalies] = useState<Anomaly[]>([]);
   const [siteAnomalies, setSiteAnomalies] = useState<Anomaly[]>([]);
@@ -83,7 +95,8 @@ function StatisticsContent() {
             fetch(`/api/statistics/anomalyForSite?siteId=${siteId}`),
           ]);
           if (sRes.ok) setSiteData((await sRes.json()).site);
-          if (wRes.ok) setWaterQualityPercent((await wRes.json()).percentageClean || 0);
+          if (wRes.ok)
+            setWaterQualityPercent((await wRes.json()).percentageClean || 0);
           if (tRes.ok) setTimeInUnsafe((await tRes.json()).totalRedTime || 0);
           if (saRes.ok) setSiteAnomalies(await saRes.json());
         }
@@ -107,41 +120,73 @@ function StatisticsContent() {
         <header className="mb-10 flex items-start justify-between">
           <div className="flex items-center gap-4">
             {isSiteView && (
-              <button onClick={() => window.history.back()} className="p-2 bg-white border border-border rounded-full hover:bg-gray-50 shadow-subtle transition-all">
+              <button
+                onClick={() => window.history.back()}
+                className="p-2 bg-white border border-border rounded-full hover:bg-gray-50 shadow-subtle transition-all"
+              >
                 <ArrowLeft size={20} className="text-gray-600" />
               </button>
             )}
             <div>
               <h1 className="text-3xl font-bold tracking-tight text-foreground">
-                {isSiteView ? `${siteData.sampleName} Statistics` : "System-wide Statistics"}
+                {isSiteView
+                  ? `${siteData.sampleName} Statistics`
+                  : "System-wide Statistics"}
               </h1>
               <p className="text-gray-500 mt-1 font-medium">
-                {isSiteView ? "Detailed metrics for this sampling site" : "Overall metrics across all sites"}
+                {isSiteView
+                  ? "Detailed metrics for this sampling site"
+                  : "Overall metrics across all sites"}
               </p>
             </div>
           </div>
-          <ExportDropdown onExport={(f) => handleExport(f, isSiteView)} show={showExportMenu} setShow={setShowExportMenu} />
+          <ExportDropdown
+            onExport={(f: any) => handleExport(f, isSiteView)}
+            show={showExportMenu}
+            setShow={setShowExportMenu}
+          />
         </header>
 
         {isSiteView ? (
-          <SiteView siteData={siteData} waterQualityPercent={waterQualityPercent} timeInUnsafe={timeInUnsafe} siteAnomalies={siteAnomalies} siteId={siteId!} />
+          <SiteView
+            siteData={siteData}
+            waterQualityPercent={waterQualityPercent}
+            timeInUnsafe={timeInUnsafe}
+            siteAnomalies={siteAnomalies}
+            siteId={siteId!}
+          />
         ) : (
-          <SystemView averageMetrics={averageMetrics} trendData={trendData} anomalies={anomalies} wqiData={wqiData} />
+          <SystemView
+            averageMetrics={averageMetrics}
+            trendData={trendData}
+            anomalies={anomalies}
+            wqiData={wqiData}
+          />
         )}
       </div>
     </main>
   );
 }
 
-function SiteView({ siteData, waterQualityPercent, timeInUnsafe, siteAnomalies, siteId }: any) {
+function SiteView({
+  siteData,
+  waterQualityPercent,
+  timeInUnsafe,
+  siteAnomalies,
+  siteId,
+}: any) {
   return (
     <div className="space-y-8">
       {siteData.imageBatches?.[0]?.algaeDetected && (
         <div className="bg-red-50 border-l-4 border-risk-high p-4 rounded-r-xl shadow-subtle flex gap-4">
           <AlertTriangle className="text-risk-high shrink-0" size={20} />
           <div>
-            <p className="text-sm font-bold text-red-800">Algae Bloom Detected</p>
-            <p className="text-xs text-red-600 mt-0.5">Potential algae presence identified in the latest photo batch.</p>
+            <p className="text-sm font-bold text-red-800">
+              Algae Bloom Detected
+            </p>
+            <p className="text-xs text-red-600 mt-0.5">
+              Potential algae presence identified in the latest photo batch.
+            </p>
           </div>
         </div>
       )}
@@ -151,9 +196,19 @@ function SiteView({ siteData, waterQualityPercent, timeInUnsafe, siteAnomalies, 
         <div className="lg:col-span-4 space-y-6">
           <div className="bg-white rounded-2xl border border-border overflow-hidden shadow-subtle">
             <div className="h-48 bg-gray-100 relative">
-              <img src={siteData.imageBase64 || "/login-bg.jpg"} alt="Site" className="w-full h-full object-cover" />
-              <div className={clsx("absolute top-4 right-4 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest text-white", 
-                siteData.dangerZone === 'red' ? 'bg-risk-high' : 'bg-risk-moderate')}>
+              <img
+                src={siteData.imageBase64 || "/login-bg.jpg"}
+                alt="Site"
+                className="w-full h-full object-cover"
+              />
+              <div
+                className={clsx(
+                  "absolute top-4 right-4 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest text-white",
+                  siteData.dangerZone === "red"
+                    ? "bg-risk-high"
+                    : "bg-risk-moderate",
+                )}
+              >
                 {siteData.dangerZone} Risk
               </div>
             </div>
@@ -162,60 +217,126 @@ function SiteView({ siteData, waterQualityPercent, timeInUnsafe, siteAnomalies, 
                 <MapPin size={14} /> {siteData.geoLocName}
               </div>
               <div className="grid grid-cols-2 gap-4 text-sm mb-6">
-                <MetricSmall label="Latitude" value={siteData.latitude?.toFixed(4)} />
-                <MetricSmall label="Longitude" value={siteData.longitude?.toFixed(4)} />
+                <MetricSmall
+                  label="Latitude"
+                  value={siteData.latitude?.toFixed(4)}
+                />
+                <MetricSmall
+                  label="Longitude"
+                  value={siteData.longitude?.toFixed(4)}
+                />
               </div>
               <div className="flex gap-2">
-                <Link href={`/gallery?site=${siteId}`} className="flex-1 text-center py-2 bg-gray-50 border border-border rounded-lg text-xs font-bold hover:bg-gray-100 transition-colors">Gallery</Link>
-                <Link href={`/add-images?site=${siteId}`} className="flex-1 text-center py-2 bg-brand-600 text-white rounded-lg text-xs font-bold hover:bg-brand-700 transition-colors">Add Photos</Link>
+                <Link
+                  href={`/gallery?site=${siteId}`}
+                  className="flex-1 text-center py-2 bg-gray-50 border border-border rounded-lg text-xs font-bold hover:bg-gray-100 transition-colors"
+                >
+                  Gallery
+                </Link>
+                <Link
+                  href={`/add-images?site=${siteId}`}
+                  className="flex-1 text-center py-2 bg-brand-600 text-white rounded-lg text-xs font-bold hover:bg-brand-700 transition-colors"
+                >
+                  Add Photos
+                </Link>
               </div>
             </div>
           </div>
 
           <div className="bg-white rounded-2xl border border-border p-8 shadow-subtle flex flex-col items-center">
-             <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-6 text-center">Water Quality Index</h3>
-             <WQIProgress value={waterQualityPercent} />
+            <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-6 text-center">
+              Water Quality Index
+            </h3>
+            <WQIProgress value={waterQualityPercent} />
           </div>
         </div>
 
         {/* Detailed Metrics */}
         <div className="lg:col-span-8 space-y-6">
           <div className="bg-white rounded-2xl border border-border p-8 shadow-subtle">
-            <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-6">Real-time Parameters</h3>
+            <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-6">
+              Real-time Parameters
+            </h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-               <MetricBlock label="pH Level" value={siteData.ph} color="text-brand-600" />
-               <MetricBlock label="Temp (°C)" value={siteData.temperature} color="text-risk-moderate" />
-               <MetricBlock label="DO (mg/L)" value={siteData.dissolvedO2} color="text-brand-500" />
-               <MetricBlock label="TDS (mg/L)" value={siteData.tds} color="text-purple-600" />
+              <MetricBlock
+                label="pH Level"
+                value={siteData.ph}
+                color="text-brand-600"
+              />
+              <MetricBlock
+                label="Temp (°C)"
+                value={siteData.temperature}
+                color="text-risk-moderate"
+              />
+              <MetricBlock
+                label="DO (mg/L)"
+                value={siteData.dissolvedO2}
+                color="text-brand-500"
+              />
+              <MetricBlock
+                label="TDS (mg/L)"
+                value={siteData.tds}
+                color="text-purple-600"
+              />
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-             <div className="bg-white rounded-2xl border border-border p-8 shadow-subtle">
-               <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Risk Duration</h3>
-               <div className="text-4xl font-bold text-risk-high">{timeInUnsafe?.toFixed(1)} <span className="text-sm font-medium text-gray-400 uppercase tracking-widest">Hours</span></div>
-               <p className="text-xs text-gray-500 mt-2 font-medium">Total accumulated time in unsafe conditions.</p>
-             </div>
-             <div className="bg-white rounded-2xl border border-border p-8 shadow-subtle">
-               <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Genetics Overview</h3>
-               <div className="space-y-1">
-                 <p className="text-xs font-bold text-gray-700">AMR Genes: <span className="font-normal text-gray-500 ml-1">{siteData.amrResGenes}</span></p>
-                 <p className="text-xs font-bold text-gray-700">Analysis: <span className="font-normal text-gray-500 ml-1">{siteData.sampleAnalysisType}</span></p>
-               </div>
-             </div>
+            <div className="bg-white rounded-2xl border border-border p-8 shadow-subtle">
+              <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">
+                Risk Duration
+              </h3>
+              <div className="text-4xl font-bold text-risk-high">
+                {timeInUnsafe?.toFixed(1)}{" "}
+                <span className="text-sm font-medium text-gray-400 uppercase tracking-widest">
+                  Hours
+                </span>
+              </div>
+              <p className="text-xs text-gray-500 mt-2 font-medium">
+                Total accumulated time in unsafe conditions.
+              </p>
+            </div>
+            <div className="bg-white rounded-2xl border border-border p-8 shadow-subtle">
+              <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">
+                Genetics Overview
+              </h3>
+              <div className="space-y-1">
+                <p className="text-xs font-bold text-gray-700">
+                  AMR Genes:{" "}
+                  <span className="font-normal text-gray-500 ml-1">
+                    {siteData.amrResGenes}
+                  </span>
+                </p>
+                <p className="text-xs font-bold text-gray-700">
+                  Analysis:{" "}
+                  <span className="font-normal text-gray-500 ml-1">
+                    {siteData.sampleAnalysisType}
+                  </span>
+                </p>
+              </div>
+            </div>
           </div>
 
           {siteAnomalies.length > 0 && (
             <div className="bg-white rounded-2xl border border-border p-8 shadow-subtle">
-               <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Anomalies Detected</h3>
-               <div className="space-y-3">
-                 {siteAnomalies.map((a: any, i: number) => (
-                   <div key={i} className="flex justify-between items-center p-3 bg-yellow-50 rounded-lg border border-yellow-100">
-                     <span className="text-xs font-bold text-yellow-800">{a.issues}</span>
-                     <span className="text-xs font-bold text-risk-moderate">+{a.changes.toFixed(2)}% Variance</span>
-                   </div>
-                 ))}
-               </div>
+              <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">
+                Anomalies Detected
+              </h3>
+              <div className="space-y-3">
+                {siteAnomalies.map((a: any, i: number) => (
+                  <div
+                    key={i}
+                    className="flex justify-between items-center p-3 bg-yellow-50 rounded-lg border border-yellow-100"
+                  >
+                    <span className="text-xs font-bold text-yellow-800">
+                      {a.issues}
+                    </span>
+                    <span className="text-xs font-bold text-risk-moderate">
+                      +{a.changes.toFixed(2)}% Variance
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
@@ -231,7 +352,9 @@ function SystemView({ averageMetrics, trendData, anomalies, wqiData }: any) {
   return (
     <div className="space-y-8">
       <div className="bg-white rounded-2xl border border-border p-8 shadow-subtle">
-        <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-6">System-wide Averages</h3>
+        <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-6">
+          System-wide Averages
+        </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           <MetricBlock label="Avg pH" value={averageMetrics?.avgpH} />
           <MetricBlock label="Avg Temp (°C)" value={averageMetrics?.avgTemp} />
@@ -242,36 +365,62 @@ function SystemView({ averageMetrics, trendData, anomalies, wqiData }: any) {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="bg-white rounded-2xl border border-border p-8 shadow-subtle">
-           <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-6">7-Day Quality Trend</h3>
-           <div className="flex items-center gap-10">
-              <div className="flex-1">
-                <p className="text-4xl font-bold tracking-tight text-foreground">{(trendData?.currScore * 100).toFixed(1)}%</p>
-                <div className="flex items-center gap-2 mt-2">
-                   {trendData?.trend === "Improving" ? <TrendingUp size={16} className="text-risk-low" /> : <TrendingDown size={16} className="text-risk-high" />}
-                   <span className={clsx("text-xs font-bold", trendData?.trend === "Improving" ? "text-risk-low" : "text-risk-high")}>
-                     {trendData?.trend}
-                   </span>
-                </div>
+          <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-6">
+            7-Day Quality Trend
+          </h3>
+          <div className="flex items-center gap-10">
+            <div className="flex-1">
+              <p className="text-4xl font-bold tracking-tight text-foreground">
+                {(trendData?.currScore * 100).toFixed(1)}%
+              </p>
+              <div className="flex items-center gap-2 mt-2">
+                {trendData?.trend === "Improving" ? (
+                  <TrendingUp size={16} className="text-risk-low" />
+                ) : (
+                  <TrendingDown size={16} className="text-risk-high" />
+                )}
+                <span
+                  className={clsx(
+                    "text-xs font-bold",
+                    trendData?.trend === "Improving"
+                      ? "text-risk-low"
+                      : "text-risk-high",
+                  )}
+                >
+                  {trendData?.trend}
+                </span>
               </div>
-              <div className="h-16 w-px bg-border hidden sm:block" />
-              <div className="flex-1">
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Previous Score</p>
-                <p className="text-xl font-bold text-gray-600">{(trendData?.prevScore * 100).toFixed(1)}%</p>
-              </div>
-           </div>
+            </div>
+            <div className="h-16 w-px bg-border hidden sm:block" />
+            <div className="flex-1">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
+                Previous Score
+              </p>
+              <p className="text-xl font-bold text-gray-600">
+                {(trendData?.prevScore * 100).toFixed(1)}%
+              </p>
+            </div>
+          </div>
         </div>
 
         <div className="bg-white rounded-2xl border border-border p-8 shadow-subtle">
-           <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-6">Critical Anomalies</h3>
-           <div className="space-y-3">
-             {anomalies.slice(0, 3).map((a: any, i: number) => (
-                <div key={i} className="flex justify-between items-center text-xs">
-                  <span className="font-bold text-gray-700">{a.sampleName}</span>
-                  <span className="text-gray-500">{a.issues}</span>
-                  <span className="font-bold text-risk-moderate">+{a.changes.toFixed(1)}%</span>
-                </div>
-             ))}
-           </div>
+          <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-6">
+            Critical Anomalies
+          </h3>
+          <div className="space-y-3">
+            {anomalies.slice(0, 3).map((a: any, i: number) => (
+              <div
+                key={i}
+                className="flex justify-between items-center text-xs"
+              >
+                <span className="font-bold text-gray-700">{a.sampleName}</span>
+                <span className="text-gray-500">{a.issues}</span>
+                <span className="font-bold text-risk-moderate">
+                  +{a.changes.toFixed(1)}%
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
@@ -281,7 +430,9 @@ function SystemView({ averageMetrics, trendData, anomalies, wqiData }: any) {
 function MetricSmall({ label, value }: any) {
   return (
     <div>
-      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">{label}</p>
+      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">
+        {label}
+      </p>
       <p className="font-bold text-gray-800 tracking-tight">{value}</p>
     </div>
   );
@@ -290,8 +441,12 @@ function MetricSmall({ label, value }: any) {
 function MetricBlock({ label, value, color = "text-foreground" }: any) {
   return (
     <div>
-      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">{label}</p>
-      <p className={clsx("text-3xl font-bold tracking-tight", color)}>{value?.toFixed(1) || "N/A"}</p>
+      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
+        {label}
+      </p>
+      <p className={clsx("text-3xl font-bold tracking-tight", color)}>
+        {value?.toFixed(1) || "N/A"}
+      </p>
     </div>
   );
 }
@@ -300,12 +455,28 @@ function WQIProgress({ value }: any) {
   return (
     <div className="relative w-32 h-32 flex items-center justify-center">
       <svg className="w-full h-full -rotate-90">
-        <circle cx="64" cy="64" r="58" className="stroke-gray-100 fill-none" strokeWidth="8" />
-        <circle cx="64" cy="64" r="58" className="stroke-brand-500 fill-none" strokeWidth="8" 
-                strokeDasharray="364.4" strokeDashoffset={364.4 - (364.4 * value) / 100} strokeLinecap="round" />
+        <circle
+          cx="64"
+          cy="64"
+          r="58"
+          className="stroke-gray-100 fill-none"
+          strokeWidth="8"
+        />
+        <circle
+          cx="64"
+          cy="64"
+          r="58"
+          className="stroke-brand-500 fill-none"
+          strokeWidth="8"
+          strokeDasharray="364.4"
+          strokeDashoffset={364.4 - (364.4 * value) / 100}
+          strokeLinecap="round"
+        />
       </svg>
       <div className="absolute flex flex-col items-center">
-        <span className="text-2xl font-bold text-foreground">{value.toFixed(0)}%</span>
+        <span className="text-2xl font-bold text-foreground">
+          {value.toFixed(0)}%
+        </span>
       </div>
     </div>
   );
@@ -314,13 +485,20 @@ function WQIProgress({ value }: any) {
 function ExportDropdown({ onExport, show, setShow }: any) {
   return (
     <div className="relative">
-      <button onClick={() => setShow(!show)} className="flex items-center gap-2 px-4 py-2 bg-foreground text-white rounded-lg text-sm font-bold hover:opacity-90 transition-opacity">
+      <button
+        onClick={() => setShow(!show)}
+        className="flex items-center gap-2 px-4 py-2 bg-foreground text-white rounded-lg text-sm font-bold hover:opacity-90 transition-opacity"
+      >
         <Download size={16} /> Export Data
       </button>
       {show && (
         <div className="absolute right-0 mt-2 w-40 bg-white border border-border rounded-xl shadow-soft z-50 overflow-hidden">
           {["csv", "tsv", "json"].map((f) => (
-            <button key={f} onClick={() => onExport(f)} className="w-full text-left px-4 py-2.5 text-xs font-bold text-gray-600 hover:bg-gray-50 border-b border-border last:border-0 uppercase tracking-widest">
+            <button
+              key={f}
+              onClick={() => onExport(f)}
+              className="w-full text-left px-4 py-2.5 text-xs font-bold text-gray-600 hover:bg-gray-50 border-b border-border last:border-0 uppercase tracking-widest"
+            >
               {f} Format
             </button>
           ))}
@@ -331,14 +509,20 @@ function ExportDropdown({ onExport, show, setShow }: any) {
 }
 
 function LoadingState() {
-  return <div className="flex-1 flex items-center justify-center h-full text-gray-400 text-sm font-bold uppercase tracking-widest animate-pulse">Initializing Dashboard...</div>;
+  return (
+    <div className="flex-1 flex items-center justify-center h-full text-gray-400 text-sm font-bold uppercase tracking-widest animate-pulse">
+      Initializing Dashboard...
+    </div>
+  );
 }
 
 function ErrorState({ message }: { message: string }) {
   return (
     <div className="flex-1 flex flex-col items-center justify-center h-full p-8 text-center">
       <AlertTriangle size={48} className="text-risk-high mb-4" />
-      <h2 className="text-xl font-bold text-foreground">Data Acquisition Failed</h2>
+      <h2 className="text-xl font-bold text-foreground">
+        Data Acquisition Failed
+      </h2>
       <p className="text-gray-500 mt-2 max-w-md">{message}</p>
     </div>
   );

@@ -2,7 +2,11 @@
 
 import L from "leaflet";
 import { useEffect, useRef } from "react";
-import { getDangerZoneLabel, type ContaminationLevel, type DangerZone } from "@/types/map_types";
+import {
+  getDangerZoneLabel,
+  type ContaminationLevel,
+  type DangerZone,
+} from "@/types/map_types";
 import type { SiteData } from "@/types/site_types";
 import { RISK_COLOUR } from "@/constants/map_constants";
 
@@ -32,15 +36,18 @@ if (typeof window !== "undefined") {
 
 function createMarkerIcon(
   riskLevel: ContaminationLevel,
-  isSelected: boolean
+  isSelected: boolean,
+  blendedColor?: string,
 ): L.DivIcon {
-
   let markerColour = RISK_COLOUR[riskLevel] ?? RISK_COLOUR.moderate;
   const markerInner = isSelected ? 20 : 15;
-  const markerBox  = markerInner + 12;
+  const markerBox = markerInner + 12;
   if (isSelected) {
-    markerColour = RISK_COLOUR.filtered
+    markerColour = RISK_COLOUR.filtered;
   }
+
+  const fillColor =
+    !isSelected && blendedColor ? blendedColor : markerColour.fill;
 
   return L.divIcon({
     html: `
@@ -51,17 +58,21 @@ function createMarkerIcon(
           fill="${markerColour.glow}"/>
         <circle
           cx="${markerBox / 2}" cy="${markerBox / 2}" r="${markerInner / 2}"
-          fill="${markerColour.fill}" stroke="${markerColour.stroke}" stroke-width="2.5"/>
-        ${isSelected ? `
+          fill="${fillColor}" stroke="${markerColour.stroke}" stroke-width="2.5"/>
+        ${
+          isSelected
+            ? `
           <circle
             cx="${markerBox / 2}" cy="${markerBox / 2}" r="${markerInner / 4}"
             fill="white" opacity="0.9"/>
-        ` : ""}
+        `
+            : ""
+        }
       </svg>`,
     className: "",
     iconSize: [markerBox, markerBox],
     iconAnchor: [markerBox / 2, markerBox / 2],
-    popupAnchor: [175, 410],   
+    popupAnchor: [175, 410],
   });
 }
 
@@ -69,12 +80,17 @@ function sitePopupHTML(point: SiteData): string {
   let riskColor = RISK_COLOUR.unknown;
   if (point.dangerZone) {
     const dangerZoneLabel = getDangerZoneLabel(point.dangerZone);
-    riskColor  = RISK_COLOUR[dangerZoneLabel];
+    riskColor = RISK_COLOUR[dangerZoneLabel];
   }
 
-  let imageUrl = '/form-image.jpg'
+  let imageUrl = "/form-image.jpg";
   // Prefer the latest image from the most recent batch, fall back to legacy images array
-  if (point.imageBatches && point.imageBatches.length > 0 && point.imageBatches[0].images && point.imageBatches[0].images.length > 0) {
+  if (
+    point.imageBatches &&
+    point.imageBatches.length > 0 &&
+    point.imageBatches[0].images &&
+    point.imageBatches[0].images.length > 0
+  ) {
     imageUrl = `/api/image?url=${encodeURIComponent(point.imageBatches[0].images[0].url)}`;
   } else if (point.images && point.images.length > 0) {
     const lastImage = point.images.length - 1;
@@ -82,9 +98,12 @@ function sitePopupHTML(point: SiteData): string {
   }
 
   // Check if the latest batch has algae detected
-  const algaeWarning = point.imageBatches && point.imageBatches.length > 0 && point.imageBatches[0].algaeDetected 
-    ? `<div style="background: #fee2e2; color: #b91c1c; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; margin-bottom: 6px; display: flex; align-items: center; gap: 4px;">⚠️ Algae Detected in latest photos</div>`
-    : "";
+  const algaeWarning =
+    point.imageBatches &&
+    point.imageBatches.length > 0 &&
+    point.imageBatches[0].algaeDetected
+      ? `<div style="background: #fee2e2; color: #b91c1c; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; margin-bottom: 6px; display: flex; align-items: center; gap: 4px;">⚠️ Algae Detected in latest photos</div>`
+      : "";
 
   return `
     <div style="${TOOLTIP_STYLES.wrapper}">
@@ -155,8 +174,7 @@ export default function Site({
   onSelectSite,
   activeDangerZones,
 }: SiteProps) {
-
-  const layerRef   = useRef<L.LayerGroup | null>(null);
+  const layerRef = useRef<L.LayerGroup | null>(null);
   const markersRef = useRef<Record<string, L.Marker>>({});
 
   //add site markers
@@ -168,35 +186,38 @@ export default function Site({
 
     layer.clearLayers();
 
-    layerRef.current  = layer;
+    layerRef.current = layer;
     markersRef.current = {};
 
-    const visiblePoints = activeDangerZones && activeDangerZones.length > 0
-        ? points.filter((p) => activeDangerZones.includes(p.dangerZone as DangerZone))
+    const visiblePoints =
+      activeDangerZones && activeDangerZones.length > 0
+        ? points.filter((p) =>
+            activeDangerZones.includes(p.dangerZone as DangerZone),
+          )
         : points;
 
     visiblePoints.forEach((point) => {
       if (!point.latitude || !point.longitude) return;
 
       let markerDangerZone = getDangerZoneLabel("blue");
-        if (point.dangerZone) {
-          markerDangerZone = getDangerZoneLabel(point.dangerZone);
-        }
-        const marker = L.marker([point.latitude, point.longitude], {
-          icon:         createMarkerIcon(markerDangerZone, false),
-          zIndexOffset: 500,
-        });
+      if (point.dangerZone) {
+        markerDangerZone = getDangerZoneLabel(point.dangerZone);
+      }
+      const marker = L.marker([point.latitude, point.longitude], {
+        icon: createMarkerIcon(markerDangerZone, false, point.blendedColor),
+        zIndexOffset: 500,
+      });
 
       const sitePopup = L.popup({
         closeButton: false,
         className: "amr-popup",
-        offset: [0,0],
+        offset: [0, 0],
         autoClose: false,
         closeOnClick: true,
         autoPan: false,
-      }).setContent(sitePopupHTML(point))
+      }).setContent(sitePopupHTML(point));
 
-      marker.bindPopup(sitePopup)
+      marker.bindPopup(sitePopup);
 
       let hideTimeout: ReturnType<typeof setTimeout> | null = null;
 
@@ -217,7 +238,7 @@ export default function Site({
         cancelHide();
         marker.openPopup();
       });
-      
+
       marker.on("mouseout", scheduleHide);
 
       marker.on("popupopen", () => {
@@ -227,7 +248,7 @@ export default function Site({
         popupThing.addEventListener("mouseleave", scheduleHide);
       });
 
-       marker.on("popupclose", () => {
+      marker.on("popupclose", () => {
         const popupThing = sitePopup.getElement();
         if (!popupThing) return;
         popupThing.removeEventListener("mouseenter", cancelHide);
@@ -239,14 +260,12 @@ export default function Site({
       });
 
       marker.addTo(layer);
-      if (point.id)
-        markersRef.current[point.id] = marker;
+      if (point.id) markersRef.current[point.id] = marker;
     });
 
     return () => {
       layer.clearLayers();
     };
-
   }, [map, points, activeDangerZones]);
 
   useEffect(() => {
@@ -256,19 +275,26 @@ export default function Site({
       if (!pt.id) return;
 
       let markerDangerZone = getDangerZoneLabel("blue");
-        if (pt.dangerZone) {
-          markerDangerZone = getDangerZoneLabel(pt.dangerZone);
-        }
+      if (pt.dangerZone) {
+        markerDangerZone = getDangerZoneLabel(pt.dangerZone);
+      }
       const m = markersRef.current[pt.id];
-      if (m) m.setIcon(
-        createMarkerIcon(markerDangerZone, selectedSite?.id === pt.id)
-      );
+      if (m)
+        m.setIcon(
+          createMarkerIcon(
+            markerDangerZone,
+            selectedSite?.id === pt.id,
+            pt.blendedColor,
+          ),
+        );
     });
 
     if (selectedSite) {
-      map.flyTo([selectedSite.latitude, selectedSite.longitude], 13, { animate: true, duration: 0.85 });
+      map.flyTo([selectedSite.latitude, selectedSite.longitude], 13, {
+        animate: true,
+        duration: 0.85,
+      });
     }
-
   }, [selectedSite]);
 
   return null;
@@ -353,5 +379,4 @@ const TOOLTIP_STYLES = {
     color: #94a3b8;
     font-size: 12px;
   `,
-  
 } as const;

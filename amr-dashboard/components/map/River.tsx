@@ -3,7 +3,12 @@
 import { useEffect, useRef } from "react";
 import L from "leaflet";
 import { RISK_COLOUR } from "@/constants/map_constants";
-import { type RiverSegment, type ContaminationLevel, getDangerZoneLabel } from "@/types/map_types";
+import { blendHexColors } from "@/utils/colorUtils";
+import {
+  type RiverSegment,
+  type ContaminationLevel,
+  getDangerZoneLabel,
+} from "@/types/map_types";
 import { SiteData } from "@/types/site_types";
 
 interface RiverProps {
@@ -13,7 +18,12 @@ interface RiverProps {
   points: SiteData[];
 }
 
-export default function River({ map, activeRisks, selectedYear, points }: RiverProps) {
+export default function River({
+  map,
+  activeRisks,
+  selectedYear,
+  points,
+}: RiverProps) {
   const layerRef = useRef<L.LayerGroup | null>(null);
 
   function segmentTooltipHTML(seg: RiverSegment): string {
@@ -41,11 +51,16 @@ export default function River({ map, activeRisks, selectedYear, points }: RiverP
     layerRef.current = river;
 
     if (points && points.length > 1) {
-      
-      const distanceBetween2Sites = (a: SiteData, b: SiteData) => Math.sqrt(Math.pow(a.latitude - b.latitude,2) + Math.pow(a.longitude -b.longitude, 2));
+      const distanceBetween2Sites = (a: SiteData, b: SiteData) =>
+        Math.sqrt(
+          Math.pow(a.latitude - b.latitude, 2) +
+            Math.pow(a.longitude - b.longitude, 2),
+        );
 
       //used lowest lat as start point
-      const remainingPoints = [...points].sort((a,b) => a.latitude - b.latitude);
+      const remainingPoints = [...points].sort(
+        (a, b) => a.latitude - b.latitude,
+      );
       const orderedPoints: SiteData[] = [remainingPoints.shift()!];
 
       while (remainingPoints.length > 0) {
@@ -65,7 +80,10 @@ export default function River({ map, activeRisks, selectedYear, points }: RiverP
         orderedPoints.push(remainingPoints.splice(nearestIndex, 1)[0]);
       }
 
-      const pointCoords: [number, number][] = orderedPoints.map(point => [Number(point.latitude), Number(point.longitude)]);
+      const pointCoords: [number, number][] = orderedPoints.map((point) => [
+        Number(point.latitude),
+        Number(point.longitude),
+      ]);
 
       L.polyline(pointCoords, {
         color: RISK_COLOUR.unknown.fill,
@@ -75,60 +93,55 @@ export default function River({ map, activeRisks, selectedYear, points }: RiverP
         lineJoin: "round",
       }).addTo(river);
 
-      const dangerZoneSegmentLength = 0.01;
-      orderedPoints.forEach((point, index) => {
-        if (!point.dangerZone) return;
+      for (let i = 0; i < orderedPoints.length - 1; i++) {
+        const p1 = orderedPoints[i];
+        const p2 = orderedPoints[i + 1];
 
-        const dangerLabel = getDangerZoneLabel(point.dangerZone);
-        const dangerColour = RISK_COLOUR[dangerLabel];
-        if (!dangerColour) return;
+        const lat1 = Number(p1.latitude);
+        const lon1 = Number(p1.longitude);
+        const lat2 = Number(p2.latitude);
+        const lon2 = Number(p2.longitude);
 
-        const pointLat = Number(point.latitude );
-        const pointLong = Number(point.longitude);
-        const beforePoint = orderedPoints[index-1];
-        const afterPoint = orderedPoints[index+1];
-
-
-        const dangerSegment: [number, number][] = [];
-
-        if (beforePoint) {
-          const latDistance = Number(beforePoint.latitude) - pointLat;
-          const longDistance = Number(beforePoint.longitude) - pointLong;
-          let quickMath = Math.sqrt(latDistance*latDistance + longDistance*longDistance);
-          if (quickMath === 0) {
-            quickMath = 1;
+        const getPointColor = (p: SiteData) => {
+          if (p.blendedColor) return p.blendedColor;
+          if (p.dangerZone) {
+            const label = getDangerZoneLabel(p.dangerZone);
+            return RISK_COLOUR[label]?.fill || RISK_COLOUR.unknown.fill;
           }
-          const newLat = latDistance/quickMath;
-          const newLong = longDistance/quickMath;
-          dangerSegment.push([pointLat+newLat*dangerZoneSegmentLength, pointLong+newLong*dangerZoneSegmentLength]);
+          return RISK_COLOUR.unknown.fill;
+        };
+
+        const color1 = getPointColor(p1);
+        const color2 = getPointColor(p2);
+
+        const segments = 20;
+        for (let j = 0; j < segments; j++) {
+          const t1 = j / segments;
+          const t2 = (j + 1) / segments;
+
+          const latA = lat1 + (lat2 - lat1) * t1;
+          const lonA = lon1 + (lon2 - lon1) * t1;
+          const latB = lat1 + (lat2 - lat1) * t2;
+          const lonB = lon1 + (lon2 - lon1) * t2;
+
+          const color = blendHexColors(color1, color2, (t1 + t2) / 2);
+
+          L.polyline(
+            [
+              [latA, lonA],
+              [latB, lonB],
+            ],
+            {
+              color: color,
+              weight: 5,
+              opacity: 0.9,
+              lineCap: "round",
+              lineJoin: "round",
+            },
+          ).addTo(river);
         }
-
-        dangerSegment.push([pointLat, pointLong]);
-
-        if (afterPoint) {
-          const latDistance = Number(afterPoint.latitude) - pointLat;
-          const longDistance = Number(afterPoint.longitude) - pointLong;
-          let quickMath = Math.sqrt(latDistance*latDistance + longDistance*longDistance);
-          if (quickMath === 0) {
-            quickMath = 1;
-          }
-          const newLat = latDistance/quickMath;
-          const newLong = longDistance/quickMath;
-          dangerSegment.push([pointLat+newLat*dangerZoneSegmentLength, pointLong+newLong*dangerZoneSegmentLength]);
-        }
-
-        if (dangerSegment.length < 2) return;
-
-        // Main coloured segment
-        L.polyline(dangerSegment, {
-          color: dangerColour.fill,
-          weight: 5,
-          opacity: 0.9,
-          lineCap: "round",
-          lineJoin: "round",
-        }).addTo(river);
-      })
-  }
+      }
+    }
 
     return () => {
       river.clearLayers();

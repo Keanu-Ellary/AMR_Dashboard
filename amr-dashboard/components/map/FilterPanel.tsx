@@ -12,16 +12,22 @@ interface FilterPanelProps {
   onFiltersChange: (f: MapFilters) => void;
 }
 
-function FilterPanel({ filters, uniqueSites, onFiltersChange }: FilterPanelProps) {
-  const riskEntries = Object.entries(RISK_COLOUR).filter(([key]) => key !== "filtered" && key !== "unknown");
+function FilterPanel({
+  filters,
+  uniqueSites,
+  onFiltersChange,
+}: FilterPanelProps) {
+  const riskEntries = Object.entries(RISK_COLOUR).filter(
+    ([key]) => key !== "filtered" && key !== "unknown",
+  );
 
   const updateDangerLevelFilters = (level: ContaminationLevel) => {
     const currentLevels = filters.contaminationLevels ?? [];
     const levelExists = currentLevels.includes(level);
     onFiltersChange({
       ...filters,
-      contaminationLevels: levelExists 
-        ? currentLevels.filter((l) => l !== level) 
+      contaminationLevels: levelExists
+        ? currentLevels.filter((l) => l !== level)
         : [...currentLevels, level],
     });
   };
@@ -31,8 +37,8 @@ function FilterPanel({ filters, uniqueSites, onFiltersChange }: FilterPanelProps
     const siteExists = currentSites.includes(site);
     onFiltersChange({
       ...filters,
-      sites: siteExists 
-        ? currentSites.filter((s) => s !== site) 
+      sites: siteExists
+        ? currentSites.filter((s) => s !== site)
         : [...currentSites, site],
     });
   };
@@ -41,8 +47,21 @@ function FilterPanel({ filters, uniqueSites, onFiltersChange }: FilterPanelProps
     <div className="bg-white rounded-lg p-5 text-sm w-[280px] max-h-[85vh] overflow-y-auto shadow-xl border border-gray-100 font-sans m-2">
       <div className="font-bold tracking-widest text-gray-900 mb-4 uppercase text-xs flex justify-between items-center border-b pb-2">
         <span>Map Filters</span>
-        <button 
-          onClick={() => onFiltersChange(DEFAULT_FILTERS)}
+        <button
+          onClick={() =>
+            onFiltersChange({
+              contaminationLevels: [
+                "low",
+                "moderate",
+                "high",
+                "unknown",
+                "filtered",
+              ],
+              sites: [],
+              startDate: "",
+              endDate: "",
+            })
+          }
           className="text-[10px] text-blue-600 hover:text-blue-800 normal-case font-semibold"
         >
           Reset
@@ -50,60 +69,93 @@ function FilterPanel({ filters, uniqueSites, onFiltersChange }: FilterPanelProps
       </div>
 
       <div className="mb-4">
-        <div className="font-bold text-[10px] text-gray-400 mb-2 uppercase tracking-widest">Contamination Level</div>
+        <div className="font-bold text-[10px] text-gray-400 mb-2 uppercase tracking-widest">
+          Contamination Level
+        </div>
         <div className="space-y-1">
           {riskEntries.map(([dangerZone, dangerColour]) => (
-            <label key={dangerZone} className="flex items-center gap-3 p-1.5 hover:bg-gray-50 rounded-md cursor-pointer transition-colors group">
+            <label
+              key={dangerZone}
+              className="flex items-center gap-3 p-1.5 hover:bg-gray-50 rounded-md cursor-pointer transition-colors group"
+            >
               <input
                 type="checkbox"
                 className="custom-checkbox"
-                checked={filters.contaminationLevels?.includes(dangerZone as ContaminationLevel) ?? false}
-                onChange={() => updateDangerLevelFilters(dangerZone as ContaminationLevel)}
+                checked={
+                  filters.contaminationLevels?.includes(
+                    dangerZone as ContaminationLevel,
+                  ) ?? false
+                }
+                onChange={() =>
+                  updateDangerLevelFilters(dangerZone as ContaminationLevel)
+                }
               />
               <span
                 className="w-3 h-3 rounded-full flex-shrink-0"
-                style={{ background: dangerColour.fill, border: `1px solid ${dangerColour.stroke}` }}
+                style={{
+                  background: dangerColour.fill,
+                  border: `1px solid ${dangerColour.stroke}`,
+                }}
               />
-              <span className="text-gray-700 font-medium">{dangerColour.label}</span>
+              <span className="text-gray-700 font-medium">
+                {dangerColour.label}
+              </span>
             </label>
           ))}
         </div>
       </div>
 
       <div className="mb-4">
-        <div className="font-bold text-[10px] text-gray-400 mb-2 uppercase tracking-widest">Sampling Sites</div>
+        <div className="font-bold text-[10px] text-gray-400 mb-2 uppercase tracking-widest">
+          Sampling Sites
+        </div>
         <div className="space-y-1 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
           {uniqueSites.sort().map((site) => (
-            <label key={site} className="flex items-center gap-3 p-1.5 hover:bg-gray-50 rounded-md cursor-pointer transition-colors">
+            <label
+              key={site}
+              className="flex items-center gap-3 p-1.5 hover:bg-gray-50 rounded-md cursor-pointer transition-colors"
+            >
               <input
                 type="checkbox"
                 className="custom-checkbox"
                 checked={filters.sites?.includes(site) ?? false}
                 onChange={() => updateSiteFilters(site)}
               />
-              <span className="text-gray-700 font-medium truncate" title={site}>{site}</span>
+              <span className="text-gray-700 font-medium truncate" title={site}>
+                {site}
+              </span>
             </label>
           ))}
         </div>
       </div>
 
       <div className="space-y-3 pt-2 border-t border-gray-50">
-        <div className="font-bold text-[10px] text-gray-400 uppercase tracking-widest">Temporal Range</div>
+        <div className="font-bold text-[10px] text-gray-400 uppercase tracking-widest">
+          Temporal Range
+        </div>
         <div>
-          <label className="text-[9px] font-bold text-gray-400 uppercase ml-1">From</label>
+          <label className="text-[9px] font-bold text-gray-400 uppercase ml-1">
+            From
+          </label>
           <input
             type="date"
             value={filters.startDate ?? ""}
-            onChange={(e) => onFiltersChange({ ...filters, startDate: e.target.value })}
+            onChange={(e) =>
+              onFiltersChange({ ...filters, startDate: e.target.value })
+            }
             className="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all"
           />
         </div>
         <div>
-          <label className="text-[9px] font-bold text-gray-400 uppercase ml-1">To</label>
+          <label className="text-[9px] font-bold text-gray-400 uppercase ml-1">
+            To
+          </label>
           <input
             type="date"
             value={filters.endDate ?? ""}
-            onChange={(e) => onFiltersChange({ ...filters, endDate: e.target.value })}
+            onChange={(e) =>
+              onFiltersChange({ ...filters, endDate: e.target.value })
+            }
             className="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all"
           />
         </div>
@@ -113,19 +165,25 @@ function FilterPanel({ filters, uniqueSites, onFiltersChange }: FilterPanelProps
 }
 
 function getUniqueSites(points: SiteData[]): string[] {
-  return [...new Set(points.map((p) => {
-    const site = p.geoLocName;
-    if (site.includes("Apies River - ")) return site.split("Apies River - ")[1]?.trim() ?? site;
-    if (site.includes(" - Apies River")) return site.split(" - Apies River")[0]?.trim() ?? site;
-    return site;
-  }))].filter(Boolean);
+  return [
+    ...new Set(
+      points.map((p) => {
+        const site = p.geoLocName;
+        if (site.includes("Apies River - "))
+          return site.split("Apies River - ")[1]?.trim() ?? site;
+        if (site.includes(" - Apies River"))
+          return site.split(" - Apies River")[0]?.trim() ?? site;
+        return site;
+      }),
+    ),
+  ].filter(Boolean);
 }
 
 export default function addFilterPanel(
   map: L.Map,
   points: SiteData[],
   filters: MapFilters,
-  setFilters: (f: MapFilters) => void
+  setFilters: (f: MapFilters) => void,
 ) {
   const div = L.DomUtil.create("div", "amr-filter");
   div.style.zIndex = "1000";
@@ -147,14 +205,16 @@ export default function addFilterPanel(
           render(updated);
           setFilters(updated);
         }}
-      />
+      />,
     );
   };
 
   render(filters);
 
   map.whenReady(() => {
-    const topRight = map.getContainer().querySelector(".leaflet-top.leaflet-right");
+    const topRight = map
+      .getContainer()
+      .querySelector(".leaflet-top.leaflet-right");
     if (topRight) {
       (topRight as HTMLElement).style.zIndex = "1000";
       topRight.appendChild(div);
