@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, Suspense } from "react";
+import TimeSeriesDashboard from "@/components/TimeSeriesDashboard";
 import { useSearchParams } from "next/navigation";
 import { MapPin, TrendingUp, TrendingDown, Download, AlertTriangle } from "lucide-react";
 import type { SiteData } from "@/types/site_types";
@@ -553,6 +554,9 @@ function StatisticsContent() {
             )}
 
           </div>
+        </div>
+        <div className="mt-8">
+          <TimeSeriesDashboard siteId={siteId} />
         </div>
       </main>
     );
