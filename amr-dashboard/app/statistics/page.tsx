@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, Suspense } from "react";
 import TimeSeriesDashboard from "@/components/TimeSeriesDashboard";
+import TimeSeriesDashboardOverall from "@/components/TimeSeriesDashboardOverall";
 import { useSearchParams } from "next/navigation";
 import { MapPin, TrendingUp, TrendingDown, Download, AlertTriangle } from "lucide-react";
 import type { SiteData } from "@/types/site_types";
@@ -574,6 +575,7 @@ function StatisticsContent() {
       </div>
 
       <div className="space-y-6 max-w-[1400px] mx-auto w-full">
+        
 
         {/* System-wide Averages */}
         {averageMetrics && (
@@ -693,6 +695,8 @@ function StatisticsContent() {
           </div>
         )}
 
+        <TimeSeriesDashboardOverall />
+        
         {/* Detected Anomalies */}
         {anomalies.length > 0 && (
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
