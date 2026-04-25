@@ -10,6 +10,7 @@ import { addSiteData, addMutlipleSiteData, getAllSites, updateSite, addSiteImage
 import ConfirmFile from '@/components/add-data/confirmFile';
 import { DEFAULT_FILTERS } from '@/constants/map_constants';
 import { getDangerZoneLabel, MapFilters } from '@/types/map_types';
+import { Upload } from "lucide-react"
 
 export default function AddDataPage() {
   const [showImportDropdown, setShowImportDropdown] = useState(false);
@@ -247,7 +248,6 @@ export default function AddDataPage() {
       reader.onloadend = () => {
         const base64String = reader.result as string;
         setImageBase64(base64String);
-        toast.success('Image loaded successfully!');
       };
       reader.readAsDataURL(file);
     }
@@ -396,16 +396,11 @@ export default function AddDataPage() {
             handleCancel={handleCancel}
         />
 
+        
           <div className="flex-1 flex overflow-hidden">
+            
             {/* MAIN Form Column */}
             <div className="w-80 border-r border-gray-100 p-6 flex flex-col overflow-y-auto py-4">
-              
-              <button 
-                className="bg-[#ef4444] text-white px-4 py-1.5 rounded w-fit text-xs font-medium mb-4 hover:bg-red-600 transition"
-                onClick={() => window.location.href = "/home"}
-              >
-                Close
-              </button>
 
               <div className="space-y-3 flex-1 overflow-y-auto">
                 {/* Form Fields */}
@@ -562,10 +557,12 @@ export default function AddDataPage() {
 
               </div>
 
-              <div className="mt-4 flex flex-col gap-2 flex-shrink-0">
+
+              <div className="flex flex-col">
+              <div className="mt-4 gap-2 flex flex-shrink-0">
                 {selectedSite && (
                   <button 
-                  className="w-full bg-[#22c55e] text-white py-1.5 rounded-md font-medium hover:bg-[#16a34a] transition text-sm"
+                  className="flex-1 bg-[#22c55e] text-white py-1.5 rounded-md font-medium hover:bg-[#16a34a] transition text-sm"
                   onClick={handleUpdateSite}
                 >
                   Update
@@ -573,14 +570,23 @@ export default function AddDataPage() {
                 )}
                 {!selectedSite && (
                   <button 
-                  className="w-full bg-[#22c55e] text-white py-1.5 rounded-md font-medium hover:bg-[#16a34a] transition text-sm"
+                  className="flex-1 bg-[#22c55e] text-white py-1.5 rounded-md font-medium hover:bg-[#16a34a] transition text-sm"
                   onClick={handleAddData}
                 >
                   Submit
                 </button>
                 )}
 
-                <div className="relative">
+                
+                <button 
+                  onClick={handleClear}
+                  className="flex-1 bg-[#ef4444] text-white py-1.5 rounded-md font-medium hover:bg-[#dc2626] transition text-sm"
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+             <div className="mt-4 flex flex-col gap-2 flex-shrink-0 relative">
                   {/* Hidden file input */}
                   <input 
                     type="file" 
@@ -591,8 +597,9 @@ export default function AddDataPage() {
                   />
                   <button 
                     onClick={() => setShowImportDropdown(!showImportDropdown)}
-                    className="w-full bg-[#0ea5e9] text-white py-1.5 rounded-md font-medium hover:bg-[#0284c7] transition text-sm flex justify-center items-center gap-1"
+                    className="gap-2 w-full bg-[#0ea5e9] text-white py-1.5 rounded-md font-medium hover:bg-[#0284c7] transition text-sm flex justify-center items-center gap-1"
                   >
+                    <Upload className="w-4 h=4" />
                     Import
 
                   </button>
@@ -620,13 +627,6 @@ export default function AddDataPage() {
                     </div>
                   )}
                 </div>
-                <button 
-                  onClick={handleClear}
-                  className="w-full bg-[#ef4444] text-white py-1.5 rounded-md font-medium hover:bg-[#dc2626] transition text-sm"
-                >
-                  Clear
-                </button>
-              </div>
             </div>
 
             {/* Map Column */}
