@@ -15,72 +15,98 @@ interface FilterPanelProps {
 function FilterPanel({ filters, uniqueSites, onFiltersChange }: FilterPanelProps) {
   const riskEntries = Object.entries(RISK_COLOUR).filter(([key]) => key !== "filtered" && key !== "unknown");
 
-  const updateDangerLevelFilters = (level:ContaminationLevel) => {
-    const levelExists = filters.contaminationLevels?.includes(level);
+  const updateDangerLevelFilters = (level: ContaminationLevel) => {
+    const currentLevels = filters.contaminationLevels ?? [];
+    const levelExists = currentLevels.includes(level);
     onFiltersChange({
       ...filters,
-      contaminationLevels: levelExists ? filters.contaminationLevels?.filter((l) => l !== level) : [...(filters.contaminationLevels ?? []),level],
+      contaminationLevels: levelExists 
+        ? currentLevels.filter((l) => l !== level) 
+        : [...currentLevels, level],
     });
   };
 
   const updateSiteFilters = (site: string) => {
-    const siteExists = filters.sites?.includes(site);
+    const currentSites = filters.sites ?? [];
+    const siteExists = currentSites.includes(site);
     onFiltersChange({
       ...filters,
-      sites: siteExists ? filters.sites?.filter((s) => s !== site) : [...(filters.sites ?? []), site],
+      sites: siteExists 
+        ? currentSites.filter((s) => s !== site) 
+        : [...currentSites, site],
     });
   };
 
   return (
-    <div className="bg-white rounded-lg p-4 text-sm min-w-[200px] max-h-80 overflow-y-auto shadow-md font-sans m-2 min-w-[250px]">
-      <div className="font-bold tracking-widest text-gray-900 mb-2 uppercase text-md flex justify-center">Filters</div>
-
-      <div className="mb-2">
-        <div className="font-medium text-sm text-gray-900 mb-1 mt-2 uppercase">Danger Zone</div>
-        {riskEntries.map(([dangerZone, dangerColour]) => (
-          <label key={dangerZone} className="flex items-center gap-2 mb-1 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={filters.contaminationLevels?.includes(dangerZone as ContaminationLevel) ?? false}
-              onChange={() => updateDangerLevelFilters(dangerZone as ContaminationLevel)}
-            />
-            <span
-              className="w-4 h-1.5 rounded-full flex-shrink-0"
-              style={{ background: dangerColour.fill }}
-            />
-            <span className="text-gray-700">{dangerColour.label}</span>
-          </label>
-        ))}
+    <div className="bg-white rounded-lg p-5 text-sm w-[280px] max-h-[85vh] overflow-y-auto shadow-xl border border-gray-100 font-sans m-2">
+      <div className="font-bold tracking-widest text-gray-900 mb-4 uppercase text-xs flex justify-between items-center border-b pb-2">
+        <span>Map Filters</span>
+        <button 
+          onClick={() => onFiltersChange(DEFAULT_FILTERS)}
+          className="text-[10px] text-blue-600 hover:text-blue-800 normal-case font-semibold"
+        >
+          Reset
+        </button>
       </div>
 
-      <div className="mb-2">
-        <div className="font-medium text-sm text-gray-900 mb-1 mt-2 uppercase">Sites</div>
-        {uniqueSites.map((site) => (
-          <label key={site} className="flex items-center gap-2 mb-1 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={filters.sites?.includes(site) ?? false}
-              onChange={() => updateSiteFilters(site)}
-            />
-            <span className="text-gray-700">{site}</span>
-          </label>
-        ))}
+      <div className="mb-4">
+        <div className="font-bold text-[10px] text-gray-400 mb-2 uppercase tracking-widest">Contamination Level</div>
+        <div className="space-y-1">
+          {riskEntries.map(([dangerZone, dangerColour]) => (
+            <label key={dangerZone} className="flex items-center gap-3 p-1.5 hover:bg-gray-50 rounded-md cursor-pointer transition-colors">
+              <input
+                type="checkbox"
+                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                checked={filters.contaminationLevels?.includes(dangerZone as ContaminationLevel) ?? false}
+                onChange={() => updateDangerLevelFilters(dangerZone as ContaminationLevel)}
+              />
+              <span
+                className="w-3 h-3 rounded-full flex-shrink-0"
+                style={{ background: dangerColour.fill, border: `1px solid ${dangerColour.stroke}` }}
+              />
+              <span className="text-gray-700 font-medium">{dangerColour.label}</span>
+            </label>
+          ))}
+        </div>
       </div>
 
-      <div className="flex flex-col">
-        <div className="font-medium text-sm text-gray-900 mb-1 mt-2 uppercase">Date Range</div>
-        <input
-          type="date"
-          value={filters.startDate ?? ""}
-          onChange={(e) => onFiltersChange({ ...filters, startDate: e.target.value })}
-          className="w-full mb-1 px-2 py-1 border border-gray-200 rounded text-sm focus:outline-none focus:border-blue-400"
-        />
-        <input
-          type="date"
-          value={filters.endDate ?? ""}
-          onChange={(e) => onFiltersChange({ ...filters, endDate: e.target.value })}
-          className="w-full px-2 py-1 border border-gray-200 rounded text-sm focus:outline-none focus:border-blue-400"
-        />
+      <div className="mb-4">
+        <div className="font-bold text-[10px] text-gray-400 mb-2 uppercase tracking-widest">Sampling Sites</div>
+        <div className="space-y-1 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
+          {uniqueSites.sort().map((site) => (
+            <label key={site} className="flex items-center gap-3 p-1.5 hover:bg-gray-50 rounded-md cursor-pointer transition-colors">
+              <input
+                type="checkbox"
+                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                checked={filters.sites?.includes(site) ?? false}
+                onChange={() => updateSiteFilters(site)}
+              />
+              <span className="text-gray-700 font-medium truncate" title={site}>{site}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-3 pt-2 border-t border-gray-50">
+        <div className="font-bold text-[10px] text-gray-400 uppercase tracking-widest">Temporal Range</div>
+        <div>
+          <label className="text-[9px] font-bold text-gray-400 uppercase ml-1">From</label>
+          <input
+            type="date"
+            value={filters.startDate ?? ""}
+            onChange={(e) => onFiltersChange({ ...filters, startDate: e.target.value })}
+            className="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all"
+          />
+        </div>
+        <div>
+          <label className="text-[9px] font-bold text-gray-400 uppercase ml-1">To</label>
+          <input
+            type="date"
+            value={filters.endDate ?? ""}
+            onChange={(e) => onFiltersChange({ ...filters, endDate: e.target.value })}
+            className="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all"
+          />
+        </div>
       </div>
     </div>
   );
@@ -92,7 +118,7 @@ function getUniqueSites(points: SiteData[]): string[] {
     if (site.includes("Apies River - ")) return site.split("Apies River - ")[1]?.trim() ?? site;
     if (site.includes(" - Apies River")) return site.split(" - Apies River")[0]?.trim() ?? site;
     return site;
-  }))];
+  }))].filter(Boolean);
 }
 
 export default function addFilterPanel(

@@ -5,6 +5,8 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import NavBars from "@/components/NavBars";
 
+import { UIProvider } from "@/context/UIContext";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -36,7 +38,9 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-      <NavBars>{children}</NavBars>
+      <UIProvider>
+        <NavBars>{children}</NavBars>
+      </UIProvider>
         <ToastContainer
           position="top-center"
           autoClose={3000}

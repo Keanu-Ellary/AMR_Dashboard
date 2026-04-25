@@ -2,276 +2,135 @@
 
 import type { SiteData } from "@/types/site_types";
 import { RISK_COLOUR, CONTAMINATION_LEVEL_ORDER } from "@/constants/map_constants";
-import {  DangerZone, getDangerZoneLabel } from "@/types/map_types";
-import { Trash2Icon } from "lucide-react";
+import { getDangerZoneLabel } from "@/types/map_types";
+import { Trash2Icon, MapPin, Calendar, XCircle } from "lucide-react";
 import { deleteSite } from "@/app/services/siteService";
 import { toast } from "react-toastify";
 import ConfirmDelete from "../add-data/confirmDelete";
 import { useEffect, useState } from "react";
 import { getMe } from "@/app/services/authService";
-import { unique } from "next/dist/build/utils";
-
+import clsx from "clsx";
 
 interface SiteListProps {
   points: SiteData[];
   selectedSite: SiteData | null;
-  onSelectSite: (site: SiteData) => void;
+  onSelectSite: (site: SiteData | null) => void;
   onRefresh: () => void;
 }
 
 export default function SiteList({ points, selectedSite, onSelectSite, onRefresh }: SiteListProps) {
-
   const [siteToDelete, setSiteToDelete] = useState<SiteData | null>(null);
-  const getDanger = (zone?: DangerZone)=> zone ? getDangerZoneLabel(zone) : "unknown";
-
-  const uniqueSites = Object.values(
-    points.reduce<Record<string, SiteData>>((uniquePoints, point ) => {
-      const coords = `${point.latitude}, ${point.longitude}`;
-      const uniquePoint = uniquePoints[coords];
-      if (!uniquePoint || new Date(point.collectionDate) > new Date(uniquePoint.collectionDate)) {
-        uniquePoints[coords] = point;
-      }
-      return uniquePoints;
-    }, {} as Record<string, SiteData>)
-  );
-
-  const sortedPoints = [...uniqueSites].sort(
-    (pointA, pointB) => (CONTAMINATION_LEVEL_ORDER[getDanger(pointA.dangerZone)] ?? 3) - (CONTAMINATION_LEVEL_ORDER[getDanger(pointB.dangerZone)] ?? 3)
-  );
   const [isAdminUser, setIsAdminUser] = useState(false);
 
   useEffect(() => {
-    isAdmin();
-  },[]);
-
-  useEffect(() => {
-  }, [isAdminUser]);
-
-  const isAdmin = async () => {
-    try {
-      const response = await getMe();
-      if (response) {
-        setIsAdminUser(response.isAdmin ?? false);
-      }else{
+    const checkAdmin = async () => {
+      try {
+        const response = await getMe();
+        setIsAdminUser(response?.isAdmin ?? false);
+      } catch (error) {
         setIsAdminUser(false);
       }
-    }catch (error) {
-      toast.error("Could not authenticate user");
-    }
-  };
+    };
+    checkAdmin();
+  }, []);
+
+  const sortedPoints = [...points].sort((a, b) => {
+    const labelA = getDangerZoneLabel(a.dangerZone as any);
+    const labelB = getDangerZoneLabel(b.dangerZone as any);
+    return (CONTAMINATION_LEVEL_ORDER[labelA] ?? 3) - (CONTAMINATION_LEVEL_ORDER[labelB] ?? 3);
+  });
 
   const handleDeleteSite = async (site: SiteData) => {
     try {
-      if (!site.id) {
-        toast.error('Site ID is missing.');
-        return;
-      }
+      if (!site.id) return;
       const response = await deleteSite(site.id);
       if (response.ok) {
-        toast.success('Site deleted successfully!');
+        toast.success('Site deleted');
         setSiteToDelete(null);
         onRefresh();
       } else {
-        toast.error('Failed to delete site. Please try again.');
+        toast.error('Delete failed');
       }
     } catch (error) {
-      toast.error('An error occurred while deleting the site. Please try again.');
+      toast.error('Delete error');
     }
   };
 
-  const handleCancel = () => {
-    setSiteToDelete(null);
-  };
-
-  const handleDeleteClick = (site: SiteData) => {
-    setSiteToDelete(site);
-  }
-
-
   return (
-    <div>
-    <ConfirmDelete
-               site={siteToDelete}
-               handleConfirm={handleDeleteSite.bind(null, siteToDelete!)}
-               handleCancel={handleCancel}
-            />
+    <div className="flex flex-col w-72 bg-white border-l border-border h-full shadow-subtle overflow-hidden">
+      <ConfirmDelete
+        site={siteToDelete}
+        handleConfirm={() => handleDeleteSite(siteToDelete!)}
+        handleCancel={() => setSiteToDelete(null)}
+      />
 
-    <div style={styles.wrapper}>
-
-      <div style={styles.header}>
-        <span style={styles.headerTitle}>Sampling Sites</span>
-        <span style={styles.headerCount}>{uniqueSites.length} sites</span>
+      <div className="p-4 border-b border-border bg-gray-50/50 flex items-center justify-between">
+        <div>
+          <h2 className="text-xs font-bold uppercase tracking-wider text-foreground">Sampling Sites</h2>
+          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">{points.length} locations</p>
+        </div>
+        {selectedSite && (
+          <button 
+            onClick={() => onSelectSite(null)}
+            className="p-1 hover:bg-gray-200 rounded-full transition-colors text-gray-400 hover:text-risk-high"
+            title="Clear Selection"
+          >
+            <XCircle size={16} />
+          </button>
+        )}
       </div>
 
-      <ul style={styles.list}>
+      <ul className="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar">
         {sortedPoints.map((site) => {
           const isSelected = selectedSite?.id === site.id;
-          let riskColor = RISK_COLOUR.unknown.fill;
-          if (site.dangerZone) {
-            const dangerZoneLabel = getDangerZoneLabel(site.dangerZone);
-            riskColor  = RISK_COLOUR[dangerZoneLabel]?.fill;
-          }
+          const dangerLabel = getDangerZoneLabel(site.dangerZone as any);
+          const riskColor = RISK_COLOUR[dangerLabel]?.fill ?? RISK_COLOUR.unknown.fill;
           
           return (
             <li
               key={site.id}
               onClick={() => onSelectSite(site)}
-              style={{
-                ...styles.item,
-                background:   isSelected ? "rgba(59,130,246,0.1)"  : "transparent",
-                borderColor:  isSelected ? "rgba(59,130,246,0.4)"  : "rgba(80,140,255,0.08)",
-                cursor: "pointer",
-              }}
+              className={clsx(
+                "group flex items-stretch rounded-lg border transition-all duration-200 cursor-pointer overflow-hidden",
+                isSelected 
+                  ? "bg-brand-50 border-brand-200 shadow-sm" 
+                  : "bg-white border-transparent hover:border-gray-200 hover:bg-gray-50"
+              )}
             >
-              <div
-                style={{
-                  ...styles.riskBar,
-                  background: riskColor,
-                }}
-              />
+              <div className="w-1.5 shrink-0" style={{ background: riskColor }} />
 
-              <div style={styles.itemBody}>
-                <div style={styles.dataWrapper}>
-                  <div style={styles.siteName}>{site.geoLocName}</div>
-
-                  <div style={styles.dateRow}>
-                    <span style={styles.dateLabel}>Last sampled:</span>
-                    <span style={styles.dateValue}>{new Date(site.collectionDate).toLocaleDateString("en-ZA", { year: "numeric", month: "short", day: "numeric" })}</span>
+              <div className="flex-1 p-3 min-w-0 flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <div className={clsx(
+                    "text-xs font-bold truncate tracking-tight",
+                    isSelected ? "text-brand-900" : "text-gray-700"
+                  )}>
+                    {site.geoLocName}
+                  </div>
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <Calendar size={10} className="text-gray-400" />
+                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">
+                      {new Date(site.collectionDate).toLocaleDateString("en-ZA", { day: '2-digit', month: 'short', year: 'numeric' })}
+                    </span>
                   </div>
                 </div>
-                 <div>
-                  {isAdminUser && (
-                    <button
-                      onClick={handleDeleteClick.bind(null, site)}
-                      className="cursor-pointer group"
-                    >
-                      <Trash2Icon size={18} className="group-hover:text-red-700 transition-colors"/>
-                    </button>
-                  )}
-                </div>
+
+                {isAdminUser && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSiteToDelete(site);
+                    }}
+                    className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-50 rounded-md transition-all text-gray-400 hover:text-risk-high"
+                  >
+                    <Trash2Icon size={14} />
+                  </button>
+                )}
               </div>
             </li>
           );
         })}
       </ul>
     </div>
-    </div>
   );
 }
-
-const styles: Record<string, React.CSSProperties> = {
-  wrapper: {
-    display: "flex",
-    flexDirection: "column",
-    width: "260px",
-    height: "100%",
-    background: "#f9fbff",
-    border: "1px solid rgba(80,140,255,0.12)",
-    flexShrink:0,
-    overflow:"hidden",
-  },
-
-  header: {
-    display:"flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: "14px 16px",
-    borderBottom:"1px solid rgba(80,140,255,0.12)",
-    background: "#f4f7fa",
-    flexShrink: 0,
-  },
-  headerTitle: {
-    fontSize: "16px",
-    fontWeight: 700,
-    letterSpacing:"1.5px",
-    textTransform: "uppercase",
-    color: "#0e0f0f",
-    fontFamily: "opensans, sans-serif",
-  },
-  headerCount: {
-    fontSize: "12px",
-    color: "#0e0f0f",
-    fontFamily: "opensans, sans-serif",
-    background: "rgba(200, 219, 254, 0.08)",
-    padding: "2px 8px",
-    borderRadius: "10px",
-    border: "1px solid rgba(80,140,255,0.12)",
-  },
-  contaminationLevelHeader: {
-    fontSize: "12px",
-    color: "#0e0f0f",
-    marginTop:"12px",
-    marginBottom: "6px",
-  },
-
-  list: {
-    listStyle:"none",
-    padding: "8px",
-    overflowY:"auto",
-    flex: 1,
-    display: "flex",
-    flexDirection:"column",
-    gap: "4px",
-  },
-
-  item: {
-    display: "flex",
-    alignItems: "stretch",
-    borderRadius: "6px",
-    border: "1px solid",
-    transition: "all 0.15s ease",
-  },
-
-  riskBar: {
-    width: "3px",
-    flexShrink: 0,
-  },
-
-  itemBody: {
-    flex: 1,
-    padding:"10px 12px",
-    display: "flex",
-    flexDirection: "row",
-    gap: "2px",
-    minWidth: 0,
-  },
-  dataWrapper: {
-    flex: 1,
-    display: "flex",
-    flexDirection: "column",
-    gap: "2px",
-    minWidth: 0,
-  },
-
-  siteName: {
-    fontSize:"12px",
-    fontWeight: 600,
-    color:"#0e0f0f",
-    fontFamily:"opensans, sans-serif",
-    whiteSpace: "nowrap",
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-  },
-
-  dateRow: {
-    display: "flex",
-    alignItems: "center",
-    gap:  "6px",
-    marginTop: "4px",
-  },
-
-  dateLabel: {
-    fontSize: "9px",
-    color: "#333b46",
-    fontFamily:"opensans, sans-serif",
-    textTransform: "uppercase",
-    letterSpacing: "0.8px",
-  },
-
-  dateValue: {
-    fontSize:"9px",
-    color: "#64748b",
-    fontFamily: "opensans, sans-serif",
-  },
-
-};

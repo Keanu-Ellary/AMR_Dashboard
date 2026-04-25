@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { Search, Loader2, AlertCircle, CheckCircle2, ShieldAlert } from "lucide-react";
+import clsx from "clsx";
 
 export default function AnalyzePage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -25,205 +27,176 @@ export default function AnalyzePage() {
 
   const handleProcessImage = async () => {
     if (!selectedFile) return;
-
     setIsProcessing(true);
     setError(null);
     setResult(null);
 
     try {
-      // Convert file to base64
       const reader = new FileReader();
       reader.readAsDataURL(selectedFile);
-
       reader.onload = async () => {
-        // The result is a data URL like "data:image/jpeg;base64,/9j/4AAQSkZJRg..."
-        // We only want the base64 string portion after the comma
         const base64String = (reader.result as string).split(",")[1];
-
         try {
           const response = await fetch("/api/algae", {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ image: base64String }),
           });
-
           const data = await response.json();
-
-          if (!response.ok) {
-            throw new Error(data.error || "Failed to process image");
-          }
+          if (!response.ok) throw new Error(data.error || "Failed to process image");
 
           const detections = data.data.results || [];
-
           if (detections.length > 0) {
-            // Find the highest confidence score among all bounding boxes
             let maxConf = 0;
-            for (const detection of detections) {
-              if (detection[4] > maxConf) {
-                maxConf = detection[4];
-              }
-            }
-            setResult({
-              detected: true,
-              probability: Math.round(maxConf * 100),
-              boxes: detections,
-            });
+            for (const detection of detections) { if (detection[4] > maxConf) maxConf = detection[4]; }
+            setResult({ detected: true, probability: Math.round(maxConf * 100), boxes: detections });
           } else {
-            // No boxes returned means no algae detected over the threshold
             setResult({ detected: false, probability: 0, boxes: [] });
           }
         } catch (err: any) {
-          console.error(err);
           setError(err.message || "An error occurred during processing");
         } finally {
           setIsProcessing(false);
         }
       };
-
-      reader.onerror = () => {
-        setError("Failed to read file");
-        setIsProcessing(false);
-      };
     } catch (err: any) {
-      console.error(err);
       setError(err.message || "An error occurred");
       setIsProcessing(false);
     }
   };
 
   return (
-    <div className="container mx-auto p-8 max-w-6xl text-gray-900 bg-white rounded-xl shadow-md border border-gray-100 my-8">
-      <h1 className="text-3xl font-bold mb-8 text-gray-900">
-        Algae Detection Analysis
-      </h1>
+    <main className="flex-1 bg-background p-8 min-h-full">
+      <div className="max-w-7xl mx-auto">
+        <header className="mb-10">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Algae Detection Analysis</h1>
+          <p className="text-gray-500 mt-1 font-medium">Automated visual monitoring for cyanobacteria and algal blooms</p>
+        </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Left Side: Upload and Preview */}
-        <div className="border rounded-lg p-6 shadow-sm bg-white">
-          <h2 className="text-xl font-semibold mb-4 text-gray-900">
-            Upload Image
-          </h2>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Controls */}
+          <div className="lg:col-span-5 space-y-6">
+            <div className="bg-white rounded-2xl border border-border p-8 shadow-subtle">
+              <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-6">Laboratory Input</h3>
+              
+              <div className="space-y-6">
+                <div className="relative group">
+                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">Select Sampling Image</label>
+                   <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="block w-full text-xs text-gray-400
+                      file:mr-4 file:py-2.5 file:px-4
+                      file:rounded-lg file:border-0
+                      file:text-[10px] file:font-bold file:uppercase file:tracking-widest
+                      file:bg-gray-100 file:text-gray-600
+                      hover:file:bg-gray-200 transition-all cursor-pointer"
+                  />
+                </div>
 
-          <div className="mb-4">
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-              className="block w-full text-sm text-gray-500
-                file:mr-4 file:py-2 file:px-4
-                file:rounded-md file:border-0
-                file:text-sm file:font-semibold
-                file:bg-blue-50 file:text-blue-700
-                hover:file:bg-blue-100"
-            />
+                {previewUrl && (
+                  <div className="mt-6 rounded-xl overflow-hidden bg-gray-50 border border-border p-4 flex justify-center items-center">
+                    <div className="relative inline-block max-w-full shadow-subtle rounded-lg overflow-hidden">
+                      <img src={previewUrl} alt="Preview" className="max-h-[300px] w-auto block" />
+                      {result?.boxes?.map((box, i) => {
+                        const [xmin, ymin, xmax, ymax] = box;
+                        return (
+                          <div
+                            key={i}
+                            className="absolute border-2 border-risk-high bg-risk-high/10"
+                            style={{ 
+                              left: `${(xmin / 800) * 100}%`, 
+                              top: `${(ymin / 800) * 100}%`, 
+                              width: `${((xmax - xmin) / 800) * 100}%`, 
+                              height: `${((ymax - ymin) / 800) * 100}%` 
+                            }}
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  onClick={handleProcessImage}
+                  disabled={!selectedFile || isProcessing}
+                  className="w-full flex items-center justify-center gap-2 bg-brand-600 text-white font-bold py-3 rounded-xl hover:bg-brand-700 transition-all shadow-subtle text-xs uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isProcessing ? <><Loader2 className="animate-spin" size={16} /> Scanning Matrix...</> : <><Search size={16} /> Run AI Analysis</>}
+                </button>
+
+                {error && (
+                  <div className="flex gap-3 p-4 bg-red-50 text-red-700 rounded-xl text-xs font-bold border border-red-100 items-center">
+                    <AlertCircle size={16} className="shrink-0" /> {error}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
-          {previewUrl && (
-            <div className="mt-4 border rounded-md overflow-hidden bg-gray-50 flex justify-center items-center p-4">
-              <div className="relative inline-block max-w-full">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={previewUrl}
-                  alt="Preview"
-                  className="max-h-[350px] w-auto block"
-                />
-                {result?.boxes?.map((box, i) => {
-                  const [xmin, ymin, xmax, ymax] = box;
+          {/* Results Side */}
+          <div className="lg:col-span-7">
+            <div className="bg-white rounded-2xl border border-border p-12 shadow-subtle min-h-[500px] flex flex-col">
+              <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-10">Analysis Outcome</h3>
 
-                  // The AI backend resizes the image to 800x800 before inference.
-                  // We map the 800x800 coordinates to percentages so they overlay
-                  // correctly on the original aspect ratio!
-                  const left = `${(xmin / 800) * 100}%`;
-                  const top = `${(ymin / 800) * 100}%`;
-                  const width = `${((xmax - xmin) / 800) * 100}%`;
-                  const height = `${((ymax - ymin) / 800) * 100}%`;
-
-                  return (
-                    <div
-                      key={i}
-                      className="absolute border-2 border-red-500 bg-red-500/20"
-                      style={{ left, top, width, height }}
-                    />
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          <button
-            onClick={handleProcessImage}
-            disabled={!selectedFile || isProcessing}
-            className={`mt-6 w-full py-3 px-4 rounded-md text-white font-medium transition-colors
-              ${
-                !selectedFile || isProcessing
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-700"
-              }`}
-          >
-            {isProcessing ? "Processing AI Analysis..." : "Analyze Image"}
-          </button>
-
-          {error && (
-            <div className="mt-4 p-3 bg-red-50 text-red-700 rounded-md text-sm border border-red-200">
-              {error}
-            </div>
-          )}
-        </div>
-
-        {/* Right Side: Results */}
-        <div className="border rounded-lg p-6 shadow-sm bg-white flex flex-col items-center justify-center min-h-[350px]">
-          <h2 className="text-xl font-semibold mb-6 w-full text-left text-gray-900">
-            Analysis Results
-          </h2>
-
-          {!result && !isProcessing && (
-            <div className="flex-1 flex items-center justify-center text-gray-500 italic text-center px-4">
-              Select an image from your computer and click "Analyze Image" to
-              see the AI predictions here.
-            </div>
-          )}
-
-          {isProcessing && (
-            <div className="flex-1 flex flex-col items-center justify-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-              <p className="text-gray-600">Running AI Model...</p>
-            </div>
-          )}
-
-          {result && !isProcessing && (
-            <div className="flex-1 flex flex-col items-center justify-center w-full animate-in fade-in zoom-in duration-300">
-              <div
-                className={`text-3xl font-bold mb-4 px-6 py-4 rounded-xl shadow-sm ${
-                  result.detected
-                    ? "bg-red-100 text-red-600 border border-red-200"
-                    : "bg-green-100 text-green-600 border border-green-200"
-                }`}
-              >
-                {result.detected ? "ALGAE DETECTED" : "NOT DETECTED"}
-              </div>
-
-              {result.detected && (
-                <div className="text-xl mt-4 bg-gray-50 px-6 py-3 rounded-lg border border-gray-100">
-                  <span className="text-gray-600 font-medium">
-                    Confidence:{" "}
-                  </span>
-                  <span className="font-bold text-red-500">
-                    {result.probability}%
-                  </span>
+              {!result && !isProcessing && (
+                <div className="flex-1 flex flex-col items-center justify-center text-center px-12">
+                   <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-6 border border-border">
+                      <Search className="text-gray-300" size={32} />
+                   </div>
+                   <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">Pending Laboratory Data</p>
+                   <p className="text-xs text-gray-400 mt-2">Awaiting image upload for convolutional neural network inference.</p>
                 </div>
               )}
 
-              <p className="mt-8 text-sm text-gray-500 text-center px-4 max-w-sm border-t border-gray-100 pt-6">
-                {result.detected
-                  ? "The AI model has identified visual elements highly consistent with algae blooms in the provided image."
-                  : "The AI model did not find any significant evidence of algae blooms in the provided image."}
-              </p>
+              {isProcessing && (
+                <div className="flex-1 flex flex-col items-center justify-center">
+                  <div className="relative w-20 h-20 mb-6">
+                    <div className="absolute inset-0 border-4 border-brand-100 rounded-full" />
+                    <div className="absolute inset-0 border-4 border-brand-600 rounded-full border-t-transparent animate-spin" />
+                  </div>
+                  <p className="text-xs font-bold text-brand-600 uppercase tracking-widest">Processing Tensors...</p>
+                </div>
+              )}
+
+              {result && !isProcessing && (
+                <div className="flex-1 flex flex-col items-center justify-center animate-in fade-in duration-500">
+                  <div className={clsx("flex items-center gap-4 px-8 py-5 rounded-2xl border mb-10", 
+                    result.detected ? "bg-red-50 border-red-100 text-risk-high" : "bg-green-50 border-green-100 text-risk-low")}>
+                    {result.detected ? <ShieldAlert size={32} /> : <CheckCircle2 size={32} />}
+                    <div>
+                      <p className="text-sm font-bold uppercase tracking-widest">{result.detected ? "Algae Detected" : "No Algae Detected"}</p>
+                      <p className="text-[10px] font-bold opacity-70 uppercase tracking-widest">Inference Confidence: {result.probability}%</p>
+                    </div>
+                  </div>
+
+                  <div className="w-full max-w-md space-y-6 pt-10 border-t border-border">
+                    <div className="grid grid-cols-2 gap-8">
+                       <ResultStat label="Confidence Score" value={`${result.probability}%`} />
+                       <ResultStat label="Objects Logged" value={result.boxes.length} />
+                    </div>
+                    <p className="text-xs text-gray-400 leading-relaxed font-medium">
+                      {result.detected 
+                        ? "Visual patterns consistent with high-concentration chlorophyll-a or cyanobacteria blooms have been identified within the image matrix."
+                        : "The model found no significant evidence of surface blooms. Water clarity patterns are consistent with normal historical baselines."}
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </div>
+    </main>
+  );
+}
+
+function ResultStat({ label, value }: any) {
+  return (
+    <div>
+      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">{label}</p>
+      <p className="text-2xl font-bold text-foreground tracking-tight">{value}</p>
     </div>
   );
 }

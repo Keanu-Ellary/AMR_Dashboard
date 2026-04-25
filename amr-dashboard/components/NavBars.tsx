@@ -28,18 +28,18 @@ export default function NavBars({ children }: { children: React.ReactNode }) {
   }, [displayNavbars]);
 
   return (
-    <div>
+    <div className="flex h-screen bg-background overflow-hidden selection:bg-brand-100 selection:text-brand-700">
         {displayNavbars ? (
-          <div className="flex h-screen bg-gray-100">
+          <>
             <SideNavBar isLoggedIn={isLoggedIn} />
-            <div className="flex-1 flex flex-col overflow-hidden">
-              <main className="flex-1 overflow-auto">
+            <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+              <div className="flex-1 overflow-y-auto overflow-x-hidden">
                 {children}
-              </main>
+              </div>
             </div>
-          </div>
+          </>
         ) : (
-          <div>{children}</div>
+          <div className="flex-1 overflow-auto">{children}</div>
         )}
       </div>
   );

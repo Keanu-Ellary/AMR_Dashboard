@@ -1,4 +1,11 @@
 @import "tailwindcss";
+@config "../tailwind.config.js";
+
+@layer base {
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+}
 
 .amr-popup .leaflet-popup-tip-container {
   position: absolute;
@@ -8,4 +15,18 @@
   width: 20px;
   height: 20px;
   transform: rotate(90deg);
+}
+
+/* Custom Scrollbar for a cleaner research look */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-200 rounded-full hover:bg-gray-300 transition-colors;
 }

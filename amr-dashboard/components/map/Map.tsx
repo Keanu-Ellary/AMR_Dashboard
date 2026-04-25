@@ -33,14 +33,25 @@ export default function Map({
   useEffect(() => {
     if (mapRef.current || !mapDivRef.current) return;
 
+    const savedCenter = localStorage.getItem("mapCenter");
+    const savedZoom = localStorage.getItem("mapZoom");
+
+    const center = savedCenter ? JSON.parse(savedCenter) : [-25.735, 28.28];
+    const zoom = savedZoom ? parseInt(savedZoom, 10) : 11;
+
     const map = L.map(mapDivRef.current, {
-      center: [-25.735, 28.28],
-      zoom: 11,
+      center,
+      zoom,
+    });
+
+    map.on("moveend", () => {
+      localStorage.setItem("mapCenter", JSON.stringify(map.getCenter()));
+      localStorage.setItem("mapZoom", map.getZoom().toString());
     });
 
     const tileUrl = satelliteView
       ? "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-      : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+      : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
 
     tileLayerRef.current = L.tileLayer(tileUrl, {
       maxZoom: 18,
@@ -72,7 +83,7 @@ export default function Map({
 
     const tileUrl = satelliteView
       ? "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-      : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+      : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
 
     tileLayerRef.current = L.tileLayer(tileUrl, {
       maxZoom: 18,
@@ -103,7 +114,14 @@ export default function Map({
   };
 
   return (
-    <div style={{ width: "100%", height: "100%", position: "relative", border: "1px solid rgba(80,140,255,0.12)" }}>
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        position: "relative",
+        border: "1px solid rgba(80,140,255,0.12)",
+      }}
+    >
       {/* Inner div for Leaflet */}
       <div
         ref={mapDivRef}

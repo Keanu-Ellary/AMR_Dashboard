@@ -2,111 +2,112 @@
 
 import React, { useState } from "react";
 import { toast } from "react-toastify";
-import { login, getMe } from "@/app/services/authService";
+import { login } from "@/app/services/authService";
+import { Eye, EyeOff, ArrowLeft } from "lucide-react";
+import Link from "next/link";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
- const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
       if (!email || !password) {
-        toast.error("Please enter email and password.");
+        toast.error("Please enter credentials.");
         return;
       }
-      const response = await login(email, password);
-      if (response && response.status === 200) {
-        toast.success("Login successful!");
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        window.location.href = "/home";
-      } else { 
-        toast.error("Login failed. Please try again.");
-      } 
+      setIsLoading(true);
+      try {
+        const response = await login(email, password);
+        if (response && response.status === 200) {
+          toast.success("Authentication successful");
+          setTimeout(() => window.location.href = "/home", 1000);
+        } else { 
+          toast.error("Invalid credentials");
+        }
+      } finally {
+        setIsLoading(false);
+      }
   };
 
   return (
-    <div className="min-h-screen bg-neutral-900 flex items-center justify-center p-4 md:p-8">
-      {/* Main Card */}
-      <div className="bg-white rounded-[32px] w-full max-w-5xl flex flex-col md:flex-row overflow-hidden shadow-2xl p-4 md:p-8 gap-8 h-[700px]">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+      <div className="bg-white rounded-3xl w-full max-w-5xl flex flex-col md:flex-row overflow-hidden shadow-soft border border-border h-[650px]">
         
-        {/* Left Side: Form */}
-        <div className="w-full md:w-1/2 flex flex-col justify-center items-center px-4 md:px-12 text-center">
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-700 tracking-wide mb-8">
-            AMR SURVEILLANCE DASHBOARD
-          </h1>
+        {/* Form Side */}
+        <div className="w-full md:w-1/2 flex flex-col justify-center px-12 md:px-20">
+          <header className="mb-10 text-center md:text-left">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground uppercase mb-2">
+              AMR Surveillance
+            </h1>
+            <p className="text-sm font-medium text-gray-400 uppercase tracking-widest">
+              Researcher Portal
+            </p>
+          </header>
           
-          <p className="text-gray-600 text-lg mb-8">
-            Please Enter Your Details
-          </p>
-          
-          <form className="w-full max-w-sm flex flex-col gap-6" onSubmit={handleLogin}>
-            <input
-              type="email"
-              placeholder="Email"
-              className="w-full border border-gray-300 rounded-full px-6 py-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all"
-              value={email}
-              onChange = {(e) => setEmail(e.target.value)}
-              suppressHydrationWarning
-            />
+          <form className="space-y-6" onSubmit={handleLogin}>
+            <div>
+              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">Email Address</label>
+              <input
+                type="email"
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-100 focus:border-brand-500 transition-all placeholder:text-gray-300"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="researcher@example.edu"
+              />
+            </div>
             
-            <div className="relative w-full">
+            <div className="relative">
+              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">Secure Password</label>
               <input
                 type={showPassword ? "text" : "password"}
-                placeholder="Password"
-                className="w-full border border-gray-300 rounded-full px-6 py-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition-all pr-12"
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-100 focus:border-brand-500 transition-all pr-12 placeholder:text-gray-300"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                suppressHydrationWarning
+                placeholder="••••••••"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                className="absolute right-4 top-[38px] text-gray-400 hover:text-gray-600 focus:outline-none"
               >
-                {!showPassword ? (
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
-                  </svg>
-                ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                )}
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
             
-            <div className="flex flex-col items-center gap-4 mt-6">
+            <div className="flex flex-col gap-4 pt-4">
               <button
                 type="submit"
-                className="w-48 bg-blue-200 text-slate-800 font-medium py-3 rounded-full hover:bg-blue-300 transition-colors shadow-sm"
+                disabled={isLoading}
+                className="w-full bg-foreground text-white font-bold py-3 rounded-xl hover:opacity-90 transition-opacity shadow-subtle text-sm uppercase tracking-widest disabled:opacity-50"
               >
-                Login
+                {isLoading ? "Authenticating..." : "Authorize Access"}
               </button>
               
-              <button
-                type="button"
-                onClick={() => window.history.back()}
-                className="w-40 bg-red-400 text-white font-medium py-2 rounded-full hover:bg-red-500 transition-colors shadow-sm flex items-center justify-center gap-2 text-sm"
-              >
-                <span>✖</span> Go Back
-              </button>
-              
-              <a href="/forgot-password" className="text-sm text-gray-500 underline hover:text-gray-700 mt-2">
-                Forgot Password
-              </a>
+              <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-widest text-gray-400 mt-2">
+                <Link href="/forgot-password" title="reset" className="hover:text-brand-600 transition-colors">Forgot Password</Link>
+                <button type="button" onClick={() => window.history.back()} className="flex items-center gap-1 hover:text-risk-high transition-colors">
+                  <ArrowLeft size={12} /> Return
+                </button>
+              </div>
             </div>
           </form>
         </div>
 
-        {/* Right Side: Image */}
-        <div className="w-full md:w-1/2 hidden md:block relative h-full rounded-[24px] overflow-hidden">
+        {/* Visual Side */}
+        <div className="w-full md:w-1/2 hidden md:block relative bg-gray-100">
           <img 
             src="/login-bg.jpg" 
-            alt="Scenic view"
-            className="w-full h-full object-cover"
+            alt="Scientific Context"
+            className="w-full h-full object-cover opacity-90 grayscale-[0.2]"
           />
+          <div className="absolute inset-0 bg-brand-600/10 mix-blend-multiply" />
+          <div className="absolute bottom-10 left-10 right-10 p-6 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 text-white">
+            <p className="text-xs font-bold uppercase tracking-widest opacity-80 mb-1">Apies River Basin</p>
+            <p className="text-sm font-medium italic">"Precision monitoring for public health security."</p>
+          </div>
         </div>
       </div>
     </div>
