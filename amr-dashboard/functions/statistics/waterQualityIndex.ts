@@ -26,11 +26,15 @@ function normalizeTDS(tds: number): number {
   return 100 - ((tds - 50) / 950) * 100;
 }
 
-export async function waterQualityIndex() {
+// Make siteId optional so it works for both use cases
+export async function waterQualityIndex(siteId?: number) {
   try {
-    const sites = await prisma.siteData.findMany();
+    // If siteId is provided, fetch just that one; otherwise fetch all
+    const queryOptions = siteId ? { where: { id: siteId } } : {};
+    const sites = await prisma.siteData.findMany(queryOptions);
 
     const results = sites.map((site) => {
+      // Check for necessary fields based on the upstream approach
       if (
         site.dissolvedO2 == null ||
         site.ph == null ||
@@ -40,6 +44,7 @@ export async function waterQualityIndex() {
         throw new Error("Fields are empty. Cannot perform function");
       }
 
+      // We use the upstream version's normalizations because they map actual WQI ranges
       const qDO = normalizeDO(site.dissolvedO2);
       const qPH = normalizePH(site.ph);
       const qTemp = normalizeTemp(site.temperature);

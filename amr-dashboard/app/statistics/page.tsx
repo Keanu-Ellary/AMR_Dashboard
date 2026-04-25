@@ -275,7 +275,7 @@ function StatisticsContent() {
           
           if (waterQualityRes.ok) {
             const waterRes = await waterQualityRes.json();
-            setWaterQualityPercent(waterRes.percentageClean || 0);
+            setWaterQualityPercent(waterRes.results?.[0]?.WQI || 0);
           }
           if (timeInUnsafeRes.ok) {
             const timeRes = await timeInUnsafeRes.json();
