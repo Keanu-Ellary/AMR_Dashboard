@@ -47,6 +47,8 @@ interface WQIData {
   WQI: number;
 }
 
+import { useUI } from "@/context/UIContext";
+
 function StatisticsContent() {
   const searchParams = useSearchParams();
   const siteIdParam = searchParams.get("site");
@@ -175,6 +177,7 @@ function SiteView({
   siteAnomalies,
   siteId,
 }: any) {
+  const { setIsAddImagesOpen, setGlobalSelectedSite } = useUI();
   return (
     <div className="space-y-8">
       {siteData.imageBatches?.[0]?.algaeDetected && (
@@ -197,7 +200,12 @@ function SiteView({
           <div className="bg-white rounded-2xl border border-border overflow-hidden shadow-subtle">
             <div className="h-48 bg-gray-100 relative">
               <img
-                src={siteData.imageBase64 || "/login-bg.jpg"}
+                src={
+                  siteData.imageBatches?.[0]?.images?.[0]?.url ||
+                  siteData.images?.[0]?.url ||
+                  siteData.imageBase64 ||
+                  "/login-bg.jpg"
+                }
                 alt="Site"
                 className="w-full h-full object-cover"
               />
@@ -234,7 +242,11 @@ function SiteView({
                   Gallery
                 </Link>
                 <Link
-                  href={`/add-images?site=${siteId}`}
+                  href="/home"
+                  onClick={() => {
+                    setGlobalSelectedSite(siteData);
+                    setIsAddImagesOpen(true);
+                  }}
                   className="flex-1 text-center py-2 bg-brand-600 text-white rounded-lg text-xs font-bold hover:bg-brand-700 transition-colors"
                 >
                   Add Photos

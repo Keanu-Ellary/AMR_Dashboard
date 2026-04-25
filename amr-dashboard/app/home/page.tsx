@@ -21,10 +21,10 @@ type Speed = (typeof SPEED_OPTIONS)[number];
 
 // Each speed reduces the delay between 1-day advances
 const SPEED_DELAY_MS: Record<Speed, number> = {
-  1: 500,  // 1× — one day every 500 ms
-  2: 250,  // 2× — one day every 250 ms
-  5: 100,  // 5× — one day every 100 ms
-  10: 50,  // 10× — one day every 50 ms
+  1: 500, // 1× — one day every 500 ms
+  2: 250, // 2× — one day every 250 ms
+  5: 100, // 5× — one day every 100 ms
+  10: 50, // 10× — one day every 50 ms
 };
 
 const DAY_MS = 86_400_000;
@@ -41,6 +41,8 @@ export default function Home() {
     setIsAddDataOpen,
     isAddImagesOpen,
     setIsAddImagesOpen,
+    globalSelectedSite,
+    setGlobalSelectedSite,
   } = useUI();
   const [selectedSite, setSelectedSite] = useState<SiteData | null>(null);
   const [filters, setFilters] = useState<MapFilters>(DEFAULT_FILTERS);
@@ -66,7 +68,7 @@ export default function Home() {
           return;
         }
         e.preventDefault();
-        
+
         // Use the same logic as the button
         const atEnd = timeWindow[1] >= sliderBounds[1];
         if (atEnd) {
@@ -162,7 +164,7 @@ export default function Home() {
     const groupedData = timeFiltered.reduce<
       Record<string, { base: SiteData; totalScore: number; count: number }>
     >((acc, point) => {
-      const key = `${point.latitude},${point.longitude}`;
+      const key = point.geoLocName;
 
       let score = 0;
       const dz = getDangerZoneLabel(point.dangerZone as any);
@@ -204,7 +206,7 @@ export default function Home() {
 
     const allUniqueBases = sites.reduce<Record<string, SiteData>>(
       (acc, point) => {
-        const key = `${point.latitude},${point.longitude}`;
+        const key = point.geoLocName;
         if (
           !acc[key] ||
           new Date(point.collectionDate) > new Date(acc[key].collectionDate)
@@ -217,10 +219,8 @@ export default function Home() {
     );
 
     return Object.values(allUniqueBases).map((baseSite) => {
-      const key = `${baseSite.latitude},${baseSite.longitude}`;
-      const agg = aggregatedSites.find(
-        (a) => `${a.latitude},${a.longitude}` === key,
-      );
+      const key = baseSite.geoLocName;
+      const agg = aggregatedSites.find((a) => a.geoLocName === key);
 
       let result = agg
         ? { ...agg }
@@ -233,7 +233,10 @@ export default function Home() {
 
       let passesFilter = true;
       if (filters) {
-        if (filters.contaminationLevels && filters.contaminationLevels.length > 0) {
+        if (
+          filters.contaminationLevels &&
+          filters.contaminationLevels.length > 0
+        ) {
           const mappedLevel = getDangerZoneLabel(result.dangerZone as any);
           if (!filters.contaminationLevels.includes(mappedLevel))
             passesFilter = false;
@@ -268,7 +271,8 @@ export default function Home() {
     return {
       total: uniqueSitePoints.length,
       highRisk: uniqueSitePoints.filter((p) => p.dangerZone === "red").length,
-      moderateRisk: uniqueSitePoints.filter((p) => p.dangerZone === "yellow").length,
+      moderateRisk: uniqueSitePoints.filter((p) => p.dangerZone === "yellow")
+        .length,
     };
   }, [uniqueSitePoints]);
 
@@ -332,7 +336,10 @@ export default function Home() {
                       if (atEnd) {
                         // Restart from beginning of window
                         const windowSize = timeWindow[1] - timeWindow[0];
-                        setTimeWindow([sliderBounds[0], sliderBounds[0] + windowSize]);
+                        setTimeWindow([
+                          sliderBounds[0],
+                          sliderBounds[0] + windowSize,
+                        ]);
                         setIsPlaying(true);
                       } else {
                         setIsPlaying((p) => !p);
@@ -350,17 +357,29 @@ export default function Home() {
                   >
                     {atEnd ? (
                       /* Restart icon */
-                      <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        className="w-4 h-4"
+                      >
                         <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z" />
                       </svg>
                     ) : isPlaying ? (
                       /* Pause icon */
-                      <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        className="w-4 h-4"
+                      >
                         <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
                       </svg>
                     ) : (
                       /* Play icon */
-                      <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        className="w-4 h-4"
+                      >
                         <path d="M8 5v14l11-7z" />
                       </svg>
                     )}
@@ -446,14 +465,20 @@ export default function Home() {
       {/* Popups */}
       <AddDataPopup
         isOpen={isAddDataOpen}
-        onClose={() => setIsAddDataOpen(false)}
-        selectedSite={selectedSite}
+        onClose={() => {
+          setIsAddDataOpen(false);
+          setGlobalSelectedSite(null);
+        }}
+        selectedSite={globalSelectedSite || selectedSite}
         onRefresh={handleGetAllSites}
       />
       <AddImagesPopup
         isOpen={isAddImagesOpen}
-        onClose={() => setIsAddImagesOpen(false)}
-        initialSite={selectedSite}
+        onClose={() => {
+          setIsAddImagesOpen(false);
+          setGlobalSelectedSite(null);
+        }}
+        initialSite={globalSelectedSite || selectedSite}
         onRefresh={handleGetAllSites}
       />
     </main>
