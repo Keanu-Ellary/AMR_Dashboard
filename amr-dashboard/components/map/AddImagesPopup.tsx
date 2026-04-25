@@ -176,14 +176,15 @@ export default function AddImagesPopup({ isOpen, onClose, initialSite, onRefresh
                 />
               </div>
               <div className="flex flex-col justify-end">
-                <label className="flex items-center gap-3 p-2.5 bg-gray-50 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors">
+                <label className="flex items-center gap-3 p-2.5 bg-gray-50 border border-border rounded-xl cursor-pointer hover:bg-gray-100 transition-colors group">
                   <input 
                     type="checkbox" 
                     checked={checkAlgae} 
                     onChange={(e) => setCheckAlgae(e.target.checked)} 
-                    className="w-4 h-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500" 
+                    className="custom-checkbox" 
                   />
                   <div className="flex items-center gap-2">
+
                     <ShieldAlert size={14} className="text-risk-high" />
                     <span className="text-[10px] font-bold text-gray-600 uppercase tracking-widest">Enable Neural Algae Scanner</span>
                   </div>

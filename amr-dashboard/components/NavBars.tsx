@@ -31,7 +31,7 @@ export default function NavBars({ children }: { children: React.ReactNode }) {
     <div className="flex h-screen bg-background overflow-hidden selection:bg-brand-100 selection:text-brand-700">
         {displayNavbars ? (
           <>
-            <SideNavBar isLoggedIn={isLoggedIn} />
+            <SideNavBar isLoggedIn={isLoggedIn} isAdmin={isAdmin} />
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
               <div className="flex-1 overflow-y-auto overflow-x-hidden">
                 {children}

@@ -35,7 +35,7 @@ function NavLink({ href, icon: Icon, label, isActive, onClick }: NavItem & { isA
   );
 }
 
-export default function SideNavBar({isLoggedIn}: { isLoggedIn: boolean }) {
+export default function SideNavBar({isLoggedIn, isAdmin}: { isLoggedIn: boolean; isAdmin: boolean }) {
   const pathname = usePathname();
   const { isAddDataOpen, setIsAddDataOpen, isAddImagesOpen, setIsAddImagesOpen } = useUI();
   const isHome = pathname === "/home";
@@ -62,27 +62,25 @@ export default function SideNavBar({isLoggedIn}: { isLoggedIn: boolean }) {
             />
           ))}
           
-          <div className="text-[10px] text-gray-400 uppercase font-bold tracking-widest mt-6 mb-4">
-            Data Management
-          </div>
-          <NavLink
-            key="/add-data"
-            {...NAV_ITEMS.find(i => i.href === "/add-data")!}
-            isActive={isHome ? isAddDataOpen : pathname === "/add-data"}
-            onClick={(!isLoggedIn) 
-              ? () => { window.location.href = "/login"; } 
-              : (isHome ? (e) => { e.preventDefault(); setIsAddDataOpen(true); } : undefined)
-            }
-          />
-          <NavLink
-            key="/add-images"
-            {...NAV_ITEMS.find(i => i.href === "/add-images")!}
-            isActive={isHome ? isAddImagesOpen : pathname === "/add-images"}
-            onClick={(!isLoggedIn) 
-              ? () => { window.location.href = "/login"; } 
-              : (isHome ? (e) => { e.preventDefault(); setIsAddImagesOpen(true); } : undefined)
-            }
-          />
+          {isAdmin && (
+            <>
+              <div className="text-[10px] text-gray-400 uppercase font-bold tracking-widest mt-6 mb-4">
+                Data Management
+              </div>
+              <NavLink
+                key="/add-data"
+                {...NAV_ITEMS.find(i => i.href === "/add-data")!}
+                isActive={isHome ? isAddDataOpen : pathname === "/add-data"}
+                onClick={isHome ? (e) => { e.preventDefault(); setIsAddDataOpen(true); } : undefined}
+              />
+              <NavLink
+                key="/add-images"
+                {...NAV_ITEMS.find(i => i.href === "/add-images")!}
+                isActive={isHome ? isAddImagesOpen : pathname === "/add-images"}
+                onClick={isHome ? (e) => { e.preventDefault(); setIsAddImagesOpen(true); } : undefined}
+              />
+            </>
+          )}
       </nav>
 
       <div className="mt-auto pt-6 border-t border-border">

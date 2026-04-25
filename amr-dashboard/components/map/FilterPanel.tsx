@@ -53,10 +53,10 @@ function FilterPanel({ filters, uniqueSites, onFiltersChange }: FilterPanelProps
         <div className="font-bold text-[10px] text-gray-400 mb-2 uppercase tracking-widest">Contamination Level</div>
         <div className="space-y-1">
           {riskEntries.map(([dangerZone, dangerColour]) => (
-            <label key={dangerZone} className="flex items-center gap-3 p-1.5 hover:bg-gray-50 rounded-md cursor-pointer transition-colors">
+            <label key={dangerZone} className="flex items-center gap-3 p-1.5 hover:bg-gray-50 rounded-md cursor-pointer transition-colors group">
               <input
                 type="checkbox"
-                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                className="custom-checkbox"
                 checked={filters.contaminationLevels?.includes(dangerZone as ContaminationLevel) ?? false}
                 onChange={() => updateDangerLevelFilters(dangerZone as ContaminationLevel)}
               />
@@ -77,7 +77,7 @@ function FilterPanel({ filters, uniqueSites, onFiltersChange }: FilterPanelProps
             <label key={site} className="flex items-center gap-3 p-1.5 hover:bg-gray-50 rounded-md cursor-pointer transition-colors">
               <input
                 type="checkbox"
-                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                className="custom-checkbox"
                 checked={filters.sites?.includes(site) ?? false}
                 onChange={() => updateSiteFilters(site)}
               />
