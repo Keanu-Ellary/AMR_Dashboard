@@ -30,7 +30,7 @@ function normalizeTDS(tds: number): number {
 export async function waterQualityIndex(siteId?: number) {
   try {
     // If siteId is provided, fetch just that one; otherwise fetch all
-    const queryOptions = siteId ? { where: { id: siteId } } : {};
+    const queryOptions = siteId ? { where: { id: siteId } } : undefined;
     const sites = await prisma.siteData.findMany(queryOptions);
 
     const results = sites.map((site) => {

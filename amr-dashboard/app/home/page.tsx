@@ -8,6 +8,7 @@ import { getDangerZoneLabel, MapFilters } from "@/types/map_types";
 import { DEFAULT_FILTERS } from "@/constants/map_constants";
 import { Map } from "@/components/map/LoadMap";
 import { getAllSites } from "@/app/services/siteService";
+import { parseLocationName } from "@/utils/siteUtils";
 
 export default function Home() {
   const [selectedSite, setSelectedSite] = useState<SiteData | null>(null);
@@ -39,22 +40,7 @@ export default function Home() {
       }
   
       if (filters.sites) {
-        const site= point.geoLocName;
-        let siteName = site;
-        if (point.sampleName) {
-          if (site.includes("Apies River - ")) {
-            const parts = site.split("Apies River - ");
-            if (parts.length > 1) {
-              siteName = parts[1].trim();
-            }
-          }
-          if (site.includes(" - Apies River")) {
-            const parts = site.split(" - Apies River");
-            if (parts.length > 1) {
-              siteName = parts[0].trim();
-            }
-          }
-        }
+        const siteName = parseLocationName(point.geoLocName);
         if (filters.sites?.length > 0 &&
           !filters.sites.includes(siteName))
         return false;

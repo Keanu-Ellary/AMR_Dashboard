@@ -10,6 +10,7 @@ import { addSiteData, addMutlipleSiteData, getAllSites, updateSite, addSiteImage
 import ConfirmFile from '@/components/add-data/confirmFile';
 import { DEFAULT_FILTERS } from '@/constants/map_constants';
 import { getDangerZoneLabel, MapFilters } from '@/types/map_types';
+import { parseLocationName } from '@/utils/siteUtils';
 
 export default function AddDataPage() {
   const [showImportDropdown, setShowImportDropdown] = useState(false);
@@ -318,22 +319,7 @@ export default function AddDataPage() {
          }
      
          if (filters.sites) {
-           const site= point.geoLocName;
-           let siteName = site;
-           if (point.sampleName) {
-             if (site.includes("Apies River - ")) {
-               const parts = site.split("Apies River - ");
-               if (parts.length > 1) {
-                 siteName = parts[1].trim();
-               }
-             }
-             if (site.includes(" - Apies River")) {
-               const parts = site.split(" - Apies River");
-               if (parts.length > 1) {
-                 siteName = parts[0].trim();
-               }
-             }
-           }
+           const siteName = parseLocationName(point.geoLocName);
            if (filters.sites?.length > 0 &&
              !filters.sites.includes(siteName))
            return false;
