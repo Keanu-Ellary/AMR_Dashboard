@@ -10,6 +10,7 @@ import { addSiteData, addMutlipleSiteData, getAllSites, updateSite, addSiteImage
 import ConfirmFile from '@/components/add-data/confirmFile';
 import { DEFAULT_FILTERS } from '@/constants/map_constants';
 import { getDangerZoneLabel, MapFilters } from '@/types/map_types';
+import { parseLocationName } from '@/utils/siteUtils';
 import { Upload } from "lucide-react"
 
 export default function AddDataPage() {
@@ -21,60 +22,97 @@ export default function AddDataPage() {
   const [sites, setSites] = useState<SiteData[]>([]);
   const [selectedSite, setSelectedSite] = useState<SiteData | null>(null);
   const [filters, setFilters] = useState<MapFilters>(DEFAULT_FILTERS);
-  
-    const handleGetAllSites = async () => {
-      const allSitesResponse = await getAllSites();
-  
-      if (allSitesResponse.ok) {
-        const allSiteData = await allSitesResponse.json();
-        setSites(allSiteData.sites);
-  
-      }
+  const [formData, setFormData] = useState({
+    // required
+    sampleName: '',
+    isolationSource: '',
+    collectionDate: '',
+    geoLocName: '',
+    latitude: '',
+    longitude: '',
+    amrResGenes: '',
+    predictedSir: '',
+    sampleAnalysisType: '',
+
+    // optional
+    isolateId: '',
+    organism: '',
+    sampleId: '',
+    collectedBy: '',
+    sequenceName: '',
+    elementType: '',
+    class: '',
+    subclass: '',
+    targetLength: '',
+    referenceLength: '',
+    coverage: '',
+    identity: '',
+    alignmentLength: '',
+    accession: '',
+    virtulenceGenes: '',
+    plasmidReplicons: '',
+
+    // water params
+    temperature: '',
+    ph: '',
+    tds: '',
+    ec: '',
+    dissolvedO2: '',
+  });
+
+  const handleGetAllSites = async () => {
+    const allSitesResponse = await getAllSites();
+
+    if (allSitesResponse.ok) {
+      const allSiteData = await allSitesResponse.json();
+      setSites(allSiteData.sites);
+
     }
-  
-    useEffect(() => {
-      handleGetAllSites();
-      filteredPoints;
-    }, []);
+  }
 
-    useEffect(() => {
-      if (!selectedSite) return;
+  useEffect(() => {
+    handleGetAllSites();
+  }, []);
 
-      setFormData({
-        sampleName: selectedSite.sampleName ?? '',
-        isolationSource: selectedSite.isolationSource ?? '',
-        collectionDate: selectedSite.collectionDate ? new Date(selectedSite.collectionDate).toISOString().split('T')[0] : '',
-        geoLocName: selectedSite.geoLocName ?? '',
-        latitude:selectedSite.latitude?.toString() ?? '',
-        longitude:selectedSite.longitude?.toString() ?? '',
-        amrResGenes:selectedSite.amrResGenes ?? '',
-        predictedSir:selectedSite.predictedSir ?? '',
-        sampleAnalysisType: selectedSite.sampleAnalysisType ?? '',
+  useEffect(() => {
+    if (!selectedSite) return;
 
-        isolateId:selectedSite.isolateId ?? '',
-        organism: selectedSite.orgamism ?? '',
-        sampleId: selectedSite.sampleId ?? '',
-        collectedBy:selectedSite.collectedBy ?? '',
-        sequenceName:selectedSite.sequenceName ?? '',
-        elementType: selectedSite.elementType ?? '',
-        class: selectedSite.class ?? '',
-        subclass: selectedSite.subclass ?? '',
-        targetLength: selectedSite.targetLength?.toString() ?? '',
-        referenceLength: selectedSite.referenceLength?.toString() ?? '',
-        coverage: selectedSite.coverage?.toString() ?? '',
-        identity:selectedSite.identity?.toString() ?? '',
-        alignmentLength: selectedSite.alignmentLength?.toString() ?? '',
-        accession: selectedSite.accession ?? '',
-        virtulenceGenes: selectedSite.virtulenceGenes ?? '',
-        plasmidReplicons:selectedSite.plasmidReplicons ?? '',
-        temperature: selectedSite.temperature?.toString() ?? '',
-        ph: selectedSite.ph?.toString() ?? '',
-        tds:selectedSite.tds?.toString() ?? '',
-        ec:selectedSite.ec?.toString() ?? '',
-        dissolvedO2:selectedSite.dissolvedO2?.toString() ?? '',
-      });
+    setFormData({
+      sampleName: selectedSite.sampleName ?? '',
+      isolationSource: selectedSite.isolationSource ?? '',
+      collectionDate: selectedSite.collectionDate ? new Date(selectedSite.collectionDate).toISOString().split('T')[0] : '',
+      geoLocName: selectedSite.geoLocName ?? '',
+      latitude:selectedSite.latitude?.toString() ?? '',
+      longitude:selectedSite.longitude?.toString() ?? '',
+      amrResGenes:selectedSite.amrResGenes ?? '',
+      predictedSir:selectedSite.predictedSir ?? '',
+      sampleAnalysisType: selectedSite.sampleAnalysisType ?? '',
 
-    }, [selectedSite]);
+      isolateId:selectedSite.isolateId ?? '',
+      organism: selectedSite.orgamism ?? '',
+      sampleId: selectedSite.sampleId ?? '',
+      collectedBy:selectedSite.collectedBy ?? '',
+      sequenceName:selectedSite.sequenceName ?? '',
+      elementType: selectedSite.elementType ?? '',
+      class: selectedSite.class ?? '',
+      subclass: selectedSite.subclass ?? '',
+      targetLength: selectedSite.targetLength?.toString() ?? '',
+      referenceLength: selectedSite.referenceLength?.toString() ?? '',
+      coverage: selectedSite.coverage?.toString() ?? '',
+      identity:selectedSite.identity?.toString() ?? '',
+      alignmentLength: selectedSite.alignmentLength?.toString() ?? '',
+      accession: selectedSite.accession ?? '',
+      virtulenceGenes: selectedSite.virtulenceGenes ?? '',
+      plasmidReplicons:selectedSite.plasmidReplicons ?? '',
+      temperature: selectedSite.temperature?.toString() ?? '',
+      ph: selectedSite.ph?.toString() ?? '',
+      tds:selectedSite.tds?.toString() ?? '',
+      ec:selectedSite.ec?.toString() ?? '',
+      dissolvedO2:selectedSite.dissolvedO2?.toString() ?? '',
+    });
+
+  }, [selectedSite]);
+
 
   const handleUpdateSite = async () => {
     if (selectedSite && selectedSite.id) {
@@ -127,44 +165,6 @@ export default function AddDataPage() {
       }
     }
   }
-
-  const [formData, setFormData] = useState({
-    // required
-    sampleName: '',
-    isolationSource: '',
-    collectionDate: '',
-    geoLocName: '',
-    latitude: '',
-    longitude: '',
-    amrResGenes: '',
-    predictedSir: '',
-    sampleAnalysisType: '',
-
-    // optional
-    isolateId: '',
-    organism: '',
-    sampleId: '',
-    collectedBy: '',
-    sequenceName: '',
-    elementType: '',
-    class: '',
-    subclass: '',
-    targetLength: '',
-    referenceLength: '',
-    coverage: '',
-    identity: '',
-    alignmentLength: '',
-    accession: '',
-    virtulenceGenes: '',
-    plasmidReplicons: '',
-
-    // water params
-    temperature: '',
-    ph: '',
-    tds: '',
-    ec: '',
-    dissolvedO2: '',
-  });
 
   const handleClear = () => {
     setSelectedSite(null);
@@ -305,7 +305,6 @@ export default function AddDataPage() {
         toast.success('File data added successfully!' );
         handleClear();
         handleGetAllSites();
-        filteredPoints;
       } else {
         toast.error('Failed to add file data. Please try again.');
       }
@@ -340,22 +339,7 @@ export default function AddDataPage() {
          }
      
          if (filters.sites) {
-           const site= point.geoLocName;
-           let siteName = site;
-           if (point.sampleName) {
-             if (site.includes("Apies River - ")) {
-               const parts = site.split("Apies River - ");
-               if (parts.length > 1) {
-                 siteName = parts[1].trim();
-               }
-             }
-             if (site.includes(" - Apies River")) {
-               const parts = site.split(" - Apies River");
-               if (parts.length > 1) {
-                 siteName = parts[0].trim();
-               }
-             }
-           }
+           const siteName = parseLocationName(point.geoLocName);
            if (filters.sites?.length > 0 &&
              !filters.sites.includes(siteName))
            return false;
@@ -572,7 +556,7 @@ export default function AddDataPage() {
                     onClick={() => setShowImportDropdown(!showImportDropdown)}
                     className="gap-2 w-full bg-[#0ea5e9] text-white py-1.5 rounded-md font-medium hover:bg-[#0284c7] transition text-sm flex justify-center items-center gap-1"
                   >
-                    <Upload className="w-4 h=4" />
+                    <Upload className="w-4 h-4" />
                     Import
 
                   </button>
