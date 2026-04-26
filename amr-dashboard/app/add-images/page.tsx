@@ -16,11 +16,16 @@ function AddImagesContent() {
     null,
   );
   const [selectedSite, setSelectedSite] = useState<SiteData | null>(null);
+  const [visibleCount, setVisibleCount] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const imageInputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setVisibleCount(10);
+  }, [selectedLocationName]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -63,7 +68,14 @@ function AddImagesContent() {
   }, [initialSiteId]);
 
   const uniqueLocations = useMemo(() => getUniqueLocations(sites), [sites]);
-  const groupedSites = useMemo(() => groupSitesByLocation(sites), [sites]);
+  const groupedSites = useMemo(() => {
+    const sortedSites = [...sites].sort(
+      (a, b) =>
+        new Date(b.collectionDate).getTime() -
+        new Date(a.collectionDate).getTime(),
+    );
+    return groupSitesByLocation(sortedSites);
+  }, [sites]);
 
   const filteredLocations = useMemo(
     () =>
@@ -212,22 +224,37 @@ function AddImagesContent() {
                     Select Sampling Event
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {groupedSites[selectedLocationName]?.map((site) => (
-                      <div
-                        key={site.id}
-                        onClick={() => setSelectedSite(site)}
-                        className="p-3 border border-gray-200 rounded-md hover:border-blue-300 hover:bg-blue-50 cursor-pointer transition-colors"
-                      >
-                        <div className="font-medium text-gray-800 text-sm">
-                          {site.sampleName}
+                    {groupedSites[selectedLocationName]
+                      ?.slice(0, visibleCount)
+                      .map((site) => (
+                        <div
+                          key={site.id}
+                          onClick={() => setSelectedSite(site)}
+                          className="p-3 border border-gray-200 rounded-md hover:border-blue-300 hover:bg-blue-50 cursor-pointer transition-colors"
+                        >
+                          <div className="font-medium text-gray-800 text-sm">
+                            {site.sampleName}
+                          </div>
+                          <div className="text-[10px] text-gray-500">
+                            {new Date(
+                              site.collectionDate,
+                            ).toLocaleDateString()} •{" "}
+                            {site.dangerZone}
+                          </div>
                         </div>
-                        <div className="text-[10px] text-gray-500">
-                          {new Date(site.collectionDate).toLocaleDateString()} •{" "}
-                          {site.dangerZone}
-                        </div>
-                      </div>
-                    ))}
+                      ))}
                   </div>
+                  {groupedSites[selectedLocationName] &&
+                    groupedSites[selectedLocationName].length >
+                      visibleCount && (
+                      <button
+                        onClick={() => setVisibleCount((prev) => prev + 10)}
+                        className="mt-4 w-full py-2 px-4 border border-blue-600 text-blue-600 rounded-md hover:bg-blue-50 transition-colors text-sm font-medium"
+                      >
+                        Load More (Showing {visibleCount} of{" "}
+                        {groupedSites[selectedLocationName].length})
+                      </button>
+                    )}
                 </div>
               ) : (
                 <div className="flex items-center justify-between p-3 bg-green-50 border border-green-100 rounded-md">

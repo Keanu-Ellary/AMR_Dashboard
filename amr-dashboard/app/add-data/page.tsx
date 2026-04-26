@@ -22,60 +22,97 @@ export default function AddDataPage() {
   const [sites, setSites] = useState<SiteData[]>([]);
   const [selectedSite, setSelectedSite] = useState<SiteData | null>(null);
   const [filters, setFilters] = useState<MapFilters>(DEFAULT_FILTERS);
-  
-    const handleGetAllSites = async () => {
-      const allSitesResponse = await getAllSites();
-  
-      if (allSitesResponse.ok) {
-        const allSiteData = await allSitesResponse.json();
-        setSites(allSiteData.sites);
-  
-      }
+  const [formData, setFormData] = useState({
+    // required
+    sampleName: '',
+    isolationSource: '',
+    collectionDate: '',
+    geoLocName: '',
+    latitude: '',
+    longitude: '',
+    amrResGenes: '',
+    predictedSir: '',
+    sampleAnalysisType: '',
+
+    // optional
+    isolateId: '',
+    organism: '',
+    sampleId: '',
+    collectedBy: '',
+    sequenceName: '',
+    elementType: '',
+    class: '',
+    subclass: '',
+    targetLength: '',
+    referenceLength: '',
+    coverage: '',
+    identity: '',
+    alignmentLength: '',
+    accession: '',
+    virtulenceGenes: '',
+    plasmidReplicons: '',
+
+    // water params
+    temperature: '',
+    ph: '',
+    tds: '',
+    ec: '',
+    dissolvedO2: '',
+  });
+
+  const handleGetAllSites = async () => {
+    const allSitesResponse = await getAllSites();
+
+    if (allSitesResponse.ok) {
+      const allSiteData = await allSitesResponse.json();
+      setSites(allSiteData.sites);
+
     }
-  
-    useEffect(() => {
-      handleGetAllSites();
-      filteredPoints;
-    }, []);
+  }
 
-    useEffect(() => {
-      if (!selectedSite) return;
+  useEffect(() => {
+    handleGetAllSites();
+  }, []);
 
-      setFormData({
-        sampleName: selectedSite.sampleName ?? '',
-        isolationSource: selectedSite.isolationSource ?? '',
-        collectionDate: selectedSite.collectionDate ? new Date(selectedSite.collectionDate).toISOString().split('T')[0] : '',
-        geoLocName: selectedSite.geoLocName ?? '',
-        latitude:selectedSite.latitude?.toString() ?? '',
-        longitude:selectedSite.longitude?.toString() ?? '',
-        amrResGenes:selectedSite.amrResGenes ?? '',
-        predictedSir:selectedSite.predictedSir ?? '',
-        sampleAnalysisType: selectedSite.sampleAnalysisType ?? '',
+  useEffect(() => {
+    if (!selectedSite) return;
 
-        isolateId:selectedSite.isolateId ?? '',
-        organism: selectedSite.orgamism ?? '',
-        sampleId: selectedSite.sampleId ?? '',
-        collectedBy:selectedSite.collectedBy ?? '',
-        sequenceName:selectedSite.sequenceName ?? '',
-        elementType: selectedSite.elementType ?? '',
-        class: selectedSite.class ?? '',
-        subclass: selectedSite.subclass ?? '',
-        targetLength: selectedSite.targetLength?.toString() ?? '',
-        referenceLength: selectedSite.referenceLength?.toString() ?? '',
-        coverage: selectedSite.coverage?.toString() ?? '',
-        identity:selectedSite.identity?.toString() ?? '',
-        alignmentLength: selectedSite.alignmentLength?.toString() ?? '',
-        accession: selectedSite.accession ?? '',
-        virtulenceGenes: selectedSite.virtulenceGenes ?? '',
-        plasmidReplicons:selectedSite.plasmidReplicons ?? '',
-        temperature: selectedSite.temperature?.toString() ?? '',
-        ph: selectedSite.ph?.toString() ?? '',
-        tds:selectedSite.tds?.toString() ?? '',
-        ec:selectedSite.ec?.toString() ?? '',
-        dissolvedO2:selectedSite.dissolvedO2?.toString() ?? '',
-      });
+    setFormData({
+      sampleName: selectedSite.sampleName ?? '',
+      isolationSource: selectedSite.isolationSource ?? '',
+      collectionDate: selectedSite.collectionDate ? new Date(selectedSite.collectionDate).toISOString().split('T')[0] : '',
+      geoLocName: selectedSite.geoLocName ?? '',
+      latitude:selectedSite.latitude?.toString() ?? '',
+      longitude:selectedSite.longitude?.toString() ?? '',
+      amrResGenes:selectedSite.amrResGenes ?? '',
+      predictedSir:selectedSite.predictedSir ?? '',
+      sampleAnalysisType: selectedSite.sampleAnalysisType ?? '',
 
-    }, [selectedSite]);
+      isolateId:selectedSite.isolateId ?? '',
+      organism: selectedSite.orgamism ?? '',
+      sampleId: selectedSite.sampleId ?? '',
+      collectedBy:selectedSite.collectedBy ?? '',
+      sequenceName:selectedSite.sequenceName ?? '',
+      elementType: selectedSite.elementType ?? '',
+      class: selectedSite.class ?? '',
+      subclass: selectedSite.subclass ?? '',
+      targetLength: selectedSite.targetLength?.toString() ?? '',
+      referenceLength: selectedSite.referenceLength?.toString() ?? '',
+      coverage: selectedSite.coverage?.toString() ?? '',
+      identity:selectedSite.identity?.toString() ?? '',
+      alignmentLength: selectedSite.alignmentLength?.toString() ?? '',
+      accession: selectedSite.accession ?? '',
+      virtulenceGenes: selectedSite.virtulenceGenes ?? '',
+      plasmidReplicons:selectedSite.plasmidReplicons ?? '',
+      temperature: selectedSite.temperature?.toString() ?? '',
+      ph: selectedSite.ph?.toString() ?? '',
+      tds:selectedSite.tds?.toString() ?? '',
+      ec:selectedSite.ec?.toString() ?? '',
+      dissolvedO2:selectedSite.dissolvedO2?.toString() ?? '',
+    });
+
+  }, [selectedSite]);
+
 
   const handleUpdateSite = async () => {
     if (selectedSite && selectedSite.id) {
@@ -128,44 +165,6 @@ export default function AddDataPage() {
       }
     }
   }
-
-  const [formData, setFormData] = useState({
-    // required
-    sampleName: '',
-    isolationSource: '',
-    collectionDate: '',
-    geoLocName: '',
-    latitude: '',
-    longitude: '',
-    amrResGenes: '',
-    predictedSir: '',
-    sampleAnalysisType: '',
-
-    // optional
-    isolateId: '',
-    organism: '',
-    sampleId: '',
-    collectedBy: '',
-    sequenceName: '',
-    elementType: '',
-    class: '',
-    subclass: '',
-    targetLength: '',
-    referenceLength: '',
-    coverage: '',
-    identity: '',
-    alignmentLength: '',
-    accession: '',
-    virtulenceGenes: '',
-    plasmidReplicons: '',
-
-    // water params
-    temperature: '',
-    ph: '',
-    tds: '',
-    ec: '',
-    dissolvedO2: '',
-  });
 
   const handleClear = () => {
     setSelectedSite(null);
@@ -306,7 +305,6 @@ export default function AddDataPage() {
         toast.success('File data added successfully!' );
         handleClear();
         handleGetAllSites();
-        filteredPoints;
       } else {
         toast.error('Failed to add file data. Please try again.');
       }
