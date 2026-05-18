@@ -1,6 +1,6 @@
-beforeAll(() => {
-    jest.spyOn(console, "error").mockImplementation(() => {});
-});
+// beforeAll(() => {
+//     jest.spyOn(console, "error").mockImplementation(() => {});
+// });
 
 jest.mock("@/lib/middleware/authMiddleware", () => ({
     adminNeeded: jest.fn()
@@ -30,6 +30,9 @@ jest.mock("@/lib/db", () => ({
         },
         siteImage: {
             createMany: jest.fn(),
+        },
+        siteImageBatch: {
+            create: jest.fn(),
         },
     },
 }));
