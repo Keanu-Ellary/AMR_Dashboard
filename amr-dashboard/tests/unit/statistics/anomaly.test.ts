@@ -33,18 +33,22 @@ describe("anomalies", () => {
                 temperature: 20,
                 ph: 7,
                 tds: 100,
+                dissolvedO2: 4.5,
                 createdAt: new Date(),
             },
             {
                 id: 1,
-                temperature: 30,
+                temperature: 50,
                 ph: 7.1,
                 tds: 110,
+                dissolvedO2: 4.5,
                 createdAt: new Date(),
             }
         ]);
 
         const res = await anomaliesPerSite();
+
+        console.log(res.body);
 
         expect(res.statusCode).toBe(200);
         expect(res.body.anomalies![0].issues).toBe("Sudden temperature change");

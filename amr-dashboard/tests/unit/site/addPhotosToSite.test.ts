@@ -24,6 +24,10 @@ describe("addPhotosToSite", () => {
             id: 1
         });
 
+        mockPrisma.siteImageBatch.create.mockResolvedValue({
+            id: 123,
+        });
+
         (minioClient.putObject as jest.Mock).mockResolvedValue(undefined);
 
         mockPrisma.siteData.createMany.mockResolvedValue({count: 2});
