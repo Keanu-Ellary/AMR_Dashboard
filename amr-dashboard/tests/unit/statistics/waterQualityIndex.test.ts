@@ -10,6 +10,7 @@ describe("WQI", () => {
                 dissolvedO2: 8,
                 tds: 100,
                 ec: 1,
+                temperature: 20
             },
         ]);
 
@@ -45,6 +46,7 @@ describe("WQI", () => {
                 dissolvedO2: 8.5678,
                 tds: 100,
                 ec: 1,
+                temperature: 20,
             },
         ]);
 

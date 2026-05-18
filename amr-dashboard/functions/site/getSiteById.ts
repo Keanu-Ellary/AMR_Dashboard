@@ -29,6 +29,10 @@ export async function getSiteById(id: number) {
                         url: true,
                     }
                 },
+                imageBatches: {
+                    orderBy: { dateTaken: 'desc' },
+                    include: { images: true }
+                },
             }
         });
 

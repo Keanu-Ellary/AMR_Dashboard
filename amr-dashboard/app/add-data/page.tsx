@@ -6,75 +6,113 @@ import SitesSidebar from '@/components/map/SitesSidebar';
 import { Map } from "@/components/map/LoadMap";
 import { SiteData } from '@/types/site_types';
 import { toast } from 'react-toastify';
-import { addSiteData, addMutlipleSiteData, getAllSites, updateSite } from '@/app/services/siteService';
+import { addSiteData, addMutlipleSiteData, getAllSites, updateSite, addSiteImage } from '@/app/services/siteService';
 import ConfirmFile from '@/components/add-data/confirmFile';
 import { DEFAULT_FILTERS } from '@/constants/map_constants';
 import { getDangerZoneLabel, MapFilters } from '@/types/map_types';
+import { parseLocationName } from '@/utils/siteUtils';
+import { Upload } from "lucide-react"
 
 export default function AddDataPage() {
   const [showImportDropdown, setShowImportDropdown] = useState(false);
   const [acceptType, setAcceptType] = useState('.csv');
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const imageInputRef = useRef<HTMLInputElement>(null);
-  const [imageBase64, setImageBase64] = useState<string | undefined>(undefined);
+
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [sites, setSites] = useState<SiteData[]>([]);
   const [selectedSite, setSelectedSite] = useState<SiteData | null>(null);
   const [filters, setFilters] = useState<MapFilters>(DEFAULT_FILTERS);
-  
-    const handleGetAllSites = async () => {
-      const allSitesResponse = await getAllSites();
-  
-      if (allSitesResponse.ok) {
-        const allSiteData = await allSitesResponse.json();
-        setSites(allSiteData.sites);
-  
-      }
+  const [formData, setFormData] = useState({
+    // required
+    sampleName: '',
+    isolationSource: '',
+    collectionDate: '',
+    geoLocName: '',
+    latitude: '',
+    longitude: '',
+    amrResGenes: '',
+    predictedSir: '',
+    sampleAnalysisType: '',
+
+    // optional
+    isolateId: '',
+    organism: '',
+    sampleId: '',
+    collectedBy: '',
+    sequenceName: '',
+    elementType: '',
+    class: '',
+    subclass: '',
+    targetLength: '',
+    referenceLength: '',
+    coverage: '',
+    identity: '',
+    alignmentLength: '',
+    accession: '',
+    virtulenceGenes: '',
+    plasmidReplicons: '',
+
+    // water params
+    temperature: '',
+    ph: '',
+    tds: '',
+    ec: '',
+    dissolvedO2: '',
+  });
+
+  const handleGetAllSites = async () => {
+    const allSitesResponse = await getAllSites();
+
+    if (allSitesResponse.ok) {
+      const allSiteData = await allSitesResponse.json();
+      setSites(allSiteData.sites);
+
     }
-  
-    useEffect(() => {
-      handleGetAllSites();
-      filteredPoints;
-    }, []);
+  }
 
-    useEffect(() => {
-      if (!selectedSite) return;
+  useEffect(() => {
+    handleGetAllSites();
+  }, []);
 
-      setFormData({
-        sampleName: selectedSite.sampleName ?? '',
-        isolationSource: selectedSite.isolationSource ?? '',
-        collectionDate: selectedSite.collectionDate ? new Date(selectedSite.collectionDate).toISOString().split('T')[0] : '',
-        geoLocName: selectedSite.geoLocName ?? '',
-        latitude:selectedSite.latitude?.toString() ?? '',
-        longitude:selectedSite.longitude?.toString() ?? '',
-        amrResGenes:selectedSite.amrResGenes ?? '',
-        predictedSir:selectedSite.predictedSir ?? '',
-        sampleAnalysisType: selectedSite.sampleAnalysisType ?? '',
+  useEffect(() => {
+    if (!selectedSite) return;
 
-        isolateId:selectedSite.isolateId ?? '',
-        organism: selectedSite.orgamism ?? '',
-        sampleId: selectedSite.sampleId ?? '',
-        collectedBy:selectedSite.collectedBy ?? '',
-        sequenceName:selectedSite.sequenceName ?? '',
-        elementType: selectedSite.elementType ?? '',
-        class: selectedSite.class ?? '',
-        subclass: selectedSite.subclass ?? '',
-        targetLength: selectedSite.targetLength?.toString() ?? '',
-        referenceLength: selectedSite.referenceLength?.toString() ?? '',
-        coverage: selectedSite.coverage?.toString() ?? '',
-        identity:selectedSite.identity?.toString() ?? '',
-        alignmentLength: selectedSite.alignmentLength?.toString() ?? '',
-        accession: selectedSite.accession ?? '',
-        virtulenceGenes: selectedSite.virtulenceGenes ?? '',
-        plasmidReplicons:selectedSite.plasmidReplicons ?? '',
-        temperature: selectedSite.temperature?.toString() ?? '',
-        ph: selectedSite.ph?.toString() ?? '',
-        tds:selectedSite.tds?.toString() ?? '',
-        ec:selectedSite.ec?.toString() ?? '',
-        dissolvedO2:selectedSite.dissolvedO2?.toString() ?? '',
-      });
+    setFormData({
+      sampleName: selectedSite.sampleName ?? '',
+      isolationSource: selectedSite.isolationSource ?? '',
+      collectionDate: selectedSite.collectionDate ? new Date(selectedSite.collectionDate).toISOString().split('T')[0] : '',
+      geoLocName: selectedSite.geoLocName ?? '',
+      latitude:selectedSite.latitude?.toString() ?? '',
+      longitude:selectedSite.longitude?.toString() ?? '',
+      amrResGenes:selectedSite.amrResGenes ?? '',
+      predictedSir:selectedSite.predictedSir ?? '',
+      sampleAnalysisType: selectedSite.sampleAnalysisType ?? '',
 
-    }, [selectedSite]);
+      isolateId:selectedSite.isolateId ?? '',
+      organism: selectedSite.orgamism ?? '',
+      sampleId: selectedSite.sampleId ?? '',
+      collectedBy:selectedSite.collectedBy ?? '',
+      sequenceName:selectedSite.sequenceName ?? '',
+      elementType: selectedSite.elementType ?? '',
+      class: selectedSite.class ?? '',
+      subclass: selectedSite.subclass ?? '',
+      targetLength: selectedSite.targetLength?.toString() ?? '',
+      referenceLength: selectedSite.referenceLength?.toString() ?? '',
+      coverage: selectedSite.coverage?.toString() ?? '',
+      identity:selectedSite.identity?.toString() ?? '',
+      alignmentLength: selectedSite.alignmentLength?.toString() ?? '',
+      accession: selectedSite.accession ?? '',
+      virtulenceGenes: selectedSite.virtulenceGenes ?? '',
+      plasmidReplicons:selectedSite.plasmidReplicons ?? '',
+      temperature: selectedSite.temperature?.toString() ?? '',
+      ph: selectedSite.ph?.toString() ?? '',
+      tds:selectedSite.tds?.toString() ?? '',
+      ec:selectedSite.ec?.toString() ?? '',
+      dissolvedO2:selectedSite.dissolvedO2?.toString() ?? '',
+    });
+
+  }, [selectedSite]);
+
 
   const handleUpdateSite = async () => {
     if (selectedSite && selectedSite.id) {
@@ -115,59 +153,18 @@ export default function AddDataPage() {
       virtulenceGenes: formData.virtulenceGenes || undefined,
       plasmidReplicons: formData.plasmidReplicons || undefined,
 
-      // image
-      imageBase64,
     });
 
       if (updateResponse.ok) {
         toast.success("Site data updated successfully");
         setSelectedSite(null);
+        handleGetAllSites();
+        handleClear();
       }else{
         toast.error("Failed to update site data")
       }
-
-      handleGetAllSites();
-      handleClear();
     }
   }
-
-  const [formData, setFormData] = useState({
-    // required
-    sampleName: '',
-    isolationSource: '',
-    collectionDate: '',
-    geoLocName: '',
-    latitude: '',
-    longitude: '',
-    amrResGenes: '',
-    predictedSir: '',
-    sampleAnalysisType: '',
-
-    // optional
-    isolateId: '',
-    organism: '',
-    sampleId: '',
-    collectedBy: '',
-    sequenceName: '',
-    elementType: '',
-    class: '',
-    subclass: '',
-    targetLength: '',
-    referenceLength: '',
-    coverage: '',
-    identity: '',
-    alignmentLength: '',
-    accession: '',
-    virtulenceGenes: '',
-    plasmidReplicons: '',
-
-    // water params
-    temperature: '',
-    ph: '',
-    tds: '',
-    ec: '',
-    dissolvedO2: '',
-  });
 
   const handleClear = () => {
     setSelectedSite(null);
@@ -208,7 +205,6 @@ export default function AddDataPage() {
     ec: '',
     dissolvedO2: '',
     });
-    setImageBase64(undefined);
   };
 
   const handleImportClick = (type: string) => {
@@ -238,7 +234,6 @@ export default function AddDataPage() {
       reader.onloadend = () => {
         const base64String = reader.result as string;
         setImageBase64(base64String);
-        toast.success('Image loaded successfully!');
       };
       reader.readAsDataURL(file);
     }
@@ -282,14 +277,12 @@ export default function AddDataPage() {
       virtulenceGenes: formData.virtulenceGenes || undefined,
       plasmidReplicons: formData.plasmidReplicons || undefined,
 
-      // image
-      imageBase64,
     });
+
     if (response.status === 200 || response.status === 201) {
       toast.success('Site data added successfully!');
       handleClear();
       handleGetAllSites();
-      filteredPoints;
     } else {
       toast.error('Failed to add site data. Please try again.');
     }
@@ -312,7 +305,6 @@ export default function AddDataPage() {
         toast.success('File data added successfully!' );
         handleClear();
         handleGetAllSites();
-        filteredPoints;
       } else {
         toast.error('Failed to add file data. Please try again.');
       }
@@ -325,8 +317,19 @@ export default function AddDataPage() {
       fileInputRef.current.value = '';
     }
   };
+
+  const uniqueSites = Object.values(
+    sites.reduce<Record<string, SiteData>>((uniquePoints, point) => {
+      const coords = `${point.latitude},${point.longitude}`;
+      const existing = uniquePoints[coords];
+      if (!existing || new Date(point.collectionDate) > new Date(existing.collectionDate)) {
+        uniquePoints[coords] = point;
+      }
+      return uniquePoints;
+    }, {})
+  );
    
-     const filteredPoints = sites.filter((point) => {
+     const filteredPoints = uniqueSites.filter((point) => {
          if (!filters) return true;
      
          if (filters.contaminationLevels) {
@@ -336,22 +339,7 @@ export default function AddDataPage() {
          }
      
          if (filters.sites) {
-           const site= point.geoLocName;
-           let siteName = site;
-           if (point.sampleName) {
-             if (site.includes("Apies River - ")) {
-               const parts = site.split("Apies River - ");
-               if (parts.length > 1) {
-                 siteName = parts[1].trim();
-               }
-             }
-             if (site.includes(" - Apies River")) {
-               const parts = site.split(" - Apies River");
-               if (parts.length > 1) {
-                 siteName = parts[0].trim();
-               }
-             }
-           }
+           const siteName = parseLocationName(point.geoLocName);
            if (filters.sites?.length > 0 &&
              !filters.sites.includes(siteName))
            return false;
@@ -374,16 +362,11 @@ export default function AddDataPage() {
             handleCancel={handleCancel}
         />
 
+        
           <div className="flex-1 flex overflow-hidden">
+            
             {/* MAIN Form Column */}
             <div className="w-80 border-r border-gray-100 p-6 flex flex-col overflow-y-auto py-4">
-              
-              <button 
-                className="bg-[#ef4444] text-white px-4 py-1.5 rounded w-fit text-xs font-medium mb-4 hover:bg-red-600 transition"
-                onClick={() => window.location.href = "/home"}
-              >
-                Close
-              </button>
 
               <div className="space-y-3 flex-1 overflow-y-auto">
                 {/* Form Fields */}
@@ -398,7 +381,7 @@ export default function AddDataPage() {
                 </div>
                 <div>
                   <label className="block text-gray-700 mb-0.5 text-xs">Collection Date </label>
-                  <input type="text" placeholder="Value" value={formData.collectionDate} onChange={(e) => setFormData({...formData, collectionDate: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
+                  <input type="text" placeholder="yyyy/mm/dd" value={formData.collectionDate} onChange={(e) => setFormData({...formData, collectionDate: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
                 </div>
                 <div>
                   <label className="block text-gray-700 mb-0.5 text-xs">Geographic Location Name</label>
@@ -527,23 +510,16 @@ export default function AddDataPage() {
                   <input type="text" placeholder="Value" value={formData.dissolvedO2} onChange={(e) => setFormData({...formData, dissolvedO2: e.target.value})} className="w-full border border-gray-200 rounded-md px-3 py-1 focus:outline-none focus:border-blue-500 placeholder-gray-400 text-black text-xs" />
                 </div>
 
-                 <p className="block text-gray-700 mb-0.5 text-xs">Site Image</p>
-                  <div>
-                    <input type="file" ref={imageInputRef} accept="image/*" onChange={handleImageChange} className="text-xs" />
-                    <button
-                      onClick={() => imageInputRef.current?.click()}
-                      className="w-full border border-dashed border-gray-300 rounded-md py-2 text-xs text-gray-500 hover:border-blue-400 hover:text-blue-500 transition"
-                    >
-                      {imageBase64 ? 'Image selected' : 'Click to upload image'}
-                    </button>
-                  </div>
+
 
               </div>
 
-              <div className="mt-4 flex flex-col gap-2 flex-shrink-0">
+
+              <div className="flex flex-col">
+              <div className="mt-4 gap-2 flex flex-shrink-0">
                 {selectedSite && (
                   <button 
-                  className="w-full bg-[#22c55e] text-white py-1.5 rounded-md font-medium hover:bg-[#16a34a] transition text-sm"
+                  className="flex-1 bg-[#22c55e] text-white py-1.5 rounded-md font-medium hover:bg-[#16a34a] transition text-sm"
                   onClick={handleUpdateSite}
                 >
                   Update
@@ -551,14 +527,23 @@ export default function AddDataPage() {
                 )}
                 {!selectedSite && (
                   <button 
-                  className="w-full bg-[#22c55e] text-white py-1.5 rounded-md font-medium hover:bg-[#16a34a] transition text-sm"
+                  className="flex-1 bg-[#22c55e] text-white py-1.5 rounded-md font-medium hover:bg-[#16a34a] transition text-sm"
                   onClick={handleAddData}
                 >
                   Submit
                 </button>
                 )}
 
-                <div className="relative">
+                
+                <button 
+                  onClick={handleClear}
+                  className="flex-1 bg-[#ef4444] text-white py-1.5 rounded-md font-medium hover:bg-[#dc2626] transition text-sm"
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+             <div className="mt-4 flex flex-col gap-2 flex-shrink-0 relative">
                   {/* Hidden file input */}
                   <input 
                     type="file" 
@@ -569,8 +554,9 @@ export default function AddDataPage() {
                   />
                   <button 
                     onClick={() => setShowImportDropdown(!showImportDropdown)}
-                    className="w-full bg-[#0ea5e9] text-white py-1.5 rounded-md font-medium hover:bg-[#0284c7] transition text-sm flex justify-center items-center gap-1"
+                    className="gap-2 w-full bg-[#0ea5e9] text-white py-1.5 rounded-md font-medium hover:bg-[#0284c7] transition text-sm flex justify-center items-center gap-1"
                   >
+                    <Upload className="w-4 h-4" />
                     Import
 
                   </button>
@@ -598,13 +584,6 @@ export default function AddDataPage() {
                     </div>
                   )}
                 </div>
-                <button 
-                  onClick={handleClear}
-                  className="w-full bg-[#ef4444] text-white py-1.5 rounded-md font-medium hover:bg-[#dc2626] transition text-sm"
-                >
-                  Clear
-                </button>
-              </div>
             </div>
 
             {/* Map Column */}
@@ -624,6 +603,7 @@ export default function AddDataPage() {
                     points={filteredPoints}
                     selectedSite={selectedSite}
                     onSelectSite={setSelectedSite}
+                    onRefresh={handleGetAllSites}
                   />
                 </div>
             </MapProvider>

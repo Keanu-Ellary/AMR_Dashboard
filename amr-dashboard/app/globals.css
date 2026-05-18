@@ -1,1 +1,11 @@
 @import "tailwindcss";
+
+.amr-popup .leaflet-popup-tip-container {
+  position: absolute;
+  left: 0px;
+  top: 12px;
+  bottom: auto;
+  width: 20px;
+  height: 20px;
+  transform: rotate(90deg);
+}

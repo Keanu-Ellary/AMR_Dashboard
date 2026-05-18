@@ -8,6 +8,7 @@ import { getDangerZoneLabel, MapFilters } from "@/types/map_types";
 import { DEFAULT_FILTERS } from "@/constants/map_constants";
 import { Map } from "@/components/map/LoadMap";
 import { getAllSites } from "@/app/services/siteService";
+import { parseLocationName } from "@/utils/siteUtils";
 
 export default function Home() {
   const [selectedSite, setSelectedSite] = useState<SiteData | null>(null);
@@ -29,7 +30,18 @@ export default function Home() {
     filteredPoints;
   }, []);
 
-  const filteredPoints = sites.filter((point) => {
+  const uniqueSites = Object.values(
+    sites.reduce<Record<string, SiteData>>((uniquePoints, point) => {
+      const coords = `${point.latitude},${point.longitude}`;
+      const existing = uniquePoints[coords];
+      if (!existing || new Date(point.collectionDate) > new Date(existing.collectionDate)) {
+        uniquePoints[coords] = point;
+      }
+      return uniquePoints;
+    }, {})
+  );
+
+  const filteredPoints = uniqueSites.filter((point) => {
       if (!filters) return true;
   
       if (filters.contaminationLevels) {
@@ -39,22 +51,7 @@ export default function Home() {
       }
   
       if (filters.sites) {
-        const site= point.geoLocName;
-        let siteName = site;
-        if (point.sampleName) {
-          if (site.includes("Apies River - ")) {
-            const parts = site.split("Apies River - ");
-            if (parts.length > 1) {
-              siteName = parts[1].trim();
-            }
-          }
-          if (site.includes(" - Apies River")) {
-            const parts = site.split(" - Apies River");
-            if (parts.length > 1) {
-              siteName = parts[0].trim();
-            }
-          }
-        }
+        const siteName = parseLocationName(point.geoLocName);
         if (filters.sites?.length > 0 &&
           !filters.sites.includes(siteName))
         return false;
@@ -72,8 +69,8 @@ export default function Home() {
   const totalModerateRiskSites = sites.filter(p => p.dangerZone === "yellow").length;
   return (
     
-          <main className="flex-1 overflow-auto p-6">
-            <div className="flex flex-direction-column justify-between">
+          <main className="flex-1 overflow-auto">
+            <div className="flex flex-direction-column justify-between pt-4 px-4">
               <div style={styles.grid}>
                 <span style={styles.card}>
                   <span style={styles.cardTitle}>Total Samples:</span>
@@ -107,6 +104,7 @@ export default function Home() {
                   points={filteredPoints}
                   selectedSite={selectedSite}
                   onSelectSite={setSelectedSite}
+                  onRefresh={handleGetAllSites}
                 />
               </div>
             </MapProvider>
@@ -126,7 +124,7 @@ const styles: Record<string, React.CSSProperties> = {
     display:"grid",
     gridTemplateColumns:"repeat(3, 200px)",
     gap:"12px",
-    marginBottom:"48px",
+    marginBottom:"16px",
   },
   card: {
     display: "flex",
