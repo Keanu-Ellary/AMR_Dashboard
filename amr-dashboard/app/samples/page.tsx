@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { MapPin, AlertTriangle, ArrowLeft, FlaskConical, Calendar, Settings } from "lucide-react";
+import { MapPin, AlertTriangle, ArrowLeft, Calendar, Info } from "lucide-react";
 import type { SiteData } from "@/types/site_types";
 import WaterQualityFormula from "@/components/WaterQualityFormula";
 
@@ -68,7 +68,9 @@ function SampleViewerContent() {
     return (
       <main className="flex-1 overflow-auto p-6 bg-slate-50/50">
         <div className="flex flex-col items-center justify-center h-96 gap-4">
-          <p className="text-red-500 font-semibold">{error || "Sample not found"}</p>
+          <p className="text-red-500 font-semibold">
+            {error || "Sample not found"}
+          </p>
           <button
             onClick={() => router.back()}
             className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold shadow-md hover:bg-indigo-700 transition-all"
@@ -108,7 +110,23 @@ function SampleViewerContent() {
   };
 
   const latestBatchImage = sampleData.imageBatches?.[0]?.images?.[0]?.url;
-  const latestImage = latestBatchImage || sampleData.images?.[sampleData.images.length - 1]?.url;
+  const latestImage =
+    latestBatchImage || sampleData.images?.[sampleData.images.length - 1]?.url;
+
+  const phValue = sampleData.ph;
+  const tempValue = sampleData.temperature;
+  const doValue = sampleData.dissolvedO2;
+  const tdsValue = sampleData.tds;
+
+  const phOutOfRange =
+    phValue !== null && phValue !== undefined && (phValue < 7 || phValue > 7.5);
+  const tempOutOfRange =
+    tempValue !== null &&
+    tempValue !== undefined &&
+    (tempValue < 15 || tempValue > 25);
+  const doOutOfRange = doValue !== null && doValue !== undefined && doValue < 8;
+  const tdsOutOfRange =
+    tdsValue !== null && tdsValue !== undefined && tdsValue > 50;
 
   return (
     <main className="flex-1 overflow-auto p-6 bg-slate-50/50 flex flex-col gap-6">
@@ -116,42 +134,45 @@ function SampleViewerContent() {
       <div className="flex items-center gap-4">
         <button
           onClick={() => router.back()}
-          className="p-2 bg-white rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 shadow-sm transition-all"
+          className="p-2 bg-white rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 transition-all"
           title="Go Back"
         >
           <ArrowLeft className="h-4 w-4" />
         </button>
         <div>
-          <h1 className="text-2xl font-black text-indigo-950 tracking-tight flex items-center gap-2">
-            <FlaskConical className="h-6 w-6 text-indigo-600" />
-            Isolate Detail Viewer
+          <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">
+            Sample details
           </h1>
-          <p className="text-sm text-gray-500 font-medium">
-            Detailed sample readings, WQI formula metrics, and AMR resistance profile
+          <p className="text-sm text-slate-500">
+            Site readings, WQI breakdown, and resistance profile
           </p>
         </div>
       </div>
 
       {/* Algae Alert Banner */}
-      {sampleData.imageBatches && sampleData.imageBatches.length > 0 && sampleData.imageBatches[0].algaeDetected && (
-        <div className="bg-red-50 border border-red-200 p-4 rounded-2xl shadow-sm flex items-start gap-3">
-          <AlertTriangle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="text-sm text-red-800 font-black">AI Algae Alert Detected</p>
-            <p className="text-xs text-red-600 mt-0.5">
-              The neural vision model flagged potential algae presence in the latest photo batch taken for this sample.
-            </p>
+      {sampleData.imageBatches &&
+        sampleData.imageBatches.length > 0 &&
+        sampleData.imageBatches[0].algaeDetected && (
+          <div className="bg-amber-50 border border-amber-200 p-3 rounded-xl flex items-start gap-3">
+            <AlertTriangle className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm text-amber-900 font-semibold">
+                Algae alert
+              </p>
+              <p className="text-xs text-amber-700 mt-0.5">
+                Potential algae presence detected in the latest image batch.
+              </p>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
       {/* Main Content Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-[1400px]">
         {/* Left Card: Info & Image */}
         <div className="lg:col-span-1 flex flex-col gap-6">
-          <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6 flex flex-col gap-4">
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 flex flex-col gap-4">
             {/* Sample Image */}
-            <div className="rounded-2xl overflow-hidden h-48 bg-slate-100 border border-slate-100">
+            <div className="rounded-xl overflow-hidden h-48 bg-slate-100">
               {latestImage ? (
                 <img
                   src={`/api/image?url=${encodeURIComponent(latestImage)}`}
@@ -167,25 +188,39 @@ function SampleViewerContent() {
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center text-slate-300 gap-2">
                   <MapPin className="h-8 w-8" />
-                  <span className="text-xs font-bold uppercase tracking-wider">No Image Available</span>
+                  <span className="text-xs font-bold uppercase tracking-wider">
+                    No Image Available
+                  </span>
                 </div>
               )}
             </div>
 
             {/* Basic Info */}
             <div className="flex flex-col gap-2">
-              <span className={`inline-flex items-center gap-1.5 px-3 py-1 border rounded-full text-xs font-bold w-fit ${getDangerZoneColor(sampleData.dangerZone)}`}>
-                <span className={`h-2 w-2 rounded-full ${getDangerDotColor(sampleData.dangerZone)}`} />
-                <span className="capitalize">{sampleData.dangerZone || "unknown"} Risk</span>
+              <span
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 border rounded-full text-xs font-semibold w-fit ${getDangerZoneColor(sampleData.dangerZone)}`}
+              >
+                <span
+                  className={`h-2 w-2 rounded-full ${getDangerDotColor(sampleData.dangerZone)}`}
+                />
+                <span className="capitalize">
+                  {sampleData.dangerZone || "unknown"} risk
+                </span>
               </span>
-              <h2 className="text-xl font-extrabold text-indigo-950 mt-1">{sampleData.sampleName}</h2>
-              <div className="flex items-center gap-1.5 text-xs text-slate-500 font-semibold">
+              <h2 className="text-xl font-semibold text-slate-900 mt-1">
+                {sampleData.sampleName}
+              </h2>
+              <div className="flex items-center gap-1.5 text-xs text-slate-500">
                 <MapPin className="h-3.5 w-3.5" />
                 {sampleData.geoLocName}
               </div>
-              <div className="flex items-center gap-1.5 text-xs text-slate-500 font-semibold mt-1">
+              <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-1">
                 <Calendar className="h-3.5 w-3.5" />
-                Sampled: {new Date(sampleData.collectionDate).toLocaleDateString("en-ZA", { year: "numeric", month: "short", day: "numeric" })}
+                Sampled:{" "}
+                {new Date(sampleData.collectionDate).toLocaleDateString(
+                  "en-ZA",
+                  { year: "numeric", month: "short", day: "numeric" },
+                )}
               </div>
             </div>
 
@@ -193,37 +228,57 @@ function SampleViewerContent() {
 
             {/* Isolate Details */}
             <div className="flex flex-col gap-3">
-              <h4 className="text-xs font-extrabold text-indigo-950 uppercase tracking-widest">Isolate Profile</h4>
-              <div className="grid grid-cols-2 gap-3 text-xs bg-slate-50 p-4 rounded-xl border border-slate-100">
+              <h4 className="text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                Isolate profile
+              </h4>
+              <div className="grid grid-cols-2 gap-3 text-xs bg-slate-50/60 p-4 rounded-xl border border-slate-200">
                 <div>
-                  <span className="text-slate-400 block font-medium">Organism</span>
-                  <span className="text-slate-800 font-bold italic">{sampleData.orgamism || "Unknown"}</span>
+                  <span className="text-slate-400 block font-medium">
+                    Organism
+                  </span>
+                  <span className="text-slate-800 font-semibold italic">
+                    {sampleData.orgamism || "Unknown"}
+                  </span>
                 </div>
                 <div>
-                  <span className="text-slate-400 block font-medium">Isolate ID</span>
-                  <span className="text-slate-800 font-mono font-bold">{sampleData.isolateId || "N/A"}</span>
+                  <span className="text-slate-400 block font-medium">
+                    Isolate ID
+                  </span>
+                  <span className="text-slate-800 font-mono font-semibold">
+                    {sampleData.isolateId || "N/A"}
+                  </span>
                 </div>
                 <div>
-                  <span className="text-slate-400 block font-medium">SIR Prediction</span>
-                  <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-extrabold mt-0.5 ${
-                    sampleData.predictedSir?.startsWith("R")
-                      ? "bg-red-50 text-red-700 border border-red-200"
-                      : sampleData.predictedSir?.startsWith("I")
-                      ? "bg-yellow-50 text-yellow-700 border border-yellow-200"
-                      : "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                  }`}>
+                  <span className="text-slate-400 block font-medium">
+                    SIR Prediction
+                  </span>
+                  <span
+                    className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold mt-0.5 ${
+                      sampleData.predictedSir?.startsWith("R")
+                        ? "bg-red-50 text-red-700 border border-red-200"
+                        : sampleData.predictedSir?.startsWith("I")
+                          ? "bg-yellow-50 text-yellow-700 border border-yellow-200"
+                          : "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                    }`}
+                  >
                     {sampleData.predictedSir || "—"}
                   </span>
                 </div>
                 <div>
-                  <span className="text-slate-400 block font-medium">Analysis Type</span>
-                  <span className="text-slate-800 font-bold">{sampleData.sampleAnalysisType}</span>
+                  <span className="text-slate-400 block font-medium">
+                    Analysis Type
+                  </span>
+                  <span className="text-slate-800 font-semibold">
+                    {sampleData.sampleAnalysisType}
+                  </span>
                 </div>
               </div>
 
               <div>
-                <span className="text-xs text-slate-400 block font-medium">AMR Resistance Genes</span>
-                <span className="text-xs text-slate-800 font-mono font-bold bg-indigo-50/50 border border-indigo-100 p-2.5 rounded-lg block mt-1 break-all">
+                <span className="text-xs text-slate-400 block font-medium">
+                  AMR Resistance Genes
+                </span>
+                <span className="text-xs text-slate-800 font-mono font-semibold bg-slate-50 border border-slate-200 p-2.5 rounded-lg block mt-1 break-all">
                   {sampleData.amrResGenes || "No resistance genes detected"}
                 </span>
               </div>
@@ -234,65 +289,139 @@ function SampleViewerContent() {
         {/* Right Columns: Metrics & Formula */}
         <div className="lg:col-span-2 flex flex-col gap-6">
           {/* Water Quality Metric Card Grid */}
-          <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6">
+          <div className="bg-white rounded-2xl border border-slate-200 p-6">
             <div className="flex justify-between items-center mb-6">
               <div>
-                <h3 className="font-extrabold text-indigo-950 text-base">Diagnostic Water Quality Parameters</h3>
-                <p className="text-xs text-gray-500 font-medium">Individual physical-chemical measurements taken at site</p>
-              </div>
-
-              {/* Water Quality Score Indicator */}
-              <div className="flex items-center gap-3">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Water Quality Score</span>
-                <span className={`px-3 py-1 rounded-2xl text-base font-black shadow-sm ${
-                  waterQualityPercent >= 76
-                    ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                    : waterQualityPercent >= 51
-                    ? "bg-yellow-50 text-yellow-700 border border-yellow-200"
-                    : "bg-red-50 text-red-700 border border-red-200"
-                }`}>
-                  {waterQualityPercent.toFixed(1)}%
-                </span>
+                <h3 className="font-semibold text-slate-900 text-base">
+                  Water quality parameters
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Physical and chemical measurements at the site
+                </p>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-blue-50/60 border border-blue-100 rounded-2xl p-4 transition-all hover:shadow-sm">
-                <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">pH Level</span>
-                <span className="text-2xl font-black text-blue-600 block mt-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div
+                className={`bg-white rounded-lg border shadow-sm p-3 flex flex-col gap-1 ${
+                  phOutOfRange ? "border-red-400" : "border-slate-200"
+                }`}
+              >
+                <span className="text-xs font-medium text-slate-500">
+                  pH Level
+                </span>
+                <span
+                  className={`text-2xl font-semibold ${
+                    phOutOfRange ? "text-red-700" : "text-slate-900"
+                  }`}
+                >
                   {sampleData.ph?.toFixed(1) || "N/A"}
                 </span>
+                <span className="text-xs text-slate-500">
+                  Ideal range: 7.0 - 7.5
+                </span>
               </div>
-              <div className="bg-emerald-50/60 border border-emerald-100 rounded-2xl p-4 transition-all hover:shadow-sm">
-                <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Temperature</span>
-                <span className="text-2xl font-black text-emerald-600 block mt-1">
+              <div
+                className={`bg-white rounded-lg border shadow-sm p-3 flex flex-col gap-1 ${
+                  tempOutOfRange ? "border-red-400" : "border-slate-200"
+                }`}
+              >
+                <span className="text-xs font-medium text-slate-500">
+                  Temperature
+                </span>
+                <span
+                  className={`text-2xl font-semibold ${
+                    tempOutOfRange ? "text-red-700" : "text-slate-900"
+                  }`}
+                >
                   {sampleData.temperature?.toFixed(1) || "N/A"}°C
                 </span>
+                <span className="text-xs text-slate-500">
+                  Ideal range: 15°C - 25°C
+                </span>
               </div>
-              <div className="bg-orange-50/60 border border-orange-100 rounded-2xl p-4 transition-all hover:shadow-sm">
-                <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Dissolved O₂</span>
-                <span className="text-2xl font-black text-orange-600 block mt-1">
+              <div
+                className={`bg-white rounded-lg border shadow-sm p-3 flex flex-col gap-1 ${
+                  doOutOfRange ? "border-red-400" : "border-slate-200"
+                }`}
+              >
+                <span className="text-xs font-medium text-slate-500">
+                  Dissolved O₂
+                </span>
+                <span
+                  className={`text-2xl font-semibold ${
+                    doOutOfRange ? "text-red-700" : "text-slate-900"
+                  }`}
+                >
                   {sampleData.dissolvedO2?.toFixed(2) || "N/A"} mg/L
                 </span>
+                <span className="text-xs text-slate-500">Ideal: ≥ 8 mg/L</span>
               </div>
-              <div className="bg-purple-50/60 border border-purple-100 rounded-2xl p-4 transition-all hover:shadow-sm">
-                <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">TDS</span>
-                <span className="text-2xl font-black text-purple-600 block mt-1">
+              <div
+                className={`bg-white rounded-lg border shadow-sm p-3 flex flex-col gap-1 ${
+                  tdsOutOfRange ? "border-red-400" : "border-slate-200"
+                }`}
+              >
+                <span className="text-xs font-medium text-slate-500">TDS</span>
+                <span
+                  className={`text-2xl font-semibold ${
+                    tdsOutOfRange ? "text-red-700" : "text-slate-900"
+                  }`}
+                >
                   {sampleData.tds?.toFixed(1) || "N/A"} mg/L
                 </span>
+                <span className="text-xs text-slate-500">Ideal: ≤ 50 mg/L</span>
               </div>
             </div>
           </div>
 
           {/* Formula Breakdown Breakdown */}
-          <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6">
-            <h3 className="font-extrabold text-indigo-950 text-base mb-4">Water Quality Index Formula Breakdown</h3>
+          <div className="bg-white rounded-2xl border border-slate-200 p-6">
+            <div className="mb-4">
+              <div className="flex items-center gap-2">
+                <h3 className="font-semibold text-slate-900 text-base">
+                  Water Quality Index
+                </h3>
+                <div className="relative group">
+                  <button
+                    type="button"
+                    className="inline-flex items-center justify-center w-6 h-6 rounded-full border border-slate-200 text-slate-500 hover:text-slate-700 hover:border-slate-300 transition-colors"
+                    aria-label="Water Quality Index calculation details"
+                  >
+                    <Info className="w-3.5 h-3.5" />
+                  </button>
+                  <div className="pointer-events-none absolute left-0 top-full mt-2 w-72 rounded-lg border border-slate-200 bg-white p-3 text-xs text-slate-600 shadow-lg opacity-0 translate-y-1 transition-all duration-150 group-hover:opacity-100 group-hover:translate-y-0 group-focus-within:opacity-100 group-focus-within:translate-y-0 z-10">
+                    <p className="text-slate-800 font-mono">
+                      WQI = 0.35×q(DO) + 0.25×q(pH) + 0.20×q(Temp) + 0.20×q(TDS)
+                    </p>
+                    <p className="mt-2">
+                      q(X) is the normalized sub-index (0–100). Weights reflect
+                      each parameter&apos;s importance; DO carries the highest
+                      weight.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <p
+                className={`text-2xl font-semibold mt-1 ${
+                  waterQualityPercent >= 70
+                    ? "text-emerald-700"
+                    : waterQualityPercent >= 50
+                      ? "text-orange-600"
+                      : "text-red-600"
+                }`}
+              >
+                {waterQualityPercent.toFixed(1)}%
+              </p>
+            </div>
             <WaterQualityFormula
               mode="site"
+              variant="compact"
               ph={sampleData.ph}
               temperature={sampleData.temperature}
               dissolvedO2={sampleData.dissolvedO2}
               tds={sampleData.tds}
+              wqi={waterQualityPercent}
             />
           </div>
         </div>
@@ -303,13 +432,15 @@ function SampleViewerContent() {
 
 export default function SampleViewer() {
   return (
-    <Suspense fallback={
-      <main className="flex-1 overflow-auto p-6 bg-slate-50/50">
-        <div className="flex items-center justify-center h-96">
-          <p className="text-gray-500">Loading sample details...</p>
-        </div>
-      </main>
-    }>
+    <Suspense
+      fallback={
+        <main className="flex-1 overflow-auto p-6 bg-slate-50/50">
+          <div className="flex items-center justify-center h-96">
+            <p className="text-gray-500">Loading sample details...</p>
+          </div>
+        </main>
+      }
+    >
       <SampleViewerContent />
     </Suspense>
   );

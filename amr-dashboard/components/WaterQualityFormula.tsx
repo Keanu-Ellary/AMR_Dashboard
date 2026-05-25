@@ -1,7 +1,14 @@
 "use client";
 
 import React from "react";
-import { Droplets, Thermometer, FlaskConical, Gauge, Info, Award } from "lucide-react";
+import {
+  Droplets,
+  Thermometer,
+  FlaskConical,
+  Gauge,
+  Info,
+  Award,
+} from "lucide-react";
 
 // ─── Normalization helpers ──────────────────────────────────────────────────────
 
@@ -33,12 +40,52 @@ function normalizeTDS(tds: number): number {
 
 // ─── Quality label helpers ──────────────────────────────────────────────────────
 
-function getQualityLabel(wqi: number): { label: string; color: string; bg: string; border: string; ring: string } {
-  if (wqi >= 90) return { label: "Excellent", color: "text-emerald-700", bg: "bg-emerald-50", border: "border-emerald-200", ring: "ring-emerald-500" };
-  if (wqi >= 70) return { label: "Good", color: "text-blue-700", bg: "bg-blue-50", border: "border-blue-200", ring: "ring-blue-500" };
-  if (wqi >= 50) return { label: "Moderate", color: "text-yellow-700", bg: "bg-yellow-50", border: "border-yellow-200", ring: "ring-yellow-500" };
-  if (wqi >= 25) return { label: "Poor", color: "text-orange-700", bg: "bg-orange-50", border: "border-orange-200", ring: "ring-orange-500" };
-  return { label: "Very Poor", color: "text-red-700", bg: "bg-red-50", border: "border-red-200", ring: "ring-red-500" };
+function getQualityLabel(wqi: number): {
+  label: string;
+  color: string;
+  bg: string;
+  border: string;
+  ring: string;
+} {
+  if (wqi >= 90)
+    return {
+      label: "Excellent",
+      color: "text-emerald-700",
+      bg: "bg-emerald-50",
+      border: "border-emerald-200",
+      ring: "ring-emerald-500",
+    };
+  if (wqi >= 70)
+    return {
+      label: "Good",
+      color: "text-blue-700",
+      bg: "bg-blue-50",
+      border: "border-blue-200",
+      ring: "ring-blue-500",
+    };
+  if (wqi >= 50)
+    return {
+      label: "Moderate",
+      color: "text-yellow-700",
+      bg: "bg-yellow-50",
+      border: "border-yellow-200",
+      ring: "ring-yellow-500",
+    };
+  if (wqi >= 25)
+    return {
+      label: "Poor",
+      color: "text-orange-700",
+      bg: "bg-orange-50",
+      border: "border-orange-200",
+      ring: "ring-orange-500",
+    };
+  return {
+    label: "Very Poor",
+    color: "text-red-700",
+    bg: "bg-red-50",
+    border: "border-red-200",
+    ring: "ring-red-500",
+  };
 }
 
 function getBarColor(score: number): string {
@@ -62,6 +109,7 @@ interface WaterQualityFormulaProps {
   tds?: number | null;
   wqi?: number | null;
   mode?: "site" | "reference";
+  variant?: "full" | "compact";
 }
 
 interface ParamCard {
@@ -88,10 +136,14 @@ function FormulaBox() {
       <div className="overflow-x-auto">
         <p className="font-mono text-base md:text-lg text-indigo-900 whitespace-nowrap leading-relaxed">
           WQI&nbsp;=&nbsp;
-          <span className="text-blue-700 font-bold">0.35</span>&nbsp;×&nbsp;q(DO)&nbsp;+&nbsp;
-          <span className="text-blue-700 font-bold">0.25</span>&nbsp;×&nbsp;q(pH)&nbsp;+&nbsp;
-          <span className="text-blue-700 font-bold">0.20</span>&nbsp;×&nbsp;q(Temp)&nbsp;+&nbsp;
-          <span className="text-blue-700 font-bold">0.20</span>&nbsp;×&nbsp;q(TDS)
+          <span className="text-blue-700 font-bold">0.35</span>
+          &nbsp;×&nbsp;q(DO)&nbsp;+&nbsp;
+          <span className="text-blue-700 font-bold">0.25</span>
+          &nbsp;×&nbsp;q(pH)&nbsp;+&nbsp;
+          <span className="text-blue-700 font-bold">0.20</span>
+          &nbsp;×&nbsp;q(Temp)&nbsp;+&nbsp;
+          <span className="text-blue-700 font-bold">0.20</span>
+          &nbsp;×&nbsp;q(TDS)
         </p>
       </div>
       <p className="text-xs text-indigo-500 mt-3">
@@ -119,7 +171,9 @@ function SubIndexCard({ card }: { card: ParamCard }) {
         </div>
         <span className="font-mono text-sm font-bold text-gray-700">
           {card.rawValue.toFixed(1)}{" "}
-          <span className="text-[10px] text-gray-400 font-normal">{card.unit}</span>
+          <span className="text-[10px] text-gray-400 font-normal">
+            {card.unit}
+          </span>
         </span>
       </div>
 
@@ -128,11 +182,15 @@ function SubIndexCard({ card }: { card: ParamCard }) {
         <div className="flex items-center justify-between mb-1.5">
           <span className="text-xs text-gray-500">
             q({card.abbrev}) ={" "}
-            <span className="font-semibold text-gray-700">{card.subIndex.toFixed(1)}</span>
+            <span className="font-semibold text-gray-700">
+              {card.subIndex.toFixed(1)}
+            </span>
           </span>
           <span className="text-[10px] text-gray-400">/100</span>
         </div>
-        <div className={`w-full h-2.5 rounded-full ${getBarTrack(card.subIndex)} overflow-hidden`}>
+        <div
+          className={`w-full h-2.5 rounded-full ${getBarTrack(card.subIndex)} overflow-hidden`}
+        >
           <div
             className={`h-full rounded-full ${getBarColor(card.subIndex)} transition-all duration-700 ease-out`}
             style={{ width: `${Math.min(Math.max(card.subIndex, 0), 100)}%` }}
@@ -143,11 +201,16 @@ function SubIndexCard({ card }: { card: ParamCard }) {
       {/* Weight & contribution */}
       <div className="flex items-center justify-between text-xs pt-2 border-t border-gray-100">
         <span className="text-gray-500">
-          Weight: <span className="font-semibold text-gray-700">{card.weight.toFixed(2)}</span>
+          Weight:{" "}
+          <span className="font-semibold text-gray-700">
+            {card.weight.toFixed(2)}
+          </span>
         </span>
         <span className="text-gray-500">
           Contribution:{" "}
-          <span className="font-semibold text-indigo-600">{contribution.toFixed(1)}</span>
+          <span className="font-semibold text-indigo-600">
+            {contribution.toFixed(1)}
+          </span>
         </span>
       </div>
     </div>
@@ -158,11 +221,21 @@ function WQIScoreBadge({ wqi }: { wqi: number }) {
   const q = getQualityLabel(wqi);
 
   return (
-    <div className={`rounded-2xl p-6 shadow-sm border ${q.border} ${q.bg} transition-all duration-300 flex flex-col sm:flex-row items-center gap-6`}>
+    <div
+      className={`rounded-2xl p-6 shadow-sm border ${q.border} ${q.bg} transition-all duration-300 flex flex-col sm:flex-row items-center gap-6`}
+    >
       {/* Ring */}
       <div className="relative w-28 h-28 flex-shrink-0">
         <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-          <circle cx="50" cy="50" r="42" fill="none" stroke="currentColor" strokeWidth="8" className="text-gray-200" />
+          <circle
+            cx="50"
+            cy="50"
+            r="42"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="8"
+            className="text-gray-200"
+          />
           <circle
             cx="50"
             cy="50"
@@ -176,7 +249,9 @@ function WQIScoreBadge({ wqi }: { wqi: number }) {
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className={`text-2xl font-bold ${q.color}`}>{wqi.toFixed(0)}</span>
+          <span className={`text-2xl font-bold ${q.color}`}>
+            {wqi.toFixed(0)}
+          </span>
           <span className="text-[9px] text-gray-400">/ 100</span>
         </div>
       </div>
@@ -188,20 +263,40 @@ function WQIScoreBadge({ wqi }: { wqi: number }) {
           <h3 className={`text-lg font-bold ${q.color}`}>{q.label}</h3>
         </div>
         <p className="text-sm text-gray-500 max-w-xs">
-          The calculated Water Quality Index based on the measured parameters and their respective weights.
+          The calculated Water Quality Index based on the measured parameters
+          and their respective weights.
         </p>
         <div className="mt-3 flex flex-wrap gap-2 justify-center sm:justify-start">
           {[
-            { min: 90, label: "Excellent", cls: "bg-emerald-100 text-emerald-700" },
+            {
+              min: 90,
+              label: "Excellent",
+              cls: "bg-emerald-100 text-emerald-700",
+            },
             { min: 70, label: "Good", cls: "bg-blue-100 text-blue-700" },
-            { min: 50, label: "Moderate", cls: "bg-yellow-100 text-yellow-700" },
+            {
+              min: 50,
+              label: "Moderate",
+              cls: "bg-yellow-100 text-yellow-700",
+            },
             { min: 25, label: "Poor", cls: "bg-orange-100 text-orange-700" },
             { min: 0, label: "Very Poor", cls: "bg-red-100 text-red-700" },
           ].map((b) => (
             <span
               key={b.label}
               className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${b.cls} ${
-                wqi >= b.min && (b.min === 90 || wqi < (b.min === 70 ? 90 : b.min === 50 ? 70 : b.min === 25 ? 50 : b.min === 0 ? 25 : 101))
+                wqi >= b.min &&
+                (b.min === 90 ||
+                  wqi <
+                    (b.min === 70
+                      ? 90
+                      : b.min === 50
+                        ? 70
+                        : b.min === 25
+                          ? 50
+                          : b.min === 0
+                            ? 25
+                            : 101))
                   ? "ring-2 ring-offset-1 ring-current"
                   : "opacity-60"
               }`}
@@ -210,6 +305,34 @@ function WQIScoreBadge({ wqi }: { wqi: number }) {
             </span>
           ))}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function CompactBreakdown({ cards }: { cards: ParamCard[] }) {
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+        {cards.map((card) => (
+          <div
+            key={card.abbrev}
+            className="flex items-center justify-between border border-slate-200 rounded-lg px-3 py-2"
+          >
+            <div>
+              <p className="font-medium text-slate-800">{card.name}</p>
+              <p className="text-xs text-slate-500">q({card.abbrev})</p>
+            </div>
+            <div className="text-right">
+              <p className="font-semibold text-slate-800">
+                {card.subIndex.toFixed(1)}
+              </p>
+              <p className="text-xs text-slate-500">
+                w {card.weight.toFixed(2)}
+              </p>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -249,23 +372,40 @@ function NormalizationTable() {
     <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 overflow-x-auto">
       <div className="flex items-center gap-2 mb-4">
         <Info className="w-4 h-4 text-gray-500" />
-        <h4 className="text-sm font-semibold text-gray-700">Sub-index Normalization Functions</h4>
+        <h4 className="text-sm font-semibold text-gray-700">
+          Sub-index Normalization Functions
+        </h4>
       </div>
       <table className="w-full text-sm">
         <thead>
           <tr className="text-left border-b border-gray-200">
-            <th className="pb-3 pr-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Parameter</th>
-            <th className="pb-3 pr-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Ideal (→ 100)</th>
-            <th className="pb-3 pr-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Normalization</th>
-            <th className="pb-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Zero Score</th>
+            <th className="pb-3 pr-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              Parameter
+            </th>
+            <th className="pb-3 pr-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              Ideal (→ 100)
+            </th>
+            <th className="pb-3 pr-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              Normalization
+            </th>
+            <th className="pb-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              Zero Score
+            </th>
           </tr>
         </thead>
         <tbody>
           {rows.map((r, i) => (
-            <tr key={r.param} className={`${i < rows.length - 1 ? "border-b border-gray-100" : ""}`}>
+            <tr
+              key={r.param}
+              className={`${i < rows.length - 1 ? "border-b border-gray-100" : ""}`}
+            >
               <td className="py-3 pr-4 font-medium text-gray-800">{r.param}</td>
-              <td className="py-3 pr-4 text-emerald-600 font-mono text-xs">{r.ideal}</td>
-              <td className="py-3 pr-4 font-mono text-xs text-gray-600 whitespace-pre-line">{r.formula}</td>
+              <td className="py-3 pr-4 text-emerald-600 font-mono text-xs">
+                {r.ideal}
+              </td>
+              <td className="py-3 pr-4 font-mono text-xs text-gray-600 whitespace-pre-line">
+                {r.formula}
+              </td>
               <td className="py-3 text-red-500 font-mono text-xs">{r.zero}</td>
             </tr>
           ))}
@@ -277,17 +417,39 @@ function NormalizationTable() {
 
 function WeightBar() {
   const segments = [
-    { label: "DO", weight: 0.35, color: "bg-blue-500", textColor: "text-blue-700" },
-    { label: "pH", weight: 0.25, color: "bg-indigo-500", textColor: "text-indigo-700" },
-    { label: "Temp", weight: 0.20, color: "bg-teal-500", textColor: "text-teal-700" },
-    { label: "TDS", weight: 0.20, color: "bg-purple-500", textColor: "text-purple-700" },
+    {
+      label: "DO",
+      weight: 0.35,
+      color: "bg-blue-500",
+      textColor: "text-blue-700",
+    },
+    {
+      label: "pH",
+      weight: 0.25,
+      color: "bg-indigo-500",
+      textColor: "text-indigo-700",
+    },
+    {
+      label: "Temp",
+      weight: 0.2,
+      color: "bg-teal-500",
+      textColor: "text-teal-700",
+    },
+    {
+      label: "TDS",
+      weight: 0.2,
+      color: "bg-purple-500",
+      textColor: "text-purple-700",
+    },
   ];
 
   return (
     <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
       <div className="flex items-center gap-2 mb-4">
         <Gauge className="w-4 h-4 text-gray-500" />
-        <h4 className="text-sm font-semibold text-gray-700">Parameter Weights</h4>
+        <h4 className="text-sm font-semibold text-gray-700">
+          Parameter Weights
+        </h4>
       </div>
 
       {/* Stacked bar */}
@@ -310,7 +472,9 @@ function WeightBar() {
             <span className={`w-3 h-3 rounded-full ${seg.color}`} />
             <span className="text-xs text-gray-600">
               {seg.label}:{" "}
-              <span className={`font-semibold ${seg.textColor}`}>{(seg.weight * 100).toFixed(0)}%</span>
+              <span className={`font-semibold ${seg.textColor}`}>
+                {(seg.weight * 100).toFixed(0)}%
+              </span>
             </span>
           </div>
         ))}
@@ -328,6 +492,7 @@ export default function WaterQualityFormula({
   tds,
   wqi: externalWqi,
   mode = "reference",
+  variant = "full",
 }: WaterQualityFormulaProps) {
   // Determine effective mode
   const hasSiteData =
@@ -346,7 +511,7 @@ export default function WaterQualityFormula({
     const qTemp = normalizeTemp(tempVal);
     const qTDS = normalizeTDS(tdsVal);
 
-    const calculatedWqi = 0.35 * qDO + 0.25 * qPH + 0.20 * qTemp + 0.20 * qTDS;
+    const calculatedWqi = 0.35 * qDO + 0.25 * qPH + 0.2 * qTemp + 0.2 * qTDS;
     const finalWqi = externalWqi ?? calculatedWqi;
 
     const cards: ParamCard[] = [
@@ -375,7 +540,7 @@ export default function WaterQualityFormula({
         rawValue: tempVal,
         unit: "°C",
         subIndex: qTemp,
-        weight: 0.20,
+        weight: 0.2,
       },
       {
         name: "Total Dissolved Solids",
@@ -384,9 +549,13 @@ export default function WaterQualityFormula({
         rawValue: tdsVal,
         unit: "mg/L",
         subIndex: qTDS,
-        weight: 0.20,
+        weight: 0.2,
       },
     ];
+
+    if (variant === "compact") {
+      return <CompactBreakdown cards={cards} />;
+    }
 
     return (
       <div className="flex flex-col gap-6">
