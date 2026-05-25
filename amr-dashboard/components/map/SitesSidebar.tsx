@@ -9,7 +9,7 @@ import { toast } from "react-toastify";
 import ConfirmDelete from "../add-data/confirmDelete";
 import { useEffect, useState } from "react";
 import { getMe } from "@/app/services/authService";
-import { unique } from "next/dist/build/utils";
+import IsolateList from "../IsolateList";
 
 
 interface SiteListProps {
@@ -22,6 +22,7 @@ interface SiteListProps {
 export default function SiteList({ points, selectedSite, onSelectSite, onRefresh }: SiteListProps) {
 
   const [siteToDelete, setSiteToDelete] = useState<SiteData | null>(null);
+  const [allSites, setAllSites] = useState<SiteData[]>([]);
   const getDanger = (zone?: DangerZone)=> zone ? getDangerZoneLabel(zone) : "unknown";
 
   const uniqueSites = Object.values(
@@ -40,8 +41,21 @@ export default function SiteList({ points, selectedSite, onSelectSite, onRefresh
   );
   const [isAdminUser, setIsAdminUser] = useState(false);
 
+  const fetchAllSites = async () => {
+    try {
+      const res = await fetch("/api/site");
+      if (res.ok) {
+        const json = await res.json();
+        setAllSites(json.sites || []);
+      }
+    } catch (error) {
+      console.error("Failed to load isolates for sidebar:", error);
+    }
+  };
+
   useEffect(() => {
     isAdmin();
+    fetchAllSites();
   },[]);
 
   useEffect(() => {
@@ -115,41 +129,67 @@ export default function SiteList({ points, selectedSite, onSelectSite, onRefresh
           return (
             <li
               key={site.id}
-              onClick={() => onSelectSite(site)}
               style={{
                 ...styles.item,
-                background:   isSelected ? "rgba(59,130,246,0.1)"  : "transparent",
-                borderColor:  isSelected ? "rgba(59,130,246,0.4)"  : "rgba(80,140,255,0.08)",
-                cursor: "pointer",
+                flexDirection: "column",
+                background:   isSelected ? "rgba(59,130,246,0.05)"  : "transparent",
+                borderColor:  isSelected ? "rgba(59,130,246,0.3)"  : "rgba(80,140,255,0.08)",
               }}
             >
+              {/* Header block (clickable for selection) */}
               <div
+                onClick={() => onSelectSite(site)}
                 style={{
-                  ...styles.riskBar,
-                  background: riskColor,
+                  display: "flex",
+                  width: "100%",
+                  cursor: "pointer",
                 }}
-              />
+              >
+                <div
+                  style={{
+                    ...styles.riskBar,
+                    background: riskColor,
+                  }}
+                />
 
-              <div style={styles.itemBody}>
-                <div style={styles.dataWrapper}>
-                  <div style={styles.siteName}>{site.geoLocName}</div>
+                <div style={styles.itemBody}>
+                  <div style={styles.dataWrapper}>
+                    <div style={styles.siteName}>{site.geoLocName}</div>
 
-                  <div style={styles.dateRow}>
-                    <span style={styles.dateLabel}>Last sampled:</span>
-                    <span style={styles.dateValue}>{new Date(site.collectionDate).toLocaleDateString("en-ZA", { year: "numeric", month: "short", day: "numeric" })}</span>
+                    <div style={styles.dateRow}>
+                      <span style={styles.dateLabel}>Last sampled:</span>
+                      <span style={styles.dateValue}>{new Date(site.collectionDate).toLocaleDateString("en-ZA", { year: "numeric", month: "short", day: "numeric" })}</span>
+                    </div>
+                  </div>
+                  <div>
+                    {isAdminUser && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteClick(site);
+                        }}
+                        className="cursor-pointer group"
+                      >
+                        <Trash2Icon size={18} className="group-hover:text-red-700 transition-colors"/>
+                      </button>
+                    )}
                   </div>
                 </div>
-                 <div>
-                  {isAdminUser && (
-                    <button
-                      onClick={handleDeleteClick.bind(null, site)}
-                      className="cursor-pointer group"
-                    >
-                      <Trash2Icon size={18} className="group-hover:text-red-700 transition-colors"/>
-                    </button>
-                  )}
-                </div>
               </div>
+
+              {/* Nested Isolates compact display */}
+              {isSelected && (
+                <div
+                  onClick={(e) => e.stopPropagation()}
+                  className="px-3 py-2 border-t border-slate-100 bg-slate-50/50 w-full overflow-y-auto max-h-[220px]"
+                >
+                  <IsolateList
+                    isolates={allSites.filter(s => s.geoLocName === site.geoLocName)}
+                    locationName={site.geoLocName || ""}
+                    compact={true}
+                  />
+                </div>
+              )}
             </li>
           );
         })}

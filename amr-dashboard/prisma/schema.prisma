@@ -9,13 +9,14 @@ generator client {
 }
 
 model AdminUser {
-  id        Int        @id @default(autoincrement())
-  name      String
-  surname   String
-  email     String     @unique
-  password  String
-  isAdmin   Boolean
-  siteDatas SiteData[]
+  id         Int         @id @default(autoincrement())
+  name       String
+  surname    String
+  email      String      @unique
+  password   String
+  isAdmin    Boolean
+  siteDatas  SiteData[]
+  changeLogs ChangeLog[]
 }
 
 model User {
@@ -91,6 +92,19 @@ model SiteImage {
   site      SiteData        @relation(fields: [siteId], references: [id], onDelete: Cascade)
   batchId   Int?
   batch     SiteImageBatch? @relation(fields: [batchId], references: [id], onDelete: Cascade)
+}
+
+model ChangeLog {
+  id           Int       @id @default(autoincrement())
+  entityType   String    // "SiteData"
+  entityId     Int       // ID of the affected row
+  action       String    // "CREATE", "UPDATE", "DELETE"
+  previousData String?   // JSON snapshot of previous state (null for CREATE)
+  newData      String?   // JSON snapshot of new state (null for DELETE)
+  changedBy    Int       // AdminUser ID
+  changedAt    DateTime  @default(now())
+  undone       Boolean   @default(false)
+  admin        AdminUser @relation(fields: [changedBy], references: [id])
 }
 
 datasource db {

@@ -8,6 +8,10 @@ import { MapPin, TrendingUp, TrendingDown, Download, AlertTriangle } from "lucid
 import type { SiteData } from "@/types/site_types";
 import { exportStatistics, ExportFormat } from "@/functions/statistics/exportData";
 import { toast } from "react-toastify";
+import WaterQualityFormula from "@/components/WaterQualityFormula";
+import SiteComparisonDashboard from "@/components/SiteComparisonDashboard";
+import Link from "next/link";
+import { parseLocationName, calculateWQI } from "@/utils/siteUtils";
 
 export const dynamic = "force-dynamic";
 
@@ -42,8 +46,10 @@ function StatisticsContent() {
   const searchParams = useSearchParams();
   const siteIdParam = searchParams.get("site");
   const siteId = siteIdParam ? parseInt(siteIdParam) : null;
+  const locationName = searchParams.get("location");
 
   const [siteData, setSiteData] = useState<SiteData | null>(null);
+  const [allSites, setAllSites] = useState<SiteData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [waterQualityPercent, setWaterQualityPercent] = useState(0);
@@ -233,12 +239,18 @@ function StatisticsContent() {
     const fetchData = async () => {
       try {
 
-        const [averageRes, trendRes, anomalyRes, wqiRes] = await Promise.all([
+        const [averageRes, trendRes, anomalyRes, wqiRes, allSitesRes] = await Promise.all([
           fetch(`/api/statistics/averageMetrics`),
           fetch(`/api/statistics/trendOverTime`),
           fetch(`/api/statistics/anomalyPerSite`),
           fetch(`/api/statistics/waterQualityIndex`),
+          fetch(`/api/site`),
         ]);
+
+        if (allSitesRes.ok) {
+          const allSitesData = await allSitesRes.json();
+          setAllSites(allSitesData.sites || []);
+        }
 
         if (averageRes.ok) {
           const avgData = await averageRes.json();
@@ -363,202 +375,198 @@ function StatisticsContent() {
     </div>
   );
 
-  // SITE-SPECIFIC VIEW
+  // LOCATION-SPECIFIC DASHBOARD
   if (siteId && siteData) {
+    const locName = locationName || parseLocationName(siteData.geoLocName);
+    
+    // Filter isolates belonging to this location name
+    const locationIsolates = allSites.filter(
+      (s) => parseLocationName(s.geoLocName) === parseLocationName(locName)
+    );
+
+    // Compute dynamic averages for this location
+    const totalSamples = locationIsolates.length;
+    let phSum = 0, phCount = 0;
+    let tempSum = 0, tempCount = 0;
+    let doSum = 0, doCount = 0;
+    let tdsSum = 0, tdsCount = 0;
+
+    locationIsolates.forEach((s) => {
+      if (s.ph !== null && s.ph !== undefined) { phSum += s.ph; phCount++; }
+      if (s.temperature !== null && s.temperature !== undefined) { tempSum += s.temperature; tempCount++; }
+      if (s.dissolvedO2 !== null && s.dissolvedO2 !== undefined) { doSum += s.dissolvedO2; doCount++; }
+      if (s.tds !== null && s.tds !== undefined) { tdsSum += s.tds; tdsCount++; }
+    });
+
+    const locAverages = {
+      ph: phCount > 0 ? phSum / phCount : null,
+      temp: tempCount > 0 ? tempSum / tempCount : null,
+      do: doCount > 0 ? doSum / doCount : null,
+      tds: tdsCount > 0 ? tdsSum / tdsCount : null,
+    };
+
     return (
-      <main className="flex-1 overflow-auto p-6">
-        <div className="mb-6 flex items-start justify-between">
+      <main className="flex-1 overflow-auto p-6 bg-slate-50/50 flex flex-col gap-6">
+        {/* Top Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">{siteData.sampleName} - Statistics</h1>
-            <p className="text-gray-600 mt-2">Detailed metrics for this sampling site</p>
+            <h1 className="text-2xl font-black text-indigo-950 tracking-tight flex items-center gap-2">
+              <MapPin className="h-6 w-6 text-indigo-600" />
+              {locName} - Location Dashboard
+            </h1>
+            <p className="text-sm text-gray-500 font-medium">
+              Historical trends, water diagnostics, and sample inventory for this location
+            </p>
           </div>
           <ExportDropdown onExport={handleExportSiteSpecific} />
         </div>
 
-        {siteData.imageBatches && siteData.imageBatches.length > 0 && siteData.imageBatches[0].algaeDetected && (
-          <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <AlertTriangle className="h-5 w-5 text-red-500" />
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-red-700 font-bold">
-                  Algae Detected in latest photos!
-                </p>
-                <p className="text-xs text-red-600 mt-1">
-                  The AI scanner detected potential algae presence in the latest photo batch (taken on {new Date(siteData.imageBatches[0].dateTaken).toLocaleDateString()}).
-                </p>
-              </div>
-            </div>
+        {/* Dynamic Aggregates Card Row */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 flex flex-col gap-1 transition-all hover:shadow-md">
+            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Samples Taken</span>
+            <span className="text-3xl font-black text-indigo-950 mt-1">{totalSamples}</span>
+            <span className="text-xs text-indigo-500 font-semibold mt-1">Across all historical dates</span>
           </div>
-        )}
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 flex flex-col gap-1 transition-all hover:shadow-md">
+            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Avg pH Level</span>
+            <span className="text-3xl font-black text-blue-600 mt-1">{locAverages.ph ? locAverages.ph.toFixed(1) : "—"}</span>
+            <span className="text-xs text-blue-500 font-semibold mt-1">Ideal range: 7.0 - 7.5</span>
+          </div>
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 flex flex-col gap-1 transition-all hover:shadow-md">
+            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Avg Temperature</span>
+            <span className="text-3xl font-black text-emerald-600 mt-1">{locAverages.temp ? `${locAverages.temp.toFixed(1)}°C` : "—"}</span>
+            <span className="text-xs text-emerald-500 font-semibold mt-1">Ideal range: 15°C - 25°C</span>
+          </div>
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 flex flex-col gap-1 transition-all hover:shadow-md">
+            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Avg Dissolved O₂</span>
+            <span className="text-3xl font-black text-orange-600 mt-1">{locAverages.do ? `${locAverages.do.toFixed(2)} mg/L` : "—"}</span>
+            <span className="text-xs text-orange-500 font-semibold mt-1">Ideal: ≥ 8 mg/L</span>
+          </div>
+        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-[1400px] mx-auto w-full">
-
-          {/* Left Column (Info Card & Water Quality) */}
-          <div className="md:col-span-1 flex flex-col gap-6">
-
-            {/* Location Info Card */}
-            <div className="bg-blue-50 rounded-2xl p-4 shadow-sm border border-blue-100">
-              <div className="rounded-xl overflow-hidden mb-4 h-40 bg-gray-200">
-                {(() => {
-                  const latestBatchImage = siteData.imageBatches?.[0]?.images?.[0]?.url;
-                  const latestImage = latestBatchImage || siteData.images?.[siteData.images.length - 1]?.url;
-                  return latestImage ? (
-                    <img src={`/api/image?url=${encodeURIComponent(latestImage)}`} alt={siteData.sampleName} className="w-full h-full object-cover" />
-                  ) : (
-                    <img src={siteData.imageBase64 || getDefaultImage()} alt={siteData.sampleName} className="w-full h-full object-cover" />
-                  );
-                })()}
-              </div>
-              <h3 className="font-bold text-gray-800 flex items-center gap-2">
-                <MapPin size={16} className="text-gray-700" />
-                {siteData.sampleName}
-              </h3>
-              <div className="flex gap-2 mt-3">
-                <a
-                  href={`/gallery?site=${siteId}`}
-                  className="flex-1 text-center px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-semibold rounded-lg hover:bg-gray-200 transition-colors border border-gray-200"
-                >
-                  View Gallery
-                </a>
-                <a
-                  href={`/add-images?site=${siteId}`}
-                  className="flex-1 text-center px-3 py-1.5 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Add Images
-                </a>
-              </div>
-              <div className="mt-4 text-sm text-gray-700 space-y-1">
-                <p><strong>GPS Coordinates:</strong> {siteData.latitude.toFixed(5)}° S, {siteData.longitude.toFixed(5)}° E</p>
-                <p><strong>Zone:</strong> {siteData.dangerZone || "Unknown"}</p>
-                <p><strong>Region:</strong> {siteData.geoLocName}</p>
-                <p><strong>Collection Date:</strong> {siteData.collectionDate ? new Date(siteData.collectionDate).toLocaleDateString() : "N/A"}</p>
-                <p className="mt-2 text-gray-800 font-semibold flex items-center gap-2">Water Temperature: {siteData.temperature?.toFixed(1) || "N/A"}°C</p>
-                <p><strong>pH:</strong> {siteData.ph?.toFixed(1) || "N/A"}</p>
-                <p><strong>TDS:</strong> {siteData.tds?.toFixed(1) || "N/A"} mg/L</p>
-                <p><strong>EC:</strong> {siteData.ec?.toFixed(1) || "N/A"} µS/cm</p>
-                <p><strong>DO:</strong> {siteData.dissolvedO2?.toFixed(2) || "N/A"} mg/L</p>
-                <p className="font-bold mt-2">Isolation Source: <span className="font-normal">{siteData.isolationSource}</span></p>
-              </div>
-            </div>
-            
-
-            {/* Water Quality Donut */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 flex flex-col items-center justify-center text-center h-full min-h-[300px]">
-              <div className="relative w-32 h-32 mb-4">
-                <svg viewBox="0 0 36 36" className="w-full h-full">
-                  <path
-                    className="text-gray-100"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                    fill="none"
-                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                  />
-                  <path
-                    className="text-blue-500"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                    strokeDasharray={`${Math.max(0, Math.min(100, waterQualityPercent))}, 100`}
-                    fill="none"
-                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                  />
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className={`text-xl font-bold ${Math.round(waterQualityPercent) < 70 ? "text-red-600" : "text-slate-800"}`}>
-                    {waterQualityPercent >= 0 && waterQualityPercent <= 100 ? waterQualityPercent.toFixed(0) : "N/A"}%
-                  </span>
-                </div>
-              </div>
-              <h3 className="font-bold text-xl text-gray-900">Water Quality</h3>
-              <div className="flex gap-4 mt-4 text-sm font-medium">
-                <div className="flex items-center gap-2"><span className="w-3 h-3 bg-blue-500 rounded-sm"></span> Clean</div>
-                <div className="flex items-center gap-2"><span className="w-3 h-3 bg-gray-200 rounded-sm"></span> Contaminated</div>
-              </div>
+        {/* Detailed Charts Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-[1400px]">
+          {/* Time Series Dashboard (Takes 2 columns) */}
+          <div className="lg:col-span-2 flex flex-col gap-6">
+            <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6">
+              <h3 className="font-extrabold text-indigo-950 text-base mb-4">Location Time-Series Trends</h3>
+              <TimeSeriesDashboard siteId={siteId} />
             </div>
           </div>
 
-          {/* Right Column */}
-          <div className="md:col-span-2 flex flex-col gap-6">
-
-            {/* Water Quality Metrics */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-              <h3 className="text-indigo-900 font-bold text-lg mb-4">Water Quality Metrics</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <p className="text-sm text-gray-600">pH Level</p>
-                  <p className="text-2xl font-bold text-blue-600">{siteData.ph?.toFixed(1) || "N/A"}</p>
+          {/* Right Column: Location Averages & Anomalies */}
+          <div className="lg:col-span-1 flex flex-col gap-6">
+            {/* Average Parameters summary */}
+            <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6 flex flex-col gap-4">
+              <h3 className="font-extrabold text-indigo-950 text-base">Historical Parameter Averages</h3>
+              <div className="flex flex-col gap-3 text-sm">
+                <div className="flex justify-between border-b border-slate-100 pb-2">
+                  <span className="text-slate-500 font-medium">Average pH:</span>
+                  <span className="font-bold text-slate-800">{locAverages.ph ? locAverages.ph.toFixed(2) : "—"}</span>
                 </div>
-                <div className="bg-green-50 p-4 rounded-lg">
-                  <p className="text-sm text-gray-600">Temperature</p>
-                  <p className="text-2xl font-bold text-green-600">{siteData.temperature?.toFixed(1) || "N/A"}°C</p>
+                <div className="flex justify-between border-b border-slate-100 pb-2">
+                  <span className="text-slate-500 font-medium">Average Temp:</span>
+                  <span className="font-bold text-slate-800">{locAverages.temp ? `${locAverages.temp.toFixed(2)}°C` : "—"}</span>
                 </div>
-                <div className="bg-orange-50 p-4 rounded-lg">
-                  <p className="text-sm text-gray-600">Dissolved O₂</p>
-                  <p className="text-2xl font-bold text-orange-600">{siteData.dissolvedO2?.toFixed(2) || "N/A"} mg/L</p>
+                <div className="flex justify-between border-b border-slate-100 pb-2">
+                  <span className="text-slate-500 font-medium">Average Dissolved O₂:</span>
+                  <span className="font-bold text-slate-800">{locAverages.do ? `${locAverages.do.toFixed(2)} mg/L` : "—"}</span>
                 </div>
-                <div className="bg-purple-50 p-4 rounded-lg">
-                  <p className="text-sm text-gray-600">TDS</p>
-                  <p className="text-2xl font-bold text-purple-600">{siteData.tds?.toFixed(1) || "N/A"} mg/L</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Time In Unsafe */}
-            {timeInUnsafe !== null && (
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                <h3 className="text-indigo-900 font-bold text-lg mb-4">Time in Unsafe Zone</h3>
-                <div className="bg-red-50 p-6 rounded-lg border border-red-100 text-center">
-                  <p className="text-sm text-gray-600 mb-2">Total time in unsafe conditions</p>
-                  <p className="text-4xl font-bold text-red-600">{timeInUnsafe.toFixed(1)}</p>
-                  <p className="text-xs text-gray-600 mt-2">Hours</p>
-                </div>
-              </div>
-            )}
-
-            {/* Sample Information */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-              <h3 className="text-indigo-900 font-bold text-lg mb-4">Sample Information</h3>
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Sample Analysis Type:</span>
-                  <span className="font-semibold text-gray-800">{siteData.sampleAnalysisType}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">AMR Resistance Genes:</span>
-                  <span className="font-semibold text-gray-800">{siteData.amrResGenes}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Predicted SIR:</span>
-                  <span className="font-semibold text-gray-800">{siteData.predictedSir}</span>
+                <div className="flex justify-between pb-1">
+                  <span className="text-slate-500 font-medium">Average TDS:</span>
+                  <span className="font-bold text-slate-800">{locAverages.tds ? `${locAverages.tds.toFixed(1)} mg/L` : "—"}</span>
                 </div>
               </div>
             </div>
 
-            {/* Detected Anomalies for This Site */}
+            {/* Location-specific anomalies */}
             {siteAnomalies.length > 0 && (
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                <h3 className="text-indigo-900 font-bold text-lg mb-4">Detected Anomalies</h3>
+              <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6">
+                <h3 className="font-extrabold text-indigo-950 text-base mb-4">Location Anomalies</h3>
                 <div className="space-y-3">
                   {siteAnomalies.map((anomaly, index) => (
-                    <div key={index} className="bg-yellow-50 p-4 rounded-lg border border-yellow-200 flex justify-between items-center">
+                    <div key={index} className="bg-yellow-50/60 p-4 rounded-2xl border border-yellow-200/50 flex justify-between items-center text-xs">
                       <div>
-                        <p className="font-semibold text-gray-800">{anomaly.issues}</p>
+                        <p className="font-bold text-slate-800">{anomaly.issues}</p>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold text-yellow-600">{anomaly.changes.toFixed(2)}</p>
-                        <p className="text-xs text-gray-600">Change magnitude</p>
+                        <p className="font-black text-yellow-600">{anomaly.changes.toFixed(2)}</p>
+                        <p className="text-[10px] text-gray-500">Change magnitude</p>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
             )}
-
           </div>
         </div>
-        <div className="mt-8">
-          <TimeSeriesDashboard siteId={siteId} />
+
+        {/* Isolate Inventory for this Location */}
+        <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6 max-w-[1400px]">
+          <div className="mb-4">
+            <h3 className="font-extrabold text-indigo-950 text-base">Isolates & Samples Inventory</h3>
+            <p className="text-xs text-gray-500">All recorded water sample collections taken at this geographic coordinate</p>
+          </div>
+
+          <div className="overflow-x-auto rounded-2xl border border-slate-100 shadow-inner">
+            <table className="min-w-full divide-y divide-slate-100">
+              <thead className="bg-slate-50/70 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                <tr>
+                  <th className="px-6 py-3.5 text-left">Sample Name</th>
+                  <th className="px-6 py-3.5 text-left">Organism</th>
+                  <th className="px-6 py-3.5 text-left">Collection Date</th>
+                  <th className="px-6 py-3.5 text-center">WQI Score</th>
+                  <th className="px-6 py-3.5 text-center">Risk Zone</th>
+                  <th className="px-6 py-3.5 text-left">AMR Genes</th>
+                  <th className="px-6 py-3.5 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-slate-100 text-sm text-slate-600 font-medium">
+                {locationIsolates.map((iso) => {
+                  const wqi = calculateWQI(iso.dissolvedO2, iso.ph, iso.temperature, iso.tds);
+                  return (
+                    <tr key={iso.id} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="px-6 py-4 font-bold text-slate-800">{iso.sampleName}</td>
+                      <td className="px-6 py-4 italic">{iso.orgamism || "—"}</td>
+                      <td className="px-6 py-4">
+                        {new Date(iso.collectionDate).toLocaleDateString("en-ZA", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </td>
+                      <td className="px-6 py-4 text-center font-black">
+                        {wqi !== null ? wqi.toFixed(1) : "—"}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-extrabold capitalize shadow-sm border ${
+                          iso.dangerZone === "red"
+                            ? "bg-red-50 text-red-700 border-red-200"
+                            : iso.dangerZone === "yellow"
+                            ? "bg-yellow-50 text-yellow-700 border-yellow-200"
+                            : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                        }`}>
+                          {iso.dangerZone}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 font-mono text-xs truncate max-w-[150px]" title={iso.amrResGenes}>
+                        {iso.amrResGenes || "—"}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <Link
+                          href={`/samples?id=${iso.id}`}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 hover:text-indigo-800 rounded-xl text-xs font-extrabold transition-all shadow-sm"
+                        >
+                          View Details
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       </main>
     );
@@ -566,194 +574,9 @@ function StatisticsContent() {
 
   // SYSTEM-WIDE VIEW (no site selected)
   return (
-    <main className="flex-1 overflow-auto p-6">
-      <div className="mb-8 flex items-start justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">System Statistics</h1>
-          <p className="text-gray-600 mt-2">Overall metrics across all sampling sites</p>
-        </div>
-        <ExportDropdown onExport={handleExportSystemWide} />
-      </div>
-
-      <div className="space-y-6 max-w-[1400px] mx-auto w-full">
-        
-
-        {/* System-wide Averages */}
-        {averageMetrics && (
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-            <div className="mb-6">
-              <h3 className="text-indigo-900 font-bold text-lg">Water Quality Metrics - System Averages</h3>
-              <p className="text-sm text-gray-600 mt-1">Average measurements across all sampling sites in the system</p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="bg-blue-50 p-6 rounded-lg border border-blue-100">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide">pH Level</p>
-                    <p className="text-xs text-gray-600 mt-1">Acidity/Alkalinity</p>
-                  </div>
-                </div>
-                <p className="text-3xl font-bold text-blue-600">{averageMetrics.avgpH.toFixed(1)}</p>
-                <p className="text-xs text-gray-500 mt-2">(Scale: 0-14)</p>
-              </div>
-              <div className="bg-green-50 p-6 rounded-lg border border-green-100">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <p className="text-xs font-semibold text-green-600 uppercase tracking-wide">Temperature</p>
-                    <p className="text-xs text-gray-600 mt-1">Water Warmth</p>
-                  </div>
-                </div>
-                <p className="text-3xl font-bold text-green-600">{averageMetrics.avgTemp.toFixed(1)}<span className="text-lg">°C</span></p>
-                <p className="text-xs text-gray-500 mt-2">Degrees Celsius</p>
-              </div>
-              <div className="bg-orange-50 p-6 rounded-lg border border-orange-100">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <p className="text-xs font-semibold text-orange-600 uppercase tracking-wide">Dissolved O₂</p>
-                    <p className="text-xs text-gray-600 mt-1">Oxygen Content</p>
-                  </div>
-                </div>
-                <p className="text-3xl font-bold text-orange-600">{averageMetrics.avgDiss.toFixed(2)}</p>
-                <p className="text-xs text-gray-500 mt-2">mg/Liter</p>
-              </div>
-              <div className="bg-purple-50 p-6 rounded-lg border border-purple-100">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <p className="text-xs font-semibold text-purple-600 uppercase tracking-wide">TDS</p>
-                    <p className="text-xs text-gray-600 mt-1">Dissolved Solids</p>
-                  </div>
-                </div>
-                <p className="text-3xl font-bold text-purple-600">{averageMetrics.avgTDS.toFixed(1)}</p>
-                <p className="text-xs text-gray-500 mt-2">mg/Liter</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Overall Trend */}
-        {trendData && (
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-            <div className="mb-6">
-              <h3 className="text-indigo-900 font-bold text-lg">Water Quality Trend (Last 7 Days)</h3>
-              <p className="text-sm text-gray-600 mt-1">Comparison of water quality between current period and previous period</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Current Score */}
-              <div className="bg-blue-50 p-6 rounded-lg border border-blue-100">
-                <p className="text-sm font-semibold text-blue-600 uppercase tracking-wide mb-3">Current Score (Last 7 Days)</p>
-                <p className="text-4xl font-bold text-blue-600 mb-2">{(trendData.currScore * 100).toFixed(1)}%</p>
-                <p className="text-xs text-gray-600">Percentage of sites with good quality</p>
-              </div>
-
-              {/* Previous Score */}
-              <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
-                <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-3">Previous Score (7 Days Prior)</p>
-                <p className="text-4xl font-bold text-gray-600 mb-2">{(trendData.prevScore * 100).toFixed(1)}%</p>
-                <p className="text-xs text-gray-600">Percentage of sites with good quality</p>
-              </div>
-
-              {/* Trend Direction */}
-              <div className={`p-6 rounded-lg border-2 flex flex-col items-center justify-center ${trendData.trend === "Improving" ? "bg-green-50 border-green-200" :
-                trendData.trend === "Worsening" ? "bg-red-50 border-red-200" :
-                  "bg-yellow-50 border-yellow-200"
-                }`}>
-                <p className="text-sm font-semibold uppercase tracking-wide mb-4" style={{
-                  color: trendData.trend === "Improving" ? "#059669" :
-                    trendData.trend === "Worsening" ? "#dc2626" :
-                      "#d97706"
-                }}>
-                  Overall Trend
-                </p>
-                <div className="flex items-center gap-3 mb-2">
-                  {trendData.trend === "Improving" && <TrendingUp className="text-green-600" size={48} />}
-                  {trendData.trend === "Worsening" && <TrendingDown className="text-red-600" size={48} />}
-                  {trendData.trend === "Stable" && <div className="text-yellow-600 text-5xl">→</div>}
-                </div>
-                <span className={`font-bold text-2xl ${trendData.trend === "Improving" ? "text-green-600" :
-                  trendData.trend === "Worsening" ? "text-red-600" :
-                    "text-yellow-600"
-                  }`}>
-                  {trendData.trend}
-                </span>
-                <p className="text-xs text-gray-600 mt-3 text-center">
-                  {trendData.trend === "Improving" && "Water quality is getting better"}
-                  {trendData.trend === "Worsening" && "Water quality is getting worse"}
-                  {trendData.trend === "Stable" && "Water quality remains unchanged"}
-                </p>
-              </div>
-            </div>
-
-            {/* Change indicator */}
-            <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-700">
-                <span className="font-semibold">Change: </span>
-                <span className={trendData.currScore >= trendData.prevScore ? "text-green-600" : "text-red-600"}>
-                  {trendData.currScore >= trendData.prevScore ? "+" : ""}{((trendData.currScore - trendData.prevScore) * 100).toFixed(1)}%
-                </span>
-              </p>
-            </div>
-          </div>
-        )}
-
-        <TimeSeriesDashboardOverall />
-        
-        {/* Detected Anomalies */}
-        {anomalies.length > 0 && (
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-            <div className="mb-6">
-              <h3 className="text-indigo-900 font-bold text-lg">Detected Anomalies</h3>
-              <p className="text-sm text-gray-600 mt-1">Sudden changes detected across sites in the system</p>
-            </div>
-            <div className="space-y-3">
-              {anomalies.map((anomaly, index) => (
-                <div key={index} className="bg-yellow-50 p-4 rounded-lg border border-yellow-200 flex justify-between items-center">
-                  <div>
-                    <p className="font-semibold text-gray-800">{anomaly.sampleName}</p>
-                    <p className="text-sm text-gray-600">{anomaly.issues}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold text-yellow-600">{anomaly.changes.toFixed(2)}</p>
-                    <p className="text-xs text-gray-600">Change detected</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Water Quality Index - All Sites */}
-        {wqiData.length > 0 && (
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-            <div className="mb-6">
-              <h3 className="text-indigo-900 font-bold text-lg">Water Quality Index (WQI) - All Sites</h3>
-              <p className="text-sm text-gray-600 mt-1">Calculated quality score for each sampling site (0-100)</p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {wqiData.map((site) => (
-                <div key={site.id} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <p className="font-semibold text-gray-800">Site {site.id}</p>
-                      <p className="text-xs text-gray-600">Water Quality Index</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-3xl font-bold text-indigo-600">{site.WQI.toFixed(1)}</p>
-                      <p className="text-xs text-gray-600">Score</p>
-                    </div>
-                  </div>
-                  {/* Progress bar */}
-                  <div className="mt-3 w-full bg-gray-300 rounded-full h-2">
-                    <div
-                      className="bg-indigo-600 h-2 rounded-full"
-                      style={{ width: `${Math.min(100, (site.WQI / 100) * 100)}%` }}
-                    ></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+    <main className="flex-1 overflow-auto p-6 bg-slate-50/50">
+      <div className="max-w-[1400px] mx-auto w-full">
+        <SiteComparisonDashboard />
       </div>
     </main>
   );
