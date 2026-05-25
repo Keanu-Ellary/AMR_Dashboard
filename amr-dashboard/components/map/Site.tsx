@@ -87,7 +87,7 @@ function createMarkerIcon(
 }
 
 function sitePopupHTML(point: SiteData): string {
-  let riskColor = RISK_COLOUR.unknown;
+  let riskColor = RISK_COLOUR.low;
   if (point.dangerZone) {
     const dangerZoneLabel = getDangerZoneLabel(point.dangerZone);
     riskColor  = RISK_COLOUR[dangerZoneLabel];
@@ -199,7 +199,7 @@ export default function Site({
     visiblePoints.forEach((point) => {
       if (!point.latitude || !point.longitude) return;
 
-      let markerDangerZone = getDangerZoneLabel("blue");
+      let markerDangerZone = getDangerZoneLabel("green");
         if (point.dangerZone) {
           markerDangerZone = getDangerZoneLabel(point.dangerZone);
         }
@@ -276,7 +276,7 @@ export default function Site({
     points.forEach((pt) => {
       if (!pt.id) return;
 
-      let markerDangerZone = getDangerZoneLabel("blue");
+      let markerDangerZone = getDangerZoneLabel("green");
         if (pt.dangerZone) {
           markerDangerZone = getDangerZoneLabel(pt.dangerZone);
         }
