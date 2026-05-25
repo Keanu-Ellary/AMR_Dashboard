@@ -4,7 +4,7 @@ import { LayoutDashboard, PieChartIcon, PlusCircleIcon, FileScan, History, Setti
 export const NAV_ITEMS: NavItem[] = [
   { href: "/home", icon: LayoutDashboard, label: "Overview" },
   { href: "/analyze", icon: FileScan, label: "Analyze Single Image" },
-  { href: "/statistics", icon: PieChartIcon, label: "Statistics" },
+  { href: "/visualizations", icon: PieChartIcon, label: "Visualizations" },
   { href: "/changelog", icon: History, label: "Change Log" },
   { href: "/data-management", icon: Settings, label: "Data Management" },
 ];

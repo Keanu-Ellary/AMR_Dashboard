@@ -230,7 +230,7 @@ export default function SampleList({ sites }: SampleListProps) {
                   <tr 
                     key={iso.id ?? `${iso.sampleName}-${idx}`} 
                     className="hover:bg-slate-50/50 transition-colors cursor-pointer"
-                    onClick={() => router.push(`/statistics?location=${encodeURIComponent(siteName)}&site=${iso.id}`)}
+                    onClick={() => router.push(`/samples?id=${iso.id}`)}
                   >
                     <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-slate-800">
                       {iso.sampleName}

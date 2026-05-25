@@ -8,22 +8,16 @@ import { parseLocationName, calculateWQI } from "@/utils/siteUtils";
 import { getMe } from "@/app/services/authService";
 import { getAllSites, addSiteData, addMutlipleSiteData, updateSite } from "@/app/services/siteService";
 import {
-  Trash2,
   Search,
-  Calendar,
-  ShieldAlert,
-  Layers,
-  Table,
-  CheckSquare,
-  Square,
-  AlertOctagon,
   RefreshCw,
   X,
-  Plus,
-  Upload as UploadIcon,
   ArrowLeft,
-  FlaskConical,
-  Edit,
+  ChevronDown,
+  Trash2,
+  ArrowUpDown,
+  ChevronLeft,
+  ChevronRight,
+  FilterX,
 } from "lucide-react";
 import ConfirmFile from "@/components/add-data/confirmFile";
 import WaterQualityFormula from "@/components/WaterQualityFormula";
@@ -42,6 +36,7 @@ export default function DataManagementPage() {
   
   // File upload state
   const [showImportDropdown, setShowImportDropdown] = useState(false);
+  const [showDeleteDropdown, setShowDeleteDropdown] = useState(false);
   const [acceptType, setAcceptType] = useState(".csv");
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
@@ -95,6 +90,10 @@ export default function DataManagementPage() {
   // Checkbox selections
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
   const [selectedSampleIds, setSelectedSampleIds] = useState<number[]>([]);
+
+  // Pagination for Samples
+  const [samplePage, setSamplePage] = useState(1);
+  const samplesPerPage = 15;
 
   // Deletion modals
   const [showDeleteAllModal, setShowDeleteAllModal] = useState(false);
@@ -190,6 +189,14 @@ export default function DataManagementPage() {
     });
   }, [sites, sampleSearch]);
 
+  // Paginated Samples
+  const paginatedSamples = useMemo(() => {
+    const start = (samplePage - 1) * samplesPerPage;
+    return filteredSamples.slice(start, start + samplesPerPage);
+  }, [filteredSamples, samplePage]);
+
+  const totalSamplePages = Math.ceil(filteredSamples.length / samplesPerPage) || 1;
+
   // Bulk Delete API handler
   const executeBulkDelete = async (payload: {
     all?: boolean;
@@ -208,7 +215,7 @@ export default function DataManagementPage() {
 
       const data = await res.json();
       if (res.ok) {
-        toast.success(data.message || "Data purged successfully");
+        toast.success(data.message || "Data deleted successfully");
         setSelectedLocations([]);
         setSelectedSampleIds([]);
         loadSitesData();
@@ -577,7 +584,7 @@ export default function DataManagementPage() {
       <main className="flex-1 overflow-auto p-6 bg-slate-50/50">
         <div className="flex items-center justify-center h-96">
           <RefreshCw className="h-6 w-6 text-indigo-600 animate-spin" />
-          <span className="ml-2 text-slate-500 font-semibold">Loading admin inventory...</span>
+          <span className="ml-2 text-slate-500 font-semibold uppercase text-[10px] tracking-widest">Loading Records...</span>
         </div>
       </main>
     );
@@ -586,47 +593,38 @@ export default function DataManagementPage() {
   if (showForm) {
     return (
       <main className="flex-1 overflow-auto p-6 bg-slate-50/50 flex flex-col gap-6">
-        {/* Form Header with Back Button */}
         <div className="flex items-center gap-4">
           <button
             onClick={handleClear}
             className="p-2 bg-white rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 shadow-sm transition-all"
-            title="Go Back"
           >
             <ArrowLeft className="h-4 w-4" />
           </button>
           <div>
-            <h1 className="text-2xl font-black text-indigo-950 tracking-tight flex items-center gap-2">
-              <FlaskConical className="h-6 w-6 text-indigo-600" />
+            <h1 className="text-2xl font-black text-indigo-950 tracking-tight">
               {editingIsolate ? "Edit Isolate Record" : "Add New Isolate Sample"}
             </h1>
-            <p className="text-sm text-gray-500 font-medium">
+            <p className="text-sm text-slate-500 font-medium">
               {editingIsolate 
                 ? `Modify details and water quality metrics for sample ${editingIsolate.sampleName}` 
-                : "Create a new water sample record with diagnostic physical-chemical metrics and genetics profile"}
+                : "Create a new water sample record with diagnostic physical-chemical metrics"}
             </p>
           </div>
         </div>
 
-        {/* Widescreen Detail Form Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-[1400px]">
-          {/* Left Column: Image box and Profile fields */}
           <div className="lg:col-span-1 flex flex-col gap-6">
-            <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6 flex flex-col gap-4">
-              {/* Sample Image Uploader Box */}
-              <div className="rounded-2xl overflow-hidden h-48 bg-slate-100 border border-slate-200 border-dashed hover:bg-slate-200/50 transition-colors flex flex-col items-center justify-center text-slate-400 gap-2 cursor-pointer relative group">
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col gap-4">
+              <div className="rounded-xl overflow-hidden h-48 bg-slate-50 border border-slate-200 border-dashed hover:bg-slate-100 transition-colors flex flex-col items-center justify-center text-slate-400 gap-2 cursor-pointer relative group">
                 {imageBase64 ? (
                   <>
                     <img src={imageBase64} className="w-full h-full object-cover" alt="Preview" />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold">
+                    <div className="absolute inset-0 bg-indigo-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-black uppercase tracking-wider">
                       Change Image
                     </div>
                   </>
                 ) : (
-                  <>
-                    <UploadIcon className="h-8 w-8" />
-                    <span className="text-xs font-bold uppercase tracking-wider">Upload Sample Image</span>
-                  </>
+                  <span className="text-[10px] font-black uppercase tracking-widest">Upload Sample Image</span>
                 )}
                 <input 
                   type="file" 
@@ -636,72 +634,71 @@ export default function DataManagementPage() {
                 />
               </div>
 
-              {/* Core Details */}
               <div className="flex flex-col gap-3">
-                <h4 className="text-xs font-extrabold text-indigo-950 uppercase tracking-widest">Core Details</h4>
-                <div className="flex flex-col gap-2.5">
+                <h4 className="text-[10px] font-black text-indigo-950 uppercase tracking-widest">Core Details</h4>
+                <div className="flex flex-col gap-3">
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Sample Name</label>
+                    <label className="block text-[9px] font-black text-slate-400 uppercase mb-1">Sample Name</label>
                     <input 
                       type="text" 
-                      placeholder="e.g. Apies River - Site A" 
+                      placeholder="Apies River - Site A" 
                       value={formData.sampleName} 
                       onChange={(e) => setFormData({...formData, sampleName: e.target.value})} 
-                      className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-800 font-bold" 
+                      className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 text-indigo-950 font-black" 
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Isolation Source</label>
+                    <label className="block text-[9px] font-black text-slate-400 uppercase mb-1">Isolation Source</label>
                     <input 
                       type="text" 
-                      placeholder="e.g. Surface Water" 
+                      placeholder="Surface Water" 
                       value={formData.isolationSource} 
                       onChange={(e) => setFormData({...formData, isolationSource: e.target.value})} 
-                      className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-800 font-medium" 
+                      className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 text-slate-700 font-bold" 
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Collection Date</label>
+                      <label className="block text-[9px] font-black text-slate-400 uppercase mb-1">Collection Date</label>
                       <input 
                         type="date" 
                         value={formData.collectionDate} 
                         onChange={(e) => setFormData({...formData, collectionDate: e.target.value})} 
-                        className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-800 font-medium" 
+                        className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 text-slate-700 font-bold" 
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Location Name</label>
+                      <label className="block text-[9px] font-black text-slate-400 uppercase mb-1">Location Name</label>
                       <input 
                         type="text" 
-                        placeholder="e.g. Site A" 
+                        placeholder="Site A" 
                         value={formData.geoLocName} 
                         onChange={(e) => setFormData({...formData, geoLocName: e.target.value})} 
-                        className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-800 font-medium" 
+                        className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 text-slate-700 font-bold" 
                       />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Longitude</label>
+                      <label className="block text-[9px] font-black text-slate-400 uppercase mb-1">Longitude</label>
                       <input 
                         type="number" 
                         step="any"
-                        placeholder="e.g. 28.188" 
+                        placeholder="28.188" 
                         value={formData.longitude} 
                         onChange={(e) => setFormData({...formData, longitude: e.target.value})} 
-                        className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-800 font-medium" 
+                        className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 text-slate-700 font-bold" 
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Latitude</label>
+                      <label className="block text-[9px] font-black text-slate-400 uppercase mb-1">Latitude</label>
                       <input 
                         type="number" 
                         step="any"
-                        placeholder="e.g. -25.744" 
+                        placeholder="-25.744" 
                         value={formData.latitude} 
                         onChange={(e) => setFormData({...formData, latitude: e.target.value})} 
-                        className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-800 font-medium" 
+                        className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 text-slate-700 font-bold" 
                       />
                     </div>
                   </div>
@@ -710,36 +707,35 @@ export default function DataManagementPage() {
 
               <hr className="border-slate-100" />
 
-              {/* Isolate Details */}
               <div className="flex flex-col gap-3">
-                <h4 className="text-xs font-extrabold text-indigo-950 uppercase tracking-widest">Isolate Profile</h4>
-                <div className="grid grid-cols-2 gap-3 text-xs bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <h4 className="text-[10px] font-black text-indigo-950 uppercase tracking-widest">Isolate Profile</h4>
+                <div className="grid grid-cols-2 gap-3 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-0.5">Organism</label>
+                    <label className="block text-[9px] font-black text-slate-400 uppercase mb-1">Organism</label>
                     <input 
                       type="text" 
-                      placeholder="e.g. E. coli" 
+                      placeholder="E. coli" 
                       value={formData.organism} 
                       onChange={(e) => setFormData({...formData, organism: e.target.value})} 
-                      className="w-full border border-slate-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 text-slate-800 font-bold italic" 
+                      className="w-full border border-slate-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 text-indigo-950 font-black italic" 
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-0.5">Isolate ID</label>
+                    <label className="block text-[9px] font-black text-slate-400 uppercase mb-1">Isolate ID</label>
                     <input 
                       type="text" 
-                      placeholder="e.g. AR-01" 
+                      placeholder="AR-01" 
                       value={formData.isolateId} 
                       onChange={(e) => setFormData({...formData, isolateId: e.target.value})} 
-                      className="w-full border border-slate-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 text-slate-800 font-mono font-bold" 
+                      className="w-full border border-slate-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 text-indigo-950 font-mono font-bold" 
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-0.5">SIR Prediction</label>
+                    <label className="block text-[9px] font-black text-slate-400 uppercase mb-1">SIR Prediction</label>
                     <select 
                       value={formData.predictedSir} 
                       onChange={(e) => setFormData({...formData, predictedSir: e.target.value})} 
-                      className="w-full border border-slate-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 text-slate-800 font-bold"
+                      className="w-full border border-slate-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 text-indigo-950 font-black"
                     >
                       <option value="">Select Profile</option>
                       <option value="Resistant (R)">Resistant (R)</option>
@@ -748,51 +744,50 @@ export default function DataManagementPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-0.5">Analysis Type</label>
+                    <label className="block text-[9px] font-black text-slate-400 uppercase mb-1">Analysis Type</label>
                     <input 
                       type="text" 
-                      placeholder="e.g. qPCR" 
+                      placeholder="qPCR" 
                       value={formData.sampleAnalysisType} 
                       onChange={(e) => setFormData({...formData, sampleAnalysisType: e.target.value})} 
-                      className="w-full border border-slate-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 text-slate-800 font-bold" 
+                      className="w-full border border-slate-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 text-indigo-950 font-black" 
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">AMR Resistance Genes</label>
+                  <label className="block text-[9px] font-black text-slate-400 uppercase mb-1">AMR Resistance Genes</label>
                   <textarea 
-                    placeholder="e.g. blaCTX-M-15, sul1, tet(A)" 
+                    placeholder="blaCTX-M-15, sul1, tet(A)" 
                     value={formData.amrResGenes} 
                     onChange={(e) => setFormData({...formData, amrResGenes: e.target.value})} 
-                    className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-800 font-mono font-bold h-20 resize-none" 
+                    className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 text-indigo-950 font-mono font-bold h-20 resize-none" 
                   />
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Right Columns: Metrics & Formula */}
           <div className="lg:col-span-2 flex flex-col gap-6">
-            {/* Water Quality Metric Card Grid */}
-            <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6">
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
               <div className="flex justify-between items-center mb-6">
                 <div>
-                  <h3 className="font-extrabold text-indigo-950 text-base">Diagnostic Water Quality Parameters</h3>
-                  <p className="text-xs text-gray-500 font-medium">Individual physical-chemical measurements taken at site</p>
+                  <h3 className="font-black text-indigo-950 text-base">Water Quality Parameters</h3>
+                  <p className="text-xs text-slate-500 font-medium">Physical-chemical measurements taken at site</p>
                 </div>
 
-                {/* Live Water Quality Score */}
                 <div className="flex items-center gap-3">
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Live Quality Score</span>
-                  <span className={`px-3 py-1 rounded-2xl text-base font-black shadow-sm transition-all duration-200 ${
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">WQI Score</span>
+                  <span className={`px-3 py-1 rounded-xl text-base font-black border shadow-sm transition-all duration-200 ${
                     liveWqiScore === null 
-                      ? "bg-slate-50 text-slate-400 border border-slate-200" 
+                      ? "bg-slate-50 text-slate-400 border-slate-200" 
                       : liveWqiScore >= 76
-                      ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-200 ring-1 ring-emerald-500/10"
                       : liveWqiScore >= 51
-                      ? "bg-yellow-50 text-yellow-700 border border-yellow-200"
-                      : "bg-red-50 text-red-700 border border-red-200"
+                      ? "bg-yellow-50 text-yellow-700 border-yellow-200 ring-1 ring-yellow-500/10"
+                      : liveWqiScore >= 26
+                      ? "bg-orange-50 text-orange-700 border-orange-200 ring-1 ring-orange-500/10"
+                      : "bg-red-50 text-red-700 border-red-200 ring-1 ring-red-500/10"
                   }`}>
                     {liveWqiScore === null ? "—" : `${liveWqiScore.toFixed(1)}%`}
                   </span>
@@ -800,71 +795,69 @@ export default function DataManagementPage() {
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-blue-50/60 border border-blue-100 rounded-2xl p-4 flex flex-col gap-1.5 shadow-sm hover:shadow transition-shadow">
-                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">pH Level</span>
+                <div className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col gap-2 shadow-sm">
+                  <span className="text-[9px] text-slate-400 font-black uppercase tracking-widest">pH Level</span>
                   <input 
                     type="number" 
                     step="0.1" 
                     placeholder="7.0"
                     value={formData.ph} 
                     onChange={(e) => setFormData({...formData, ph: e.target.value})} 
-                    className="w-full bg-white border border-blue-200 rounded-xl px-3 py-1.5 text-base font-black text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" 
+                    className="w-full border-b border-slate-200 px-0 py-1 text-lg font-black text-indigo-950 focus:outline-none focus:border-indigo-500" 
                   />
                 </div>
-                <div className="bg-emerald-50/60 border border-emerald-100 rounded-2xl p-4 flex flex-col gap-1.5 shadow-sm hover:shadow transition-shadow">
-                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Temperature (°C)</span>
+                <div className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col gap-2 shadow-sm">
+                  <span className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Temp (°C)</span>
                   <input 
                     type="number" 
                     step="0.1" 
                     placeholder="20.0"
                     value={formData.temperature} 
                     onChange={(e) => setFormData({...formData, temperature: e.target.value})} 
-                    className="w-full bg-white border border-emerald-200 rounded-xl px-3 py-1.5 text-base font-black text-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500" 
+                    className="w-full border-b border-slate-200 px-0 py-1 text-lg font-black text-indigo-950 focus:outline-none focus:border-indigo-500" 
                   />
                 </div>
-                <div className="bg-orange-50/60 border border-orange-100 rounded-2xl p-4 flex flex-col gap-1.5 shadow-sm hover:shadow transition-shadow">
-                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Dissolved O₂ (mg/L)</span>
+                <div className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col gap-2 shadow-sm">
+                  <span className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Dissolved O₂</span>
                   <input 
                     type="number" 
                     step="0.01" 
                     placeholder="8.0"
                     value={formData.dissolvedO2} 
                     onChange={(e) => setFormData({...formData, dissolvedO2: e.target.value})} 
-                    className="w-full bg-white border border-orange-200 rounded-xl px-3 py-1.5 text-base font-black text-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500" 
+                    className="w-full border-b border-slate-200 px-0 py-1 text-lg font-black text-indigo-950 focus:outline-none focus:border-indigo-500" 
                   />
                 </div>
-                <div className="bg-purple-50/60 border border-purple-100 rounded-2xl p-4 flex flex-col gap-1.5 shadow-sm hover:shadow transition-shadow">
-                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">TDS (mg/L)</span>
+                <div className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col gap-2 shadow-sm">
+                  <span className="text-[9px] text-slate-400 font-black uppercase tracking-widest">TDS (mg/L)</span>
                   <input 
                     type="number" 
                     step="1" 
                     placeholder="150"
                     value={formData.tds} 
                     onChange={(e) => setFormData({...formData, tds: e.target.value})} 
-                    className="w-full bg-white border border-purple-200 rounded-xl px-3 py-1.5 text-base font-black text-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500" 
+                    className="w-full border-b border-slate-200 px-0 py-1 text-lg font-black text-indigo-950 focus:outline-none focus:border-indigo-500" 
                   />
                 </div>
               </div>
               
-              {/* Optional Water Metric */}
               <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col gap-1.5 shadow-sm hover:shadow transition-shadow col-span-1">
-                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Water EC</span>
+                <div className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col gap-2 shadow-sm">
+                  <span className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Water EC</span>
                   <input 
                     type="number" 
                     step="any" 
-                    placeholder="e.g. 250"
+                    placeholder="250"
                     value={formData.ec} 
                     onChange={(e) => setFormData({...formData, ec: e.target.value})} 
-                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500/20 focus:border-slate-400" 
+                    className="w-full border-b border-slate-200 px-0 py-1 text-base font-black text-indigo-950 focus:outline-none focus:border-indigo-500" 
                   />
                 </div>
               </div>
             </div>
 
-            {/* Live Formula Breakdown */}
-            <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6">
-              <h3 className="font-extrabold text-indigo-950 text-base mb-4">Live Water Quality Index Formula Breakdown</h3>
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+              <h3 className="font-black text-indigo-950 text-base mb-4 uppercase tracking-widest text-[10px]">WQI Formula Breakdown</h3>
               <WaterQualityFormula
                 mode="site"
                 ph={parseFloat(formData.ph) || undefined}
@@ -874,21 +867,20 @@ export default function DataManagementPage() {
               />
             </div>
 
-            {/* Submission actions */}
-            <div className="flex gap-4 items-center justify-end mt-4">
+            <div className="flex gap-3 items-center justify-end mt-4">
               <button
                 onClick={handleClear}
-                className="px-6 py-3 border border-slate-200 bg-white hover:bg-slate-50 rounded-2xl font-black text-xs uppercase tracking-wider text-slate-600 transition-all shadow-sm"
+                className="px-6 py-2 border border-slate-200 bg-white hover:bg-slate-50 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-500 transition-all shadow-sm"
               >
-                Cancel & Return
+                Cancel
               </button>
               <button
                 onClick={editingIsolate ? handleUpdateSite : handleAddData}
                 disabled={!formData.sampleName || !formData.geoLocName || !formData.collectionDate || loading}
-                className="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 disabled:hover:bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-wider transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-1.5"
+                className="px-8 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-30 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm flex items-center justify-center gap-2"
               >
                 {loading && <RefreshCw className="h-3 w-3 animate-spin" />}
-                {editingIsolate ? "Save Changes" : "Submit New Isolate"}
+                {editingIsolate ? "Save Changes" : "Submit Record"}
               </button>
             </div>
           </div>
@@ -899,19 +891,12 @@ export default function DataManagementPage() {
 
   return (
     <main className="flex-1 overflow-auto p-6 bg-slate-50/50 flex flex-col gap-6">
-      {/* Top Banner Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-black text-indigo-950 tracking-tight flex items-center gap-2">
-            <ShieldAlert className="h-6 w-6 text-red-600" />
-            Administrative Data Management
-          </h1>
-          <p className="text-sm text-gray-500 font-medium">
-            Ingest, import, edit, and perform secure bulk-purging of water sample isolates
-          </p>
+          <h1 className="text-2xl font-black text-indigo-950 tracking-tight">Administrative Data Management</h1>
+          <p className="text-sm text-slate-500 font-medium">Ingest, edit, and perform secure purging of sample isolates</p>
         </div>
-        <div className="flex items-center gap-3 self-end sm:self-center relative">
-          {/* Hidden file input */}
+        <div className="flex items-center gap-2 self-end sm:self-center relative">
           <input 
             type="file" 
             ref={fileInputRef} 
@@ -922,433 +907,384 @@ export default function DataManagementPage() {
 
           <button
             onClick={() => setShowForm(true)}
-            className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black shadow-sm transition-all"
+            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm transition-all"
           >
-            <Plus className="h-3.5 w-3.5" />
             Add Record
           </button>
 
           <button
             onClick={() => setShowImportDropdown(!showImportDropdown)}
-            className="flex items-center gap-1.5 px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-black shadow-sm transition-all"
+            onBlur={() => setTimeout(() => setShowImportDropdown(false), 200)}
+            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm transition-all flex items-center gap-1.5"
           >
-            <UploadIcon className="h-3.5 w-3.5" />
             Import File
+            <ChevronDown className="h-3 w-3" />
           </button>
           
           {showImportDropdown && (
-            <div className="absolute top-full right-10 mt-1 w-32 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden z-20">
-              <button 
-                onClick={() => handleImportClick("CSV")}
-                className="block w-full text-left px-4 py-2.5 text-xs text-slate-700 font-bold hover:bg-slate-50 transition-colors"
-              >
-                CSV (.csv)
-              </button>
-              <button 
-                onClick={() => handleImportClick("TSV")}
-                className="block w-full text-left px-4 py-2.5 text-xs text-slate-700 font-bold hover:bg-slate-50 transition-colors"
-              >
-                TSV (.tsv)
-              </button>
-              <button 
-                onClick={() => handleImportClick("JSON")}
-                className="block w-full text-left px-4 py-2.5 text-xs text-slate-700 font-bold hover:bg-slate-50 transition-colors"
-              >
-                JSON (.json)
-              </button>
+            <div className="absolute top-full right-[100px] mt-1 w-32 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden z-20">
+              {["CSV", "TSV", "JSON"].map((type) => (
+                <button 
+                  key={type}
+                  onClick={() => handleImportClick(type)}
+                  className="block w-full text-left px-4 py-2.5 text-[10px] text-indigo-950 font-black hover:bg-slate-50 transition-colors uppercase"
+                >
+                  {type} (.{type.toLowerCase()})
+                </button>
+              ))}
             </div>
           )}
+
+          <div className="relative">
+            <button
+              onClick={() => setShowDeleteDropdown(!showDeleteDropdown)}
+              onBlur={() => setTimeout(() => setShowDeleteDropdown(false), 200)}
+              className="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm transition-all flex items-center gap-1.5"
+            >
+              Delete
+              <ChevronDown className="h-3 w-3" />
+            </button>
+            {showDeleteDropdown && (
+              <div className="absolute top-full right-0 mt-1 w-48 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden z-20">
+                <button
+                  onClick={() => setShowDeleteDateRangeModal(true)}
+                  className="block w-full text-left px-4 py-2.5 text-[10px] text-indigo-950 font-black hover:bg-slate-50 transition-colors uppercase border-b border-slate-50"
+                >
+                  By Date Range
+                </button>
+                <button
+                  onClick={() => setShowDeleteLocationsModal(true)}
+                  disabled={selectedLocations.length === 0}
+                  className="block w-full text-left px-4 py-2.5 text-[10px] text-indigo-950 font-black hover:bg-slate-50 transition-colors uppercase border-b border-slate-50 disabled:opacity-30"
+                >
+                  By Selected Locations ({selectedLocations.length})
+                </button>
+                <button
+                  onClick={() => setShowDeleteSamplesModal(true)}
+                  disabled={selectedSampleIds.length === 0}
+                  className="block w-full text-left px-4 py-2.5 text-[10px] text-indigo-950 font-black hover:bg-slate-50 transition-colors uppercase border-b border-slate-50 disabled:opacity-30"
+                >
+                  By Selected Samples ({selectedSampleIds.length})
+                </button>
+                <button
+                  onClick={() => setShowDeleteAllModal(true)}
+                  className="block w-full text-left px-4 py-2.5 text-[10px] text-rose-600 font-black hover:bg-rose-50 transition-colors uppercase"
+                >
+                  System Reset (All)
+                </button>
+              </div>
+            )}
+          </div>
 
           <button
             onClick={loadSitesData}
             className="p-2 bg-white rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 shadow-sm transition-all"
-            title="Refresh Data"
           >
             <RefreshCw className="h-4 w-4" />
           </button>
         </div>
       </div>
 
-      {/* Global Quick Action Purge Controls */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-[1400px]">
-        {/* Date Range Purge Card */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 flex flex-col gap-4 shadow-sm">
-          <div>
-            <h3 className="font-extrabold text-indigo-950 text-sm flex items-center gap-1.5">
-              <Calendar className="h-4 w-4 text-indigo-600" />
-              Delete by Date Range
-            </h3>
-            <p className="text-[11px] text-gray-400 font-semibold">Purge all records between specific collection dates</p>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="flex flex-col gap-1">
-              <span className="text-[10px] font-bold text-gray-400 uppercase">Start Date</span>
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <span className="text-[10px] font-bold text-gray-400 uppercase">End Date</span>
-              <input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-              />
-            </div>
-          </div>
-          <button
-            onClick={() => setShowDeleteDateRangeModal(true)}
-            disabled={!startDate && !endDate}
-            className="flex items-center justify-center gap-1.5 w-full py-2 bg-red-50 hover:bg-red-100 disabled:opacity-40 disabled:hover:bg-red-50 text-red-700 rounded-xl text-xs font-black shadow-sm transition-all border border-red-200"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-            Delete Data in Range
-          </button>
-        </div>
-
-        {/* Selected Data Purge Summary Card */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 flex flex-col gap-3 shadow-sm justify-between">
-          <div>
-            <h3 className="font-extrabold text-indigo-950 text-sm flex items-center gap-1.5">
-              <CheckSquare className="h-4 w-4 text-indigo-600" />
-              Purge Selected Checklist
-            </h3>
-            <p className="text-[11px] text-gray-400 font-semibold">Perform selective purging of multi-checked locations or samples</p>
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <div className="flex justify-between text-xs font-semibold text-slate-600">
-              <span>Selected Locations:</span>
-              <span className="font-black text-indigo-950">{selectedLocations.length}</span>
-            </div>
-            <div className="flex justify-between text-xs font-semibold text-slate-600">
-              <span>Selected Samples:</span>
-              <span className="font-black text-indigo-950">{selectedSampleIds.length}</span>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setShowDeleteLocationsModal(true)}
-              disabled={selectedLocations.length === 0}
-              className="flex-1 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-40 disabled:hover:bg-red-600 text-white rounded-xl text-xs font-black shadow-sm transition-all"
-            >
-              Purge Locations ({selectedLocations.length})
-            </button>
-            <button
-              onClick={() => setShowDeleteSamplesModal(true)}
-              disabled={selectedSampleIds.length === 0}
-              className="flex-1 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-40 disabled:hover:bg-red-600 text-white rounded-xl text-xs font-black shadow-sm transition-all"
-            >
-              Purge Samples ({selectedSampleIds.length})
-            </button>
-          </div>
-        </div>
-
-        {/* Master Database Wipe Card */}
-        <div className="bg-rose-50 border border-rose-200 rounded-2xl p-5 flex flex-col justify-between shadow-sm">
-          <div>
-            <h3 className="font-extrabold text-rose-950 text-sm flex items-center gap-1.5">
-              <AlertOctagon className="h-4 w-4 text-red-600" />
-              Complete System Reset
-            </h3>
-            <p className="text-[11px] text-rose-600/80 font-bold mt-0.5">Danger zone: Permanently purge all water samples and isolates</p>
-          </div>
-          <button
-            onClick={() => setShowDeleteAllModal(true)}
-            className="flex items-center justify-center gap-1.5 w-full py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-black shadow-md hover:shadow-lg transition-all"
-          >
-            <AlertOctagon className="h-4 w-4" />
-            Delete All Database Records
-          </button>
-        </div>
-      </div>
-
-      {/* Interactive Inventory Table with Tabs */}
       <div className="flex flex-col gap-4 max-w-[1400px]">
-        {/* Tab switcher */}
-        <div className="flex items-center gap-1.5 p-1 bg-slate-100/80 border border-slate-200/50 rounded-2xl self-start select-none">
+        <div className="flex items-center gap-1.5 p-1 bg-slate-100 border border-slate-200/50 rounded-2xl self-start select-none">
           <button
             onClick={() => setActiveTab("location")}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-extrabold transition-all duration-200 ${
+            className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-200 ${
               activeTab === "location"
                 ? "bg-white text-indigo-950 shadow-sm"
-                : "text-slate-500 hover:text-slate-800"
+                : "text-slate-400 hover:text-slate-600"
             }`}
           >
-            <Layers className="h-3.5 w-3.5" />
-            Locations Summary View
+            Locations Summary
           </button>
           <button
             onClick={() => setActiveTab("sample")}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-extrabold transition-all duration-200 ${
+            className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-200 ${
               activeTab === "sample"
                 ? "bg-white text-indigo-950 shadow-sm"
-                : "text-slate-500 hover:text-slate-800"
+                : "text-slate-400 hover:text-slate-600"
             }`}
           >
-            <Table className="h-3.5 w-3.5" />
-            Isolates Detail List
+            Isolates Detail
           </button>
         </div>
 
-        {/* Tab Panels */}
-        <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6 flex flex-col gap-4">
+        <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6 flex flex-col gap-4 overflow-hidden">
           {activeTab === "location" && (
             <>
-              {/* Location controls */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
                 <div>
-                  <h3 className="font-extrabold text-indigo-950 text-base">Purge by Site Locations</h3>
-                  <p className="text-xs text-gray-500">Purge all database samples collected at checked locations</p>
+                  <h3 className="font-extrabold text-indigo-950 text-lg">Manage Site Locations</h3>
+                  <p className="text-xs text-slate-500">Select locations to perform bulk delete operations</p>
                 </div>
-                <div className="relative w-full sm:w-64">
-                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                <div className="relative w-full sm:w-64 group">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                   <input
                     type="text"
                     placeholder="Search locations..."
                     value={locationSearch}
                     onChange={(e) => setLocationSearch(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                    className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
                   />
                 </div>
               </div>
 
-              {/* Table */}
-              <div className="overflow-x-auto rounded-2xl border border-slate-100 shadow-inner">
-                <table className="min-w-full divide-y divide-slate-100">
-                  <thead className="bg-slate-50/70 select-none">
-                    <tr>
-                      <th className="px-6 py-3.5 text-left w-12">
-                        <button onClick={toggleAllLocations} className="text-slate-400 hover:text-indigo-600 transition-colors">
-                          {selectedLocations.length === filteredLocations.length && filteredLocations.length > 0 ? (
-                            <CheckSquare className="h-4.5 w-4.5 text-indigo-600" />
-                          ) : (
-                            <Square className="h-4.5 w-4.5" />
-                          )}
-                        </button>
-                      </th>
-                      <th className="px-6 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Location Name</th>
-                      <th className="px-6 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Coordinates</th>
-                      <th className="px-6 py-3.5 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Samples Count</th>
-                      <th className="px-6 py-3.5 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Latest Sampling Date</th>
-                      <th className="px-6 py-3.5 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-slate-100 text-sm font-medium text-slate-700">
-                    {filteredLocations.map((loc) => {
-                      const isChecked = selectedLocations.includes(loc.name);
-                      return (
-                        <tr
-                          key={loc.name}
-                          onClick={() => toggleLocationSelection(loc.name)}
-                          className={`hover:bg-slate-50/50 cursor-pointer transition-colors ${
-                            isChecked ? "bg-indigo-50/20" : ""
-                          }`}
-                        >
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="text-slate-400">
-                              {isChecked ? (
-                                <CheckSquare className="h-4.5 w-4.5 text-indigo-600" />
-                              ) : (
-                                <Square className="h-4.5 w-4.5" />
-                              )}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap font-bold text-slate-800">{loc.name}</td>
-                          <td className="px-6 py-4 whitespace-nowrap font-mono text-xs text-slate-500">
-                            {loc.latitude.toFixed(5)}, {loc.longitude.toFixed(5)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-center font-bold">{loc.totalSamples}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-xs text-slate-500 font-medium">
-                            {new Date(loc.latestCollectionDate).toLocaleDateString("en-ZA", {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                            })}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-xs">
-                            <Link
-                              href={`/statistics?location=${encodeURIComponent(loc.name)}&site=${loc.latestSiteId}`}
-                              onClick={(e) => e.stopPropagation()}
-                              className="inline-flex items-center gap-1 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 hover:text-indigo-800 rounded-xl text-xs font-extrabold transition-all shadow-sm"
-                            >
-                              View Stats
-                            </Link>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+              <div className="flex-1 min-h-0 overflow-hidden rounded-2xl border border-slate-100 shadow-inner flex flex-col">
+                <div className="overflow-auto flex-1">
+                  <table className="w-full text-left border-collapse min-w-[800px]">
+                    <thead className="sticky top-0 z-10 select-none">
+                      <tr className="bg-slate-50 border-b border-slate-100">
+                        <th className="px-4 py-3 text-left w-12">
+                          <input
+                            type="checkbox"
+                            checked={selectedLocations.length === filteredLocations.length && filteredLocations.length > 0}
+                            onChange={toggleAllLocations}
+                            className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                          />
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Location Name</th>
+                        <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Coordinates</th>
+                        <th className="px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Samples</th>
+                        <th className="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Latest Date</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-slate-100">
+                      {filteredLocations.map((loc) => {
+                        const isChecked = selectedLocations.includes(loc.name);
+                        return (
+                          <tr
+                            key={loc.name}
+                            onClick={() => toggleLocationSelection(loc.name)}
+                            className={`hover:bg-slate-50/50 transition-colors cursor-pointer ${
+                              isChecked ? "bg-indigo-50/20" : ""
+                            }`}
+                          >
+                            <td className="px-4 py-3 whitespace-nowrap">
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={() => {}}
+                                className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                              />
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-slate-800">{loc.name}</td>
+                            <td className="px-4 py-3 whitespace-nowrap text-xs text-slate-500 font-mono font-medium">
+                              {loc.latitude.toFixed(5)}, {loc.longitude.toFixed(5)}
+                            </td>
+                            <td className="px-3 py-3 whitespace-nowrap text-center text-sm font-medium text-slate-600">{loc.totalSamples}</td>
+                            <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-slate-500 font-medium">
+                              {new Date(loc.latestCollectionDate).toLocaleDateString("en-ZA", {
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                              })}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </>
           )}
 
           {activeTab === "sample" && (
             <>
-              {/* Sample controls */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
                 <div>
-                  <h3 className="font-extrabold text-indigo-950 text-base">Purge Individual Isolate Samples</h3>
-                  <p className="text-xs text-gray-500">Purge specific record entries by multi-select checklists</p>
+                  <h3 className="font-extrabold text-indigo-950 text-lg">Manage Individual Isolate Samples</h3>
+                  <p className="text-xs text-slate-500">Select specific records to edit or delete</p>
                 </div>
-                <div className="relative w-full sm:w-80">
-                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                <div className="relative w-full sm:w-80 group">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                   <input
                     type="text"
-                    placeholder="Search organism, sample, genes..."
+                    placeholder="Search records..."
                     value={sampleSearch}
-                    onChange={(e) => setSampleSearch(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                    onChange={(e) => {
+                      setSampleSearch(e.target.value);
+                      setSamplePage(1);
+                    }}
+                    className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
                   />
                 </div>
               </div>
 
-              {/* Table */}
-              <div className="overflow-x-auto rounded-2xl border border-slate-100 shadow-inner">
-                <table className="min-w-full divide-y divide-slate-100">
-                  <thead className="bg-slate-50/70 select-none">
-                    <tr>
-                      <th className="px-6 py-3.5 text-left w-12">
-                        <button onClick={toggleAllSamples} className="text-slate-400 hover:text-indigo-600 transition-colors">
-                          {selectedSampleIds.length === filteredSamples.length && filteredSamples.length > 0 ? (
-                            <CheckSquare className="h-4.5 w-4.5 text-indigo-600" />
-                          ) : (
-                            <Square className="h-4.5 w-4.5" />
-                          )}
-                        </button>
-                      </th>
-                      <th className="px-6 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Sample Name</th>
-                      <th className="px-6 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Organism</th>
-                      <th className="px-6 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Location</th>
-                      <th className="px-6 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Collection Date</th>
-                      <th className="px-6 py-3.5 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Risk Zone</th>
-                      <th className="px-6 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">AMR Genes</th>
-                      <th className="px-6 py-3.5 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-slate-100 text-sm font-medium text-slate-600">
-                    {filteredSamples.map((s) => {
-                      const isChecked = selectedSampleIds.includes(s.id!);
-                      return (
-                        <tr
-                          key={s.id}
-                          onClick={() => toggleSampleSelection(s.id!)}
-                          className={`hover:bg-slate-50/50 cursor-pointer transition-colors ${
-                            isChecked ? "bg-indigo-50/20" : ""
-                          }`}
-                        >
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="text-slate-400">
-                              {isChecked ? (
-                                <CheckSquare className="h-4.5 w-4.5 text-indigo-600" />
-                              ) : (
-                                <Square className="h-4.5 w-4.5" />
-                              )}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap font-bold text-slate-800">{s.sampleName}</td>
-                          <td className="px-6 py-4 whitespace-nowrap italic">{s.orgamism || "—"}</td>
-                          <td className="px-6 py-4 whitespace-nowrap">{parseLocationName(s.geoLocName)}</td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            {new Date(s.collectionDate).toLocaleDateString("en-ZA", {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                            })}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-center">
-                            <span className={`inline-block px-2 py-0.5 rounded border text-[10px] font-extrabold capitalize ${
-                              s.dangerZone === "red"
-                                ? "bg-red-50 text-red-700 border-red-200"
-                                : s.dangerZone === "yellow"
-                                ? "bg-yellow-50 text-yellow-700 border-yellow-200"
-                                : "bg-emerald-50 text-emerald-700 border-emerald-200"
+              <div className="flex-1 min-h-0 overflow-hidden rounded-2xl border border-slate-100 shadow-inner flex flex-col">
+                <div className="overflow-auto flex-1">
+                  <table className="w-full text-left border-collapse min-w-[800px]">
+                    <thead className="sticky top-0 z-10 select-none">
+                      <tr className="bg-slate-50 border-b border-slate-100">
+                        <th className="px-4 py-3 text-left w-12">
+                          <input
+                            type="checkbox"
+                            checked={selectedSampleIds.length === filteredSamples.length && filteredSamples.length > 0}
+                            onChange={toggleAllSamples}
+                            className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                          />
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Sample Name</th>
+                        <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Organism</th>
+                        <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Location</th>
+                        <th className="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Date</th>
+                        <th className="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Risk</th>
+                        <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">AMR Genes</th>
+                        <th className="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-slate-100">
+                      {paginatedSamples.map((s) => {
+                        const isChecked = selectedSampleIds.includes(s.id!);
+                        const risk = s.dangerZone?.toLowerCase();
+                        const riskLabel = risk === 'red' ? 'High' : risk === 'yellow' ? 'Moderate' : 'Low';
+                        return (
+                          <tr
+                            key={s.id}
+                            onClick={() => toggleSampleSelection(s.id!)}
+                            className={`hover:bg-slate-50/50 transition-colors cursor-pointer ${
+                              isChecked ? "bg-indigo-50/20" : ""
+                            }`}
+                          >
+                            <td className="px-4 py-3 whitespace-nowrap">
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={() => {}}
+                                className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                              />
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-slate-800">{s.sampleName}</td>
+                            <td className="px-4 py-3 whitespace-nowrap text-sm italic text-slate-600 font-medium">{s.orgamism || "—"}</td>
+                            <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-600 font-medium">{parseLocationName(s.geoLocName)}</td>
+                            <td className="px-4 py-3 whitespace-nowrap text-center text-sm text-slate-500 font-medium">
+                              {new Date(s.collectionDate).toLocaleDateString("en-ZA", {
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                              })}
+                            </td>
+                            <td className={`px-4 py-3 whitespace-nowrap text-center text-sm font-extrabold capitalize ${
+                              risk === 'red' ? 'text-red-600' :
+                              risk === 'yellow' ? 'text-yellow-600' :
+                              'text-slate-800'
                             }`}>
-                              {s.dangerZone || "unknown"}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 font-mono text-xs truncate max-w-[150px]" title={s.amrResGenes}>
-                            {s.amrResGenes || "—"}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-xs">
-                            <div className="flex justify-end items-center gap-2">
+                              {riskLabel}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-slate-500 font-mono truncate max-w-[120px]" title={s.amrResGenes}>
+                              {s.amrResGenes || "—"}
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap text-right">
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleEditClick(s);
                                 }}
-                                className="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-extrabold transition-all shadow-sm"
+                                className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-extrabold transition-all shadow-sm"
                               >
-                                <Edit className="h-3 w-3" />
                                 Edit
                               </button>
-                              <Link
-                                href={`/statistics?site=${s.id}`}
-                                onClick={(e) => e.stopPropagation()}
-                                className="inline-flex items-center gap-1 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 hover:text-indigo-800 rounded-xl text-xs font-extrabold transition-all shadow-sm"
-                              >
-                                View Stats
-                              </Link>
-                            </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                      {filteredSamples.length === 0 && (
+                        <tr>
+                          <td colSpan={8} className="px-6 py-12 text-center text-slate-400 text-sm">
+                            <FilterX className="h-8 w-8 mx-auto mb-2 opacity-50 text-slate-400" />
+                            No sample records match active filters or search terms.
                           </td>
                         </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
+
+              {/* Pagination Footer for Samples */}
+              {filteredSamples.length > 0 && (
+                <div className="flex items-center justify-between pt-4 border-t border-slate-100 flex-shrink-0 select-none">
+                  <span className="text-xs text-slate-500 font-medium">
+                    Showing <strong className="text-slate-800">{(samplePage - 1) * samplesPerPage + 1}</strong> to{" "}
+                    <strong className="text-slate-800">
+                      {Math.min(samplePage * samplesPerPage, filteredSamples.length)}
+                    </strong>{" "}
+                    of <strong className="text-slate-800">{filteredSamples.length}</strong> records
+                  </span>
+
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => setSamplePage((p) => Math.max(p - 1, 1))}
+                      disabled={samplePage === 1}
+                      className="p-1.5 border border-slate-200 rounded-lg text-slate-500 hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-transparent transition-colors"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </button>
+                    {Array.from({ length: totalSamplePages }, (_, i) => i + 1)
+                      .filter((p) => Math.abs(p - samplePage) <= 2 || p === 1 || p === totalSamplePages)
+                      .map((p, index, arr) => {
+                        const isGap = index > 0 && p - arr[index - 1] > 1;
+                        return (
+                          <React.Fragment key={p}>
+                            {isGap && <span className="px-2 text-slate-400">...</span>}
+                            <button
+                              onClick={() => setSamplePage(p)}
+                              className={`px-3 py-1 text-xs font-semibold rounded-lg border transition-all ${
+                                samplePage === p
+                                  ? "bg-indigo-600 text-white border-indigo-600 shadow-sm"
+                                  : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                              }`}
+                            >
+                              {p}
+                            </button>
+                          </React.Fragment>
+                        );
+                      })}
+                    <button
+                      onClick={() => setSamplePage((p) => Math.min(p + 1, totalSamplePages))}
+                      disabled={samplePage === totalSamplePages}
+                      className="p-1.5 border border-slate-200 rounded-lg text-slate-500 hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-transparent transition-colors"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
             </>
           )}
         </div>
       </div>
 
-      {/* ========================================================== */}
-      {/* SECURITY VERIFICATION CONFIRMATION MODALS                   */}
-      {/* ========================================================== */}
-
-      {/* Deletion confirmation overlays */}
       {showDeleteAllModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl flex flex-col gap-4 border border-rose-100">
-            <div className="flex justify-between items-center text-rose-950">
-              <h3 className="font-extrabold text-base flex items-center gap-1.5">
-                <AlertOctagon className="h-5 w-5 text-red-600" />
-                Critical Database Reset
-              </h3>
-              <button onClick={() => setShowDeleteAllModal(false)} className="text-slate-400 hover:text-slate-600">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <p className="text-xs text-slate-500 leading-relaxed font-semibold">
-              Warning: This action will **permanently delete all water samples and isolates** from the database and purge all MinIO imagery. 
+        <div className="fixed inset-0 bg-indigo-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 max-md w-full shadow-2xl flex flex-col gap-4 border border-rose-100">
+            <h3 className="font-black text-base text-rose-950 uppercase tracking-widest">Critical Database Reset</h3>
+            <p className="text-xs text-slate-500 font-medium">
+              This action will **permanently delete all water samples and isolates** from the database. 
             </p>
-            <p className="text-xs text-rose-600 font-black leading-relaxed">
-              To proceed, please type <strong className="font-extrabold text-rose-800 bg-rose-50 px-1 py-0.5 rounded">DELETE ALL DATA</strong> in the verification input below:
+            <p className="text-[10px] text-rose-600 font-black uppercase tracking-widest">
+              Type <strong className="text-rose-800 bg-rose-50 px-1 py-0.5 rounded">DELETE ALL DATA</strong> to proceed:
             </p>
             <input
               type="text"
               value={confirmDeleteAllText}
               onChange={(e) => setConfirmDeleteAllText(e.target.value)}
-              placeholder="Type verification text..."
-              className="px-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 font-bold"
+              placeholder="Verification text..."
+              className="px-4 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-rose-500 font-black text-rose-900"
             />
-            <div className="flex gap-3 mt-2">
+            <div className="flex gap-2 mt-2">
               <button
                 onClick={() => setShowDeleteAllModal(false)}
-                className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold transition-all"
+                className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDeleteAll}
                 disabled={confirmDeleteAllText !== "DELETE ALL DATA"}
-                className="flex-1 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-40 text-white rounded-xl text-xs font-black transition-all shadow-sm"
+                className="flex-1 py-2 bg-rose-600 hover:bg-rose-700 disabled:opacity-30 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm"
               >
-                Wipe All Data
+                Confirm Wipe
               </button>
             </div>
           </div>
@@ -1356,36 +1292,47 @@ export default function DataManagementPage() {
       )}
 
       {showDeleteDateRangeModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl flex flex-col gap-4">
-            <div className="flex justify-between items-center">
-              <h3 className="font-extrabold text-indigo-950 text-base flex items-center gap-1.5">
-                <Calendar className="h-5 w-5 text-indigo-600" />
-                Date Range Deletion
-              </h3>
-              <button onClick={() => setShowDeleteDateRangeModal(false)} className="text-slate-400 hover:text-slate-600">
-                <X className="h-5 w-5" />
-              </button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-5 max-w-xs w-full shadow-2xl flex flex-col gap-4 border border-slate-100">
+            <div>
+              <h3 className="font-black text-indigo-950 text-sm uppercase tracking-widest">Delete by Date Range</h3>
+              <p className="text-[10px] text-slate-500 font-medium">Select a range to delete isolate records</p>
             </div>
-            <p className="text-xs text-slate-500 leading-relaxed font-semibold">
-              Are you sure you want to delete all isolates collected:
-              <strong className="text-slate-800 block mt-2">
-                {startDate ? `From: ${new Date(startDate).toLocaleDateString()}` : ""}
-                {endDate ? ` To: ${new Date(endDate).toLocaleDateString()}` : ""}
-              </strong>
-            </p>
-            <div className="flex gap-3 mt-2">
+
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-1">
+                <span className="text-[9px] font-black text-slate-400 uppercase">Start Date</span>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs text-indigo-950 font-bold focus:outline-none focus:ring-1 focus:ring-indigo-500 w-full"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-[9px] font-black text-slate-400 uppercase">End Date</span>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs text-indigo-950 font-bold focus:outline-none focus:ring-1 focus:ring-indigo-500 w-full"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2 mt-2">
               <button
                 onClick={() => setShowDeleteDateRangeModal(false)}
-                className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold transition-all"
+                className="flex-1 py-2 bg-slate-50 hover:bg-slate-100 text-slate-500 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDeleteDateRange}
-                className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-black transition-all shadow-sm"
+                disabled={!startDate && !endDate}
+                className="flex-1 py-2 bg-rose-600 hover:bg-rose-700 disabled:opacity-30 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm"
               >
-                Confirm Purge
+                Delete Data
               </button>
             </div>
           </div>
@@ -1393,35 +1340,27 @@ export default function DataManagementPage() {
       )}
 
       {showDeleteLocationsModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl flex flex-col gap-4">
-            <div className="flex justify-between items-center">
-              <h3 className="font-extrabold text-indigo-950 text-base flex items-center gap-1.5">
-                <Layers className="h-5 w-5 text-indigo-600" />
-                Purge Locations
-              </h3>
-              <button onClick={() => setShowDeleteLocationsModal(false)} className="text-slate-400 hover:text-slate-600">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <p className="text-xs text-slate-500 leading-relaxed font-semibold">
-              Are you sure you want to delete all water samples and isolates collected at:
-              <strong className="text-slate-800 block mt-2 max-h-24 overflow-y-auto font-bold border border-slate-50 p-2 rounded-lg bg-slate-50/50">
+        <div className="fixed inset-0 bg-indigo-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 max-sm w-full shadow-2xl flex flex-col gap-4">
+            <h3 className="font-black text-indigo-950 text-base uppercase tracking-widest">Delete Locations</h3>
+            <p className="text-xs text-slate-500 font-medium leading-relaxed">
+              Confirm deletion of samples at:
+              <strong className="text-indigo-950 block mt-1 max-h-24 overflow-y-auto font-black border border-slate-50 p-2 rounded-lg bg-slate-50">
                 {selectedLocations.join(", ")}
               </strong>
             </p>
-            <div className="flex gap-3 mt-2">
+            <div className="flex gap-2 mt-2">
               <button
                 onClick={() => setShowDeleteLocationsModal(false)}
-                className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold transition-all"
+                className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDeleteLocations}
-                className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-black transition-all shadow-sm"
+                className="flex-1 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm"
               >
-                Purge Sites
+                Delete Sites
               </button>
             </div>
           </div>
@@ -1429,39 +1368,30 @@ export default function DataManagementPage() {
       )}
 
       {showDeleteSamplesModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl flex flex-col gap-4">
-            <div className="flex justify-between items-center">
-              <h3 className="font-extrabold text-indigo-950 text-base flex items-center gap-1.5">
-                <Table className="h-5 w-5 text-indigo-600" />
-                Purge Checked Samples
-              </h3>
-              <button onClick={() => setShowDeleteSamplesModal(false)} className="text-slate-400 hover:text-slate-600">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <p className="text-xs text-slate-500 leading-relaxed font-semibold">
-              Are you sure you want to delete the <strong className="font-extrabold text-indigo-950">{selectedSampleIds.length}</strong> selected individual sample records?
+        <div className="fixed inset-0 bg-indigo-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 max-sm w-full shadow-2xl flex flex-col gap-4">
+            <h3 className="font-black text-indigo-950 text-base uppercase tracking-widest">Delete Samples</h3>
+            <p className="text-xs text-slate-500 font-medium">
+              Delete the <strong className="font-black text-indigo-950">{selectedSampleIds.length}</strong> selected individual sample records?
             </p>
-            <div className="flex gap-3 mt-2">
+            <div className="flex gap-2 mt-2">
               <button
                 onClick={() => setShowDeleteSamplesModal(false)}
-                className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold transition-all"
+                className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDeleteSamples}
-                className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-black transition-all shadow-sm"
+                className="flex-1 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm"
               >
-                Purge Records
+                Delete Records
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Bulk Upload CSV/TSV/JSON Confirmation Modal */}
       <ConfirmFile
         file={pendingFile}
         handleConfirm={handleAddFileData}

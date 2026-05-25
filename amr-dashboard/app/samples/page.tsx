@@ -83,17 +83,24 @@ function SampleViewerContent() {
     );
   }
 
-  const getDangerZoneColor = (zone?: string) => {
+  const getDangerZoneTextColor = (zone?: string) => {
     switch (zone?.toLowerCase()) {
       case "red":
-        return "text-red-600 bg-red-50 border-red-200";
+        return "text-red-600";
       case "yellow":
-        return "text-yellow-600 bg-yellow-50 border-yellow-200";
+        return "text-yellow-600";
       case "green":
-        return "text-emerald-600 bg-emerald-50 border-emerald-200";
+        return "text-emerald-600";
       default:
-        return "text-gray-600 bg-gray-50 border-gray-200";
+        return "text-slate-600";
     }
+  };
+
+  const getSIRTextColor = (sir?: string) => {
+    if (sir?.startsWith("R")) return "text-red-600";
+    if (sir?.startsWith("I")) return "text-yellow-600";
+    if (sir?.startsWith("S")) return "text-emerald-600";
+    return "text-slate-800";
   };
 
   const getDangerDotColor = (zone?: string) => {
@@ -196,25 +203,25 @@ function SampleViewerContent() {
             </div>
 
             {/* Basic Info */}
-            <div className="flex flex-col gap-2">
-              <span
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1 border rounded-full text-xs font-semibold w-fit ${getDangerZoneColor(sampleData.dangerZone)}`}
-              >
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center gap-3 mt-1">
+                <h2 className="text-xl font-semibold text-slate-900">
+                  {sampleData.sampleName}
+                </h2>
                 <span
-                  className={`h-2 w-2 rounded-full ${getDangerDotColor(sampleData.dangerZone)}`}
-                />
-                <span className="capitalize">
+                  className={`inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider ${getDangerZoneTextColor(sampleData.dangerZone)}`}
+                >
+                  <span
+                    className={`h-2 w-2 rounded-full ${getDangerDotColor(sampleData.dangerZone)}`}
+                  />
                   {sampleData.dangerZone || "unknown"} risk
                 </span>
-              </span>
-              <h2 className="text-xl font-semibold text-slate-900 mt-1">
-                {sampleData.sampleName}
-              </h2>
+              </div>
               <div className="flex items-center gap-1.5 text-xs text-slate-500">
                 <MapPin className="h-3.5 w-3.5" />
                 {sampleData.geoLocName}
               </div>
-              <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-1">
+              <div className="flex items-center gap-1.5 text-xs text-slate-500">
                 <Calendar className="h-3.5 w-3.5" />
                 Sampled:{" "}
                 {new Date(sampleData.collectionDate).toLocaleDateString(
@@ -253,13 +260,7 @@ function SampleViewerContent() {
                     SIR Prediction
                   </span>
                   <span
-                    className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold mt-0.5 ${
-                      sampleData.predictedSir?.startsWith("R")
-                        ? "bg-red-50 text-red-700 border border-red-200"
-                        : sampleData.predictedSir?.startsWith("I")
-                          ? "bg-yellow-50 text-yellow-700 border border-yellow-200"
-                          : "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                    }`}
+                    className={`inline-block font-bold mt-1 ${getSIRTextColor(sampleData.predictedSir)}`}
                   >
                     {sampleData.predictedSir || "—"}
                   </span>
@@ -402,17 +403,44 @@ function SampleViewerContent() {
                   </div>
                 </div>
               </div>
-              <p
-                className={`text-2xl font-semibold mt-1 ${
-                  waterQualityPercent >= 70
-                    ? "text-emerald-700"
-                    : waterQualityPercent >= 50
-                      ? "text-orange-600"
-                      : "text-red-600"
-                }`}
-              >
-                {waterQualityPercent.toFixed(1)}%
-              </p>
+              <div className="flex items-center gap-2 mt-1">
+                <p
+                  className={`text-2xl font-semibold ${
+                    waterQualityPercent >= 70
+                      ? "text-emerald-700"
+                      : waterQualityPercent >= 50
+                        ? "text-orange-600"
+                        : "text-red-600"
+                  }`}
+                >
+                  {waterQualityPercent.toFixed(1)}%
+                </p>
+                <div className="relative group">
+                  <button
+                    type="button"
+                    className="inline-flex items-center justify-center w-5 h-5 rounded-full border border-slate-200 text-slate-500 hover:text-slate-700 hover:border-slate-300 transition-colors"
+                    aria-label="Water Quality Index thresholds"
+                  >
+                    <Info className="w-3 h-3" />
+                  </button>
+                  <div className="pointer-events-none absolute left-0 top-full mt-2 w-48 rounded-lg border border-slate-200 bg-white p-3 text-xs text-slate-600 shadow-lg opacity-0 translate-y-1 transition-all duration-150 group-hover:opacity-100 group-hover:translate-y-0 group-focus-within:opacity-100 group-focus-within:translate-y-0 z-10">
+                    <ul className="space-y-1.5">
+                      <li className="flex justify-between items-center">
+                        <span className="font-semibold text-emerald-700">Good</span>
+                        <span className="text-[10px] font-mono bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">≥ 70</span>
+                      </li>
+                      <li className="flex justify-between items-center">
+                        <span className="font-semibold text-orange-600">Moderate</span>
+                        <span className="text-[10px] font-mono bg-orange-50 px-1.5 py-0.5 rounded border border-orange-100">≥ 50</span>
+                      </li>
+                      <li className="flex justify-between items-center">
+                        <span className="font-semibold text-red-600">Not good</span>
+                        <span className="text-[10px] font-mono bg-red-50 px-1.5 py-0.5 rounded border border-red-100">&lt; 50</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
             </div>
             <WaterQualityFormula
               mode="site"

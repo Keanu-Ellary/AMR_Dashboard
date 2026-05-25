@@ -1,15 +1,11 @@
 "use client";
 
 import React, { useState, useEffect, Suspense } from "react";
-import TimeSeriesDashboard from "@/components/TimeSeriesDashboard";
-import TimeSeriesDashboardOverall from "@/components/TimeSeriesDashboardOverall";
 import { useSearchParams } from "next/navigation";
 import {
   MapPin,
-  TrendingUp,
-  TrendingDown,
   Download,
-  AlertTriangle,
+  BarChart3,
 } from "lucide-react";
 import type { SiteData } from "@/types/site_types";
 import {
@@ -17,10 +13,11 @@ import {
   ExportFormat,
 } from "@/functions/statistics/exportData";
 import { toast } from "react-toastify";
-import WaterQualityFormula from "@/components/WaterQualityFormula";
-import SiteComparisonDashboard from "@/components/SiteComparisonDashboard";
 import Link from "next/link";
-import { parseLocationName, calculateWQI } from "@/utils/siteUtils";
+import { parseLocationName } from "@/utils/siteUtils";
+import GeoLocationList from "@/components/GeoLocationList";
+import SampleList from "@/components/SampleList";
+import { DashboardProvider } from "@/components/DashboardContext";
 
 export const dynamic = "force-dynamic";
 
@@ -163,89 +160,6 @@ function StatisticsContent() {
     setShowExportMenu(false);
   };
 
-  const handleExportSystemWide = (format: ExportFormat) => {
-    const exportData: any[] = [];
-
-    if (averageMetrics) {
-      exportData.push(
-        {
-          section: "System Averages",
-          metric: "Average pH",
-          value: averageMetrics.avgpH.toFixed(1),
-        },
-        {
-          section: "System Averages",
-          metric: "Average Temperature (°C)",
-          value: averageMetrics.avgTemp.toFixed(1),
-        },
-        {
-          section: "System Averages",
-          metric: "Average Dissolved O₂ (mg/L)",
-          value: averageMetrics.avgDiss.toFixed(2),
-        },
-        {
-          section: "System Averages",
-          metric: "Average TDS (mg/L)",
-          value: averageMetrics.avgTDS.toFixed(1),
-        },
-      );
-    }
-
-    if (trendData) {
-      exportData.push(
-        {
-          section: "Water Quality Trend (Last 7 Days)",
-          metric: "Current Score (%)",
-          value: (trendData.currScore * 100).toFixed(1),
-        },
-        {
-          section: "Water Quality Trend (Last 7 Days)",
-          metric: "Previous Score (%)",
-          value: (trendData.prevScore * 100).toFixed(1),
-        },
-        {
-          section: "Water Quality Trend (Last 7 Days)",
-          metric: "Overall Trend",
-          value: trendData.trend,
-        },
-        {
-          section: "Water Quality Trend (Last 7 Days)",
-          metric: "Change (%)",
-          value: ((trendData.currScore - trendData.prevScore) * 100).toFixed(1),
-        },
-      );
-    }
-
-    if (anomalies.length > 0) {
-      anomalies.forEach((anomaly) => {
-        exportData.push({
-          section: "Detected Anomalies",
-          metric: anomaly.sampleName,
-          submetric: anomaly.issues,
-          value: anomaly.changes.toFixed(2),
-        });
-      });
-    }
-
-    if (wqiData.length > 0) {
-      wqiData.forEach((site) => {
-        exportData.push({
-          section: "Water Quality Index (All Sites)",
-          metric: `Site ${site.id}`,
-          value: site.WQI.toFixed(1),
-        });
-      });
-    }
-
-    const res = exportStatistics(exportData, format, "system_statistics");
-    if (res && res.status == 200) {
-      toast.success("Statistics exported successfully");
-    } else {
-      toast.error("Could not export statistics");
-    }
-    setShowExportMenu(false);
-  };
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -328,7 +242,7 @@ function StatisticsContent() {
     return (
       <main className="flex-1 overflow-auto p-6">
         <div className="flex items-center justify-center h-96">
-          <p className="text-gray-500">Loading statistics...</p>
+          <p className="text-gray-500">Loading samples...</p>
         </div>
       </main>
     );
@@ -345,7 +259,6 @@ function StatisticsContent() {
   }
 
   const getDefaultImage = () => {
-    // Use the login background image as default placeholder
     return "/login-bg.jpg";
   };
 
@@ -382,7 +295,7 @@ function StatisticsContent() {
               onClick={() => onExport("json")}
               className="w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-700"
             >
-              {} Export as JSON
+              Export as JSON
             </button>
           </div>
         </div>
@@ -390,7 +303,7 @@ function StatisticsContent() {
     </div>
   );
 
-  // LOCATION-SPECIFIC DASHBOARD
+  // LOCATION-SPECIFIC VIEW
   if (siteId && siteData) {
     const locName = locationName || parseLocationName(siteData.geoLocName);
 
@@ -411,12 +324,10 @@ function StatisticsContent() {
     const zoneLabel = siteData.dangerZone || "—";
     const regionLabel = siteData.geoLocName || "—";
 
-    // Filter isolates belonging to this location name
     const locationIsolates = allSites.filter(
       (s) => parseLocationName(s.geoLocName) === parseLocationName(locName),
     );
 
-    // Compute dynamic averages for this location
     const totalSamples = locationIsolates.length;
     let phSum = 0,
       phCount = 0;
@@ -470,14 +381,22 @@ function StatisticsContent() {
             <div>
               <h1 className="text-xl sm:text-2xl font-semibold text-slate-900 flex items-center gap-2">
                 <MapPin className="h-5 w-5 text-slate-500" />
-                {locName} - Location Dashboard
+                {locName} - Samples & Geolocations
               </h1>
               <p className="text-sm text-slate-500">
-                Historical trends, water diagnostics, and sample inventory for
-                this location
+                Geographic details and sample inventory for this location
               </p>
             </div>
-            <ExportDropdown onExport={handleExportSiteSpecific} />
+            <div className="flex items-center gap-3">
+              <Link
+                href={`/visualizations?site=${siteId}&location=${encodeURIComponent(locName)}`}
+                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors font-medium"
+              >
+                <BarChart3 size={18} />
+                View Visualizations
+              </Link>
+              <ExportDropdown onExport={handleExportSiteSpecific} />
+            </div>
           </div>
 
           {/* Location + Key Metrics */}
@@ -650,110 +569,17 @@ function StatisticsContent() {
             )}
           </div>
 
-          {/* Time Series Graphs */}
-          <TimeSeriesDashboard siteId={siteId} />
-
-          {/* Isolate Inventory for this Location */}
-          <div className="flex flex-col gap-3">
-            <div>
-              <h3 className="text-base font-semibold text-slate-900">
-                Isolates & Samples Inventory
-              </h3>
-              <p className="text-xs text-slate-500">
-                All recorded water sample collections taken at this geographic
-                coordinate
-              </p>
-            </div>
-
-            <div className="overflow-x-auto rounded-xl border border-slate-200">
-              <table className="min-w-full divide-y divide-slate-100">
-                <thead className="bg-slate-50 text-[11px] font-semibold text-slate-500 uppercase">
-                  <tr>
-                    <th className="px-6 py-3.5 text-left">Sample Name</th>
-                    <th className="px-6 py-3.5 text-left">Organism</th>
-                    <th className="px-6 py-3.5 text-left">Collection Date</th>
-                    <th className="px-6 py-3.5 text-center">WQI Score</th>
-                    <th className="px-6 py-3.5 text-center">Risk Zone</th>
-                    <th className="px-6 py-3.5 text-left">AMR Genes</th>
-                    <th className="px-6 py-3.5 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-slate-100 text-sm text-slate-600">
-                  {locationIsolates.map((iso) => {
-                    const wqi = calculateWQI(
-                      iso.dissolvedO2,
-                      iso.ph,
-                      iso.temperature,
-                      iso.tds,
-                    );
-                    return (
-                      <tr
-                        key={iso.id}
-                        className="hover:bg-slate-50 transition-colors"
-                      >
-                        <td className="px-6 py-4 font-semibold text-slate-800">
-                          {iso.sampleName}
-                        </td>
-                        <td className="px-6 py-4 italic">
-                          {iso.orgamism || "—"}
-                        </td>
-                        <td className="px-6 py-4">
-                          {new Date(iso.collectionDate).toLocaleDateString(
-                            "en-ZA",
-                            {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                            },
-                          )}
-                        </td>
-                        <td className="px-6 py-4 text-center font-semibold">
-                          {wqi !== null ? wqi.toFixed(1) : "—"}
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                          <span
-                            className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold capitalize border ${
-                              iso.dangerZone === "red"
-                                ? "bg-red-50 text-red-700 border-red-200"
-                                : iso.dangerZone === "yellow"
-                                  ? "bg-yellow-50 text-yellow-700 border-yellow-200"
-                                  : "bg-emerald-50 text-emerald-700 border-emerald-200"
-                            }`}
-                          >
-                            {iso.dangerZone}
-                          </span>
-                        </td>
-                        <td
-                          className="px-6 py-4 font-mono text-xs truncate max-w-[150px]"
-                          title={iso.amrResGenes}
-                        >
-                          {iso.amrResGenes || "—"}
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <Link
-                            href={`/samples?id=${iso.id}`}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 hover:text-indigo-800 rounded-lg text-xs font-semibold transition-colors"
-                          >
-                            View Details
-                          </Link>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <SampleList sites={locationIsolates} />
         </div>
       </main>
     );
   }
 
-  // SYSTEM-WIDE VIEW (no site selected)
+  // SYSTEM-WIDE VIEW
   return (
     <main className="flex-1 overflow-auto bg-slate-50">
       <div className="mx-auto w-full max-w-6xl px-6 py-6">
-        <SiteComparisonDashboard />
+        <GeoLocationList sites={allSites} />
       </div>
     </main>
   );
@@ -765,12 +591,14 @@ export default function StatisticsPage() {
       fallback={
         <main className="flex-1 overflow-auto p-6">
           <div className="flex items-center justify-center h-96">
-            <p className="text-gray-500">Loading statistics...</p>
+            <p className="text-gray-500">Loading samples...</p>
           </div>
         </main>
       }
     >
-      <StatisticsContent />
+      <DashboardProvider>
+        <StatisticsContent />
+      </DashboardProvider>
     </Suspense>
   );
 }

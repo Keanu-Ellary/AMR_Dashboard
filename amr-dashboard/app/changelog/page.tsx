@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { History, Undo2, ChevronDown, ChevronUp, Clock, User, Filter, ChevronLeft, ChevronRight, AlertCircle, FileText } from "lucide-react";
+import { Undo2, ChevronDown, ChevronUp, Filter, ChevronLeft, ChevronRight, RefreshCw } from "lucide-react";
 import { toast } from "react-toastify";
 
 // ---------------------------------------------------------------------------
@@ -53,25 +53,6 @@ function getToken(): string | null {
   return match ? match[1] : null;
 }
 
-function relativeTime(dateString: string): string {
-  const now = new Date();
-  const date = new Date(dateString);
-  const diffMs = now.getTime() - date.getTime();
-  const diffSec = Math.floor(diffMs / 1000);
-  const diffMin = Math.floor(diffSec / 60);
-  const diffHr = Math.floor(diffMin / 60);
-  const diffDay = Math.floor(diffHr / 24);
-  const diffWeek = Math.floor(diffDay / 7);
-  const diffMonth = Math.floor(diffDay / 30);
-
-  if (diffSec < 60) return "just now";
-  if (diffMin < 60) return `${diffMin} minute${diffMin !== 1 ? "s" : ""} ago`;
-  if (diffHr < 24) return `${diffHr} hour${diffHr !== 1 ? "s" : ""} ago`;
-  if (diffDay < 7) return `${diffDay} day${diffDay !== 1 ? "s" : ""} ago`;
-  if (diffWeek < 5) return `${diffWeek} week${diffWeek !== 1 ? "s" : ""} ago`;
-  return `${diffMonth} month${diffMonth !== 1 ? "s" : ""} ago`;
-}
-
 function formatAbsoluteDate(dateString: string): string {
   const date = new Date(dateString);
   return date.toLocaleString("en-ZA", {
@@ -80,7 +61,6 @@ function formatAbsoluteDate(dateString: string): string {
     day: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-    second: "2-digit",
   });
 }
 
@@ -109,66 +89,46 @@ function getBulkCount(entry: ChangeLogEntry): number {
 // Action styling map
 // ---------------------------------------------------------------------------
 
-const ACTION_STYLES: Record<string, { dot: string; badge: string; badgeText: string; line: string }> = {
+const ACTION_STYLES: Record<string, { badge: string; badgeText: string }> = {
   CREATE: {
-    dot: "bg-green-500",
-    badge: "bg-green-100 text-green-700",
+    badge: "bg-emerald-50 text-emerald-700 border-emerald-100",
     badgeText: "CREATE",
-    line: "border-green-300",
   },
   UPDATE: {
-    dot: "bg-blue-500",
-    badge: "bg-blue-100 text-blue-700",
+    badge: "bg-indigo-50 text-indigo-700 border-indigo-100",
     badgeText: "UPDATE",
-    line: "border-blue-300",
   },
   DELETE: {
-    dot: "bg-red-500",
-    badge: "bg-red-100 text-red-700",
+    badge: "bg-rose-50 text-rose-700 border-rose-100",
     badgeText: "DELETE",
-    line: "border-red-300",
   },
   BULK_CREATE: {
-    dot: "bg-green-600 animate-pulse border border-green-300 shadow-[0_0_8px_rgba(34,197,94,0.6)]",
-    badge: "bg-green-100 text-green-800 font-bold border border-green-200 shadow-sm",
+    badge: "bg-emerald-50 text-emerald-700 border-emerald-100 font-bold",
     badgeText: "BULK CREATE",
-    line: "border-green-400 border-dashed",
   },
   BULK_DELETE: {
-    dot: "bg-red-600 animate-pulse border border-red-300 shadow-[0_0_8px_rgba(239,68,68,0.6)]",
-    badge: "bg-red-100 text-red-800 font-bold border border-red-200 shadow-sm",
+    badge: "bg-rose-50 text-rose-700 border-rose-100 font-bold",
     badgeText: "BULK DELETE",
-    line: "border-red-400 border-dashed",
   },
   UNDO_CREATE: {
-    dot: "bg-purple-500",
-    badge: "bg-purple-100 text-purple-700 font-semibold border border-purple-200",
+    badge: "bg-slate-100 text-slate-700 border-slate-200",
     badgeText: "UNDO CREATE",
-    line: "border-purple-300",
   },
   UNDO_UPDATE: {
-    dot: "bg-purple-500",
-    badge: "bg-purple-100 text-purple-700 font-semibold border border-purple-200",
+    badge: "bg-slate-100 text-slate-700 border-slate-200",
     badgeText: "UNDO UPDATE",
-    line: "border-purple-300",
   },
   UNDO_DELETE: {
-    dot: "bg-purple-500",
-    badge: "bg-purple-100 text-purple-700 font-semibold border border-purple-200",
+    badge: "bg-slate-100 text-slate-700 border-slate-200",
     badgeText: "UNDO DELETE",
-    line: "border-purple-300",
   },
   UNDO_BULK_CREATE: {
-    dot: "bg-purple-600 animate-pulse border border-purple-300 shadow-[0_0_8px_rgba(168,85,247,0.6)]",
-    badge: "bg-purple-100 text-purple-800 font-bold border border-purple-200 shadow-sm",
+    badge: "bg-slate-100 text-slate-700 border-slate-200 font-bold",
     badgeText: "UNDO BULK CREATE",
-    line: "border-purple-400 border-dashed",
   },
   UNDO_BULK_DELETE: {
-    dot: "bg-purple-600 animate-pulse border border-purple-300 shadow-[0_0_8px_rgba(168,85,247,0.6)]",
-    badge: "bg-purple-100 text-purple-800 font-bold border border-purple-200 shadow-sm",
+    badge: "bg-slate-100 text-slate-700 border-slate-200 font-bold",
     badgeText: "UNDO BULK DELETE",
-    line: "border-purple-400 border-dashed",
   },
 };
 
@@ -186,19 +146,19 @@ function DiffView({ entry }: { entry: ChangeLogEntry }) {
     if (list && list.length > 0) {
       return (
         <div className="mt-4">
-          <h4 className="text-sm font-semibold text-gray-700 mb-2">
+          <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">
             {entry.action.includes("DELETE") ? "Deleted Water Samples" : "Created Water Samples"} ({list.length} records)
           </h4>
-          <div className="overflow-x-auto rounded-lg border border-gray-200 max-h-96 shadow-inner">
-            <table className="w-full text-sm">
-              <thead className="sticky top-0 bg-slate-50 shadow-sm z-10">
-                <tr className="bg-slate-50 text-left">
-                  <th className="px-4 py-2.5 font-semibold text-slate-700">Sample Name</th>
-                  <th className="px-4 py-2.5 font-semibold text-slate-700">Organism</th>
-                  <th className="px-4 py-2.5 font-semibold text-slate-700">Location</th>
-                  <th className="px-4 py-2.5 font-semibold text-slate-700">Date Collected</th>
-                  <th className="px-4 py-2.5 font-semibold text-slate-700">AMR Genes</th>
-                  <th className="px-4 py-2.5 font-semibold text-slate-700 text-center">SIR</th>
+          <div className="overflow-x-auto rounded-xl border border-slate-200">
+            <table className="w-full text-[11px]">
+              <thead className="bg-slate-50/70 text-left">
+                <tr>
+                  <th className="px-4 py-2 font-bold text-slate-500 uppercase">Sample Name</th>
+                  <th className="px-4 py-2 font-bold text-slate-500 uppercase">Organism</th>
+                  <th className="px-4 py-2 font-bold text-slate-500 uppercase">Location</th>
+                  <th className="px-4 py-2 font-bold text-slate-500 uppercase">Date Collected</th>
+                  <th className="px-4 py-2 font-bold text-slate-500 uppercase">AMR Genes</th>
+                  <th className="px-4 py-2 font-bold text-slate-500 uppercase text-center">SIR</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -211,22 +171,21 @@ function DiffView({ entry }: { entry: ChangeLogEntry }) {
                   const predictedSir = String(item.predictedSir || "—");
                   const dangerZone = String(item.dangerZone || "green");
 
-                  // Danger zone color helper
                   const badgeColors: Record<string, string> = {
-                    red: "bg-red-50 text-red-700 border-red-200",
-                    yellow: "bg-yellow-50 text-yellow-700 border-yellow-200",
-                    green: "bg-green-50 text-green-700 border-green-200",
+                    red: "bg-slate-50 text-indigo-950 border-slate-200",
+                    yellow: "bg-slate-50 text-indigo-950 border-slate-200",
+                    green: "bg-slate-50 text-indigo-950 border-slate-200",
                   };
 
                   return (
-                    <tr key={idx} className={idx % 2 === 0 ? "bg-white hover:bg-slate-50" : "bg-slate-50/50 hover:bg-slate-50"}>
-                      <td className="px-4 py-2 font-medium text-gray-900">{sampleName}</td>
-                      <td className="px-4 py-2 text-gray-600 italic">{organism}</td>
-                      <td className="px-4 py-2 text-gray-600">{geoLocName}</td>
-                      <td className="px-4 py-2 text-gray-600">{collectionDate}</td>
-                      <td className="px-4 py-2 text-gray-600 font-mono text-xs">{amrResGenes}</td>
+                    <tr key={idx} className="hover:bg-slate-50/50">
+                      <td className="px-4 py-2 font-black text-indigo-950">{sampleName}</td>
+                      <td className="px-4 py-2 text-slate-600 italic">{organism}</td>
+                      <td className="px-4 py-2 text-slate-600">{geoLocName}</td>
+                      <td className="px-4 py-2 text-slate-600">{collectionDate}</td>
+                      <td className="px-4 py-2 text-slate-600 font-mono">{amrResGenes}</td>
                       <td className="px-4 py-2 text-center">
-                        <span className={`inline-block px-2.5 py-0.5 text-xs font-semibold rounded-full border ${badgeColors[dangerZone] || "bg-gray-50 text-gray-600 border-gray-200"}`}>
+                        <span className={`inline-block px-2 py-0.5 rounded border text-[9px] font-black uppercase ${badgeColors[dangerZone] || "bg-slate-50 text-slate-600 border-slate-200"}`}>
                           {predictedSir}
                         </span>
                       </td>
@@ -247,20 +206,20 @@ function DiffView({ entry }: { entry: ChangeLogEntry }) {
   if (entry.action === "CREATE" && next) {
     return (
       <div className="mt-4">
-        <h4 className="text-sm font-semibold text-gray-700 mb-2">New Data</h4>
-        <div className="overflow-x-auto rounded-lg border border-gray-200">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-gray-50 text-left">
-                <th className="px-4 py-2 font-medium text-gray-600 w-1/3">Field</th>
-                <th className="px-4 py-2 font-medium text-gray-600">Value</th>
+        <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">New Data</h4>
+        <div className="overflow-x-auto rounded-xl border border-slate-200">
+          <table className="w-full text-[11px]">
+            <thead className="bg-slate-50/70 text-left">
+              <tr>
+                <th className="px-4 py-2 font-bold text-slate-500 uppercase w-1/3">Field</th>
+                <th className="px-4 py-2 font-bold text-slate-500 uppercase">Value</th>
               </tr>
             </thead>
-            <tbody>
-              {Object.entries(next).map(([key, value], idx) => (
-                <tr key={key} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50/60"}>
-                  <td className="px-4 py-2 font-mono text-xs text-gray-600">{key}</td>
-                  <td className="px-4 py-2 text-gray-800">{String(value ?? "—")}</td>
+            <tbody className="divide-y divide-slate-100">
+              {Object.entries(next).map(([key, value]) => (
+                <tr key={key} className="hover:bg-slate-50/50">
+                  <td className="px-4 py-2 font-mono text-slate-400">{key}</td>
+                  <td className="px-4 py-2 text-indigo-950 font-bold">{String(value ?? "—")}</td>
                 </tr>
               ))}
             </tbody>
@@ -273,20 +232,20 @@ function DiffView({ entry }: { entry: ChangeLogEntry }) {
   if (entry.action === "DELETE" && prev) {
     return (
       <div className="mt-4">
-        <h4 className="text-sm font-semibold text-gray-700 mb-2">Deleted Data</h4>
-        <div className="overflow-x-auto rounded-lg border border-gray-200">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-gray-50 text-left">
-                <th className="px-4 py-2 font-medium text-gray-600 w-1/3">Field</th>
-                <th className="px-4 py-2 font-medium text-gray-600">Value</th>
+        <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Deleted Data</h4>
+        <div className="overflow-x-auto rounded-xl border border-slate-200">
+          <table className="w-full text-[11px]">
+            <thead className="bg-slate-50/70 text-left">
+              <tr>
+                <th className="px-4 py-2 font-bold text-slate-500 uppercase w-1/3">Field</th>
+                <th className="px-4 py-2 font-bold text-slate-500 uppercase">Value</th>
               </tr>
             </thead>
-            <tbody>
-              {Object.entries(prev).map(([key, value], idx) => (
-                <tr key={key} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50/60"}>
-                  <td className="px-4 py-2 font-mono text-xs text-gray-600">{key}</td>
-                  <td className="px-4 py-2 text-gray-800">{String(value ?? "—")}</td>
+            <tbody className="divide-y divide-slate-100">
+              {Object.entries(prev).map(([key, value]) => (
+                <tr key={key} className="hover:bg-slate-50/50">
+                  <td className="px-4 py-2 font-mono text-slate-400">{key}</td>
+                  <td className="px-4 py-2 text-indigo-950 font-bold">{String(value ?? "—")}</td>
                 </tr>
               ))}
             </tbody>
@@ -296,35 +255,32 @@ function DiffView({ entry }: { entry: ChangeLogEntry }) {
     );
   }
 
-  // UPDATE – side-by-side
   if (entry.action === "UPDATE") {
     const allKeys = Array.from(new Set([...Object.keys(prev ?? {}), ...Object.keys(next ?? {})]));
 
     return (
       <div className="mt-4">
-        <h4 className="text-sm font-semibold text-gray-700 mb-2">Changes</h4>
-        <div className="overflow-x-auto rounded-lg border border-gray-200">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-gray-50 text-left">
-                <th className="px-4 py-2 font-medium text-gray-600 w-1/4">Field</th>
-                <th className="px-4 py-2 font-medium text-gray-600 w-[37.5%]">Previous</th>
-                <th className="px-4 py-2 font-medium text-gray-600 w-[37.5%]">New</th>
+        <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Changes</h4>
+        <div className="overflow-x-auto rounded-xl border border-slate-200">
+          <table className="w-full text-[11px]">
+            <thead className="bg-slate-50/70 text-left">
+              <tr>
+                <th className="px-4 py-2 font-bold text-slate-500 uppercase w-1/4">Field</th>
+                <th className="px-4 py-2 font-bold text-slate-500 uppercase w-[37.5%]">Previous</th>
+                <th className="px-4 py-2 font-bold text-slate-500 uppercase w-[37.5%]">New</th>
               </tr>
             </thead>
-            <tbody>
-              {allKeys.map((key, idx) => {
+            <tbody className="divide-y divide-slate-100">
+              {allKeys.map((key) => {
                 const prevVal = prev ? (prev as Record<string, unknown>)[key] : undefined;
                 const nextVal = next ? (next as Record<string, unknown>)[key] : undefined;
                 const changed = JSON.stringify(prevVal) !== JSON.stringify(nextVal);
-                const baseBg = idx % 2 === 0 ? "bg-white" : "bg-gray-50/60";
-                const rowBg = changed ? "bg-yellow-50" : baseBg;
 
                 return (
-                  <tr key={key} className={rowBg}>
-                    <td className="px-4 py-2 font-mono text-xs text-gray-600">{key}</td>
-                    <td className="px-4 py-2 text-gray-800">{String(prevVal ?? "—")}</td>
-                    <td className="px-4 py-2 text-gray-800">{String(nextVal ?? "—")}</td>
+                  <tr key={key} className={changed ? "bg-amber-50/30 hover:bg-amber-50/50" : "hover:bg-slate-50/50"}>
+                    <td className="px-4 py-2 font-mono text-slate-400">{key}</td>
+                    <td className="px-4 py-2 text-slate-600">{String(prevVal ?? "—")}</td>
+                    <td className="px-4 py-2 text-indigo-950 font-bold">{String(nextVal ?? "—")}</td>
                   </tr>
                 );
               })}
@@ -335,7 +291,7 @@ function DiffView({ entry }: { entry: ChangeLogEntry }) {
     );
   }
 
-  return <p className="mt-4 text-sm text-gray-500 italic">No data available for this entry.</p>;
+  return <p className="mt-4 text-[11px] text-slate-400 italic">No data available for this entry.</p>;
 }
 
 // ---------------------------------------------------------------------------
@@ -353,7 +309,6 @@ export default function ChangeLogPage() {
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
   const [undoingIds, setUndoingIds] = useState<Set<number>>(new Set());
 
-  // Fetch changelog data
   const fetchChangelog = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -390,12 +345,10 @@ export default function ChangeLogPage() {
     fetchChangelog();
   }, [fetchChangelog]);
 
-  // Reset to page 1 when filter changes
   useEffect(() => {
     setPage(1);
   }, [actionFilter]);
 
-  // Toggle expand / collapse
   const toggleExpand = (id: number) => {
     setExpandedIds((prev) => {
       const copy = new Set(prev);
@@ -408,7 +361,6 @@ export default function ChangeLogPage() {
     });
   };
 
-  // Undo handler
   const handleUndo = async (entryId: number) => {
     const token = getToken();
     setUndoingIds((prev) => new Set(prev).add(entryId));
@@ -441,7 +393,6 @@ export default function ChangeLogPage() {
     }
   };
 
-  // Pagination helpers
   const totalPages = Math.max(1, Math.ceil(total / limit));
 
   function getPageNumbers(): (number | "...")[] {
@@ -460,241 +411,158 @@ export default function ChangeLogPage() {
     return pages;
   }
 
-  // -------------------------------------------------------------------------
-  // Render
-  // -------------------------------------------------------------------------
-
   return (
-    <div className="flex-1 overflow-auto p-6">
-      {/* Page Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-1">
-          <div className="p-2 bg-indigo-100 rounded-lg">
-            <History className="w-6 h-6 text-indigo-600" />
+    <main className="h-screen flex flex-col bg-slate-50/50 overflow-hidden">
+      <div className="flex-1 overflow-y-auto p-6">
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-black text-indigo-950 tracking-tight">Change Log</h1>
+            <p className="text-sm text-slate-500 font-medium">Track and undo data modifications</p>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Change Log</h1>
-        </div>
-        <p className="text-gray-500 ml-14">Track and undo data modifications</p>
-      </div>
-
-      {/* Filter Bar */}
-      <div className="mb-6 flex items-center gap-4 bg-white rounded-xl shadow-sm border border-gray-200 px-5 py-3">
-        <div className="flex items-center gap-2 text-gray-600">
-          <Filter className="w-4 h-4" />
-          <span className="text-sm font-medium">Action Type</span>
-        </div>
-        <select
-          value={actionFilter}
-          onChange={(e) => setActionFilter(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 bg-white"
-        >
-          <option value="All">All</option>
-          <option value="CREATE">CREATE</option>
-          <option value="UPDATE">UPDATE</option>
-          <option value="DELETE">DELETE</option>
-          <option value="BULK_CREATE">BULK CREATE</option>
-          <option value="BULK_DELETE">BULK DELETE</option>
-        </select>
-
-        <div className="ml-auto text-xs text-gray-400">
-          {total} total change{total !== 1 ? "s" : ""}
-        </div>
-      </div>
-
-      {/* Loading State */}
-      {loading && (
-        <div className="flex flex-col items-center justify-center py-24 text-gray-400">
-          <div className="w-10 h-10 border-4 border-gray-200 border-t-indigo-500 rounded-full animate-spin mb-4" />
-          <p className="text-sm">Loading changelog…</p>
-        </div>
-      )}
-
-      {/* Error State */}
-      {!loading && error && (
-        <div className="flex flex-col items-center justify-center py-24 text-red-500">
-          <AlertCircle className="w-12 h-12 mb-3" />
-          <p className="text-sm font-medium">{error}</p>
           <button
             onClick={fetchChangelog}
-            className="mt-4 px-4 py-2 text-sm bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 transition-colors"
+            disabled={loading}
+            className="p-2 bg-white rounded-xl border border-slate-200 hover:bg-slate-100 transition-all text-slate-600 shadow-sm"
+            title="Refresh Data"
           >
-            Retry
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
           </button>
         </div>
-      )}
 
-      {/* Empty State */}
-      {!loading && !error && entries.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-24 text-gray-400">
-          <div className="p-4 bg-gray-100 rounded-full mb-4">
-            <FileText className="w-10 h-10 text-gray-300" />
+        <div className="mb-6 flex items-center gap-4 bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+          <div className="flex items-center gap-2">
+            <Filter className="h-3.5 w-3.5 text-slate-400" />
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Action Type</span>
+            <select
+              value={actionFilter}
+              onChange={(e) => setActionFilter(e.target.value)}
+              className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1 text-xs font-bold text-indigo-950 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            >
+              <option value="All">All Actions</option>
+              <option value="CREATE">CREATE</option>
+              <option value="UPDATE">UPDATE</option>
+              <option value="DELETE">DELETE</option>
+              <option value="BULK_CREATE">BULK CREATE</option>
+              <option value="BULK_DELETE">BULK DELETE</option>
+            </select>
           </div>
-          <p className="text-lg font-medium text-gray-500 mb-1">No changes recorded yet</p>
-          <p className="text-sm text-gray-400">When data is created, updated, or deleted, changes will appear here.</p>
+          <div className="ml-auto text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+            {total} total records
+          </div>
         </div>
-      )}
 
-      {/* Timeline */}
-      {!loading && !error && entries.length > 0 && (
-        <div className="relative">
-          {entries.map((entry, idx) => {
-            const style = ACTION_STYLES[entry.action] ?? ACTION_STYLES.UPDATE;
-            const isExpanded = expandedIds.has(entry.id);
-            const isUndoing = undoingIds.has(entry.id);
-            const isLast = idx === entries.length - 1;
+        {loading && entries.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-24 text-slate-400">
+            <RefreshCw className="h-8 w-8 animate-spin mb-4 text-indigo-500" />
+            <p className="text-xs font-bold uppercase tracking-widest">Loading Records...</p>
+          </div>
+        ) : entries.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-24 bg-white rounded-3xl border border-slate-200 border-dashed">
+            <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">No changes recorded yet</p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-4">
+            {entries.map((entry) => {
+              const style = ACTION_STYLES[entry.action] ?? ACTION_STYLES.UPDATE;
+              const isExpanded = expandedIds.has(entry.id);
+              const isUndoing = undoingIds.has(entry.id);
 
-            return (
-              <div key={entry.id} className="relative flex items-start">
-                {/* Timeline line + dot */}
-                <div className="flex flex-col items-center mr-0">
-                  {/* Dot */}
-                  <div className={`w-3.5 h-3.5 rounded-full ${style.dot} ring-4 ring-white z-10 shrink-0 mt-5`} />
-                  {/* Vertical line */}
-                  {!isLast && (
-                    <div className={`w-0 flex-1 border-l-2 ${style.line}`} />
-                  )}
-                </div>
-
-                {/* Card */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 ml-6 mb-4 flex-1 transition-shadow hover:shadow-md">
-                  {/* Card header */}
-                  <div className="flex items-center justify-between flex-wrap gap-2">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {/* Action badge */}
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${style.badge}`}>
-                        {style.badgeText}
-                      </span>
-
-                      {/* Entity info */}
-                      <span className="text-sm font-medium text-gray-800">
-                        {entry.action === "BULK_DELETE" || entry.action === "UNDO_BULK_DELETE" ? (
-                          `Bulk Deletion (${getBulkCount(entry)} records)`
-                        ) : entry.action === "BULK_CREATE" || entry.action === "UNDO_BULK_CREATE" ? (
-                          `Bulk Creation (${getBulkCount(entry)} records)`
-                        ) : (
-                          `SiteData #${entry.entityId}`
-                        )}
-                      </span>
-
-                      {/* Undone badge */}
-                      {entry.undone && (
-                        <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-500">
-                          Undone
-                        </span>
-                      )}
+              return (
+                <div key={entry.id} className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm hover:border-slate-300 transition-all">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-black text-indigo-950">
+                            {entry.action.includes("BULK") ? (
+                              `${entry.action.replace("_", " ")} (${getBulkCount(entry)} records)`
+                            ) : (
+                              `SiteData #${entry.entityId}`
+                            )}
+                          </span>
+                          <span className={`px-2 py-0.5 rounded border text-[9px] font-black uppercase ${style.badge}`}>
+                            {style.badgeText}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3 mt-0.5">
+                          <span className="text-[10px] font-bold text-slate-400">{formatAbsoluteDate(entry.createdAt)}</span>
+                          {entry.admin?.name && (
+                            <span className="text-[10px] font-bold text-indigo-600/70 uppercase">By {entry.admin.name}</span>
+                          )}
+                          {entry.undone && (
+                            <span className="text-[10px] font-bold text-rose-500 uppercase tracking-tighter bg-rose-50 px-1 rounded">Undone</span>
+                          )}
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      {/* Undo button */}
+                    <div className="flex items-center gap-1">
                       <button
                         onClick={() => handleUndo(entry.id)}
                         disabled={entry.undone || isUndoing}
-                        className={`flex items-center gap-1 border rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                        className={`p-1.5 rounded-lg transition-all ${
                           entry.undone
-                            ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
-                            : "border-red-300 text-red-600 hover:bg-red-50 cursor-pointer"
+                            ? "text-slate-200 cursor-not-allowed"
+                            : "text-slate-400 hover:text-blue-600 hover:bg-blue-50"
                         }`}
+                        title="Undo Change"
                       >
-                        <Undo2 className="w-3.5 h-3.5" />
-                        {isUndoing ? "Undoing…" : "Undo"}
+                        <Undo2 className={`h-4 w-4 ${isUndoing ? "animate-spin" : ""}`} />
                       </button>
-
-                      {/* Expand / Collapse */}
                       <button
                         onClick={() => toggleExpand(entry.id)}
-                        className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
+                        className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-slate-50 rounded-lg transition-all"
                       >
-                        {isExpanded ? (
-                          <>
-                            <ChevronUp className="w-4 h-4" />
-                            <span className="hidden sm:inline">Collapse</span>
-                          </>
-                        ) : (
-                          <>
-                            <ChevronDown className="w-4 h-4" />
-                            <span className="hidden sm:inline">Details</span>
-                          </>
-                        )}
+                        {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                       </button>
                     </div>
                   </div>
 
-                  {/* Meta info */}
-                  <div className="flex items-center gap-4 mt-2 text-xs text-gray-500 flex-wrap">
-                    <span className="flex items-center gap-1" title={formatAbsoluteDate(entry.createdAt)}>
-                      <Clock className="w-3.5 h-3.5" />
-                      {relativeTime(entry.createdAt)}
-                    </span>
-                    {entry.admin?.name && (
-                      <span className="flex items-center gap-1">
-                        <User className="w-3.5 h-3.5" />
-                        {entry.admin.name}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Expandable diff */}
                   {isExpanded && <DiffView entry={entry} />}
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+              );
+            })}
+          </div>
+        )}
 
-      {/* Pagination */}
-      {!loading && !error && totalPages > 1 && (
-        <div className="flex items-center justify-center gap-1 mt-8">
-          {/* Previous */}
-          <button
-            disabled={page <= 1}
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            className={`flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg border transition-colors ${
-              page <= 1
-                ? "border-gray-200 text-gray-400 cursor-not-allowed"
-                : "border-gray-300 text-gray-700 hover:bg-gray-50 cursor-pointer"
-            }`}
-          >
-            <ChevronLeft className="w-4 h-4" />
-            Previous
-          </button>
-
-          {/* Page numbers */}
-          {getPageNumbers().map((p, idx) =>
-            p === "..." ? (
-              <span key={`ellipsis-${idx}`} className="px-2 py-1 text-sm text-gray-400">
-                …
-              </span>
-            ) : (
-              <button
-                key={p}
-                onClick={() => setPage(p as number)}
-                className={`px-3 py-1.5 text-sm rounded-lg border transition-colors cursor-pointer ${
-                  p === page
-                    ? "bg-indigo-600 text-white border-indigo-600"
-                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                }`}
-              >
-                {p}
-              </button>
-            )
-          )}
-
-          {/* Next */}
-          <button
-            disabled={page >= totalPages}
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            className={`flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg border transition-colors ${
-              page >= totalPages
-                ? "border-gray-200 text-gray-400 cursor-not-allowed"
-                : "border-gray-300 text-gray-700 hover:bg-gray-50 cursor-pointer"
-            }`}
-          >
-            Next
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
-      )}
-    </div>
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-1.5 mt-8 pb-6">
+            <button
+              disabled={page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              className="p-2 bg-white rounded-xl border border-slate-200 hover:bg-slate-50 disabled:opacity-30 disabled:hover:bg-white transition-all shadow-sm"
+            >
+              <ChevronLeft className="h-4 w-4 text-slate-600" />
+            </button>
+            <div className="flex items-center gap-1">
+              {getPageNumbers().map((p, idx) =>
+                p === "..." ? (
+                  <span key={`ellipsis-${idx}`} className="px-2 text-slate-400">...</span>
+                ) : (
+                  <button
+                    key={p}
+                    onClick={() => setPage(p as number)}
+                    className={`min-w-[32px] h-8 rounded-xl text-[10px] font-black transition-all ${
+                      p === page
+                        ? "bg-indigo-600 text-white shadow-md shadow-indigo-200"
+                        : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+                    }`}
+                  >
+                    {p}
+                  </button>
+                )
+              )}
+            </div>
+            <button
+              disabled={page >= totalPages}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              className="p-2 bg-white rounded-xl border border-slate-200 hover:bg-slate-50 disabled:opacity-30 disabled:hover:bg-white transition-all shadow-sm"
+            >
+              <ChevronRight className="h-4 w-4 text-slate-600" />
+            </button>
+          </div>
+        )}
+      </div>
+    </main>
   );
 }
