@@ -8,9 +8,9 @@ interface DashboardContextType {
   filters: MapFilters;
   selectedWqiBrackets: string[];
   setFilters: (filters: MapFilters) => void;
-  toggleContaminationLevel: (level: ContaminationLevel, ctrlKey?: boolean) => void;
-  toggleSite: (site: string, ctrlKey?: boolean) => void;
-  toggleWqiBracket: (bracket: string, ctrlKey?: boolean) => void;
+  toggleContaminationLevel: (level: ContaminationLevel, append?: boolean) => void;
+  toggleSite: (site: string, append?: boolean) => void;
+  toggleWqiBracket: (bracket: string, append?: boolean) => void;
   setDateRange: (start?: string, end?: string) => void;
   clearAllFilters: () => void;
 }
@@ -25,13 +25,13 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     setFiltersState(newFilters);
   };
 
-  const toggleContaminationLevel = (level: ContaminationLevel, ctrlKey?: boolean) => {
+  const toggleContaminationLevel = (level: ContaminationLevel, append: boolean = false) => {
     setFiltersState((prev) => {
       const current = prev.contaminationLevels ?? [];
       const exists = current.includes(level);
       let next: ContaminationLevel[];
 
-      if (ctrlKey) {
+      if (append) {
         next = exists ? current.filter((l) => l !== level) : [...current, level];
       } else {
         next = exists && current.length === 1 ? [] : [level];
@@ -41,13 +41,13 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const toggleSite = (site: string, ctrlKey?: boolean) => {
+  const toggleSite = (site: string, append: boolean = false) => {
     setFiltersState((prev) => {
       const current = prev.sites ?? [];
       const exists = current.includes(site);
       let next: string[];
 
-      if (ctrlKey) {
+      if (append) {
         next = exists ? current.filter((s) => s !== site) : [...current, site];
       } else {
         next = exists && current.length === 1 ? [] : [site];
@@ -57,10 +57,10 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const toggleWqiBracket = (bracket: string, ctrlKey?: boolean) => {
+  const toggleWqiBracket = (bracket: string, append: boolean = false) => {
     setSelectedWqiBrackets((prev) => {
       const exists = prev.includes(bracket);
-      if (ctrlKey) {
+      if (append) {
         return exists ? prev.filter((b) => b !== bracket) : [...prev, bracket];
       } else {
         return exists && prev.length === 1 ? [] : [bracket];

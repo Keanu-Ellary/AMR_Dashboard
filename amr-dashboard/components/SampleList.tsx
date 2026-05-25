@@ -9,10 +9,9 @@ import {
   getWqiBracket,
 } from "@/utils/siteUtils";
 import { getDangerZoneLabel } from "@/types/map_types";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Search,
-  FlaskConical,
   ArrowUpDown,
   FilterX,
   ChevronLeft,
@@ -28,6 +27,7 @@ type SortDir = "asc" | "desc";
 
 export default function SampleList({ sites }: SampleListProps) {
   const { filters, selectedWqiBrackets } = useDashboard();
+  const router = useRouter();
 
   // Search & Pagination States
   const [searchTerm, setSearchTerm] = useState("");
@@ -109,8 +109,9 @@ export default function SampleList({ sites }: SampleListProps) {
           valB = calculateWQI(b.dissolvedO2, b.ph, b.temperature, b.tds) ?? -1;
           break;
         case "risk":
-          valA = a.dangerZone ?? "";
-          valB = b.dangerZone ?? "";
+          const riskMap: Record<string, number> = { green: 1, yellow: 2, red: 3 };
+          valA = riskMap[a.dangerZone?.toLowerCase() || ""] || 0;
+          valB = riskMap[b.dangerZone?.toLowerCase() || ""] || 0;
           break;
       }
 
@@ -138,30 +139,17 @@ export default function SampleList({ sites }: SampleListProps) {
     setCurrentPage(1); // reset to page 1 on sort change
   };
 
-  const getDangerPillStyle = (zone?: string) => {
-    switch (zone?.toLowerCase()) {
-      case "red":
-        return "bg-red-50 text-red-700 border-red-200";
-      case "yellow":
-        return "bg-yellow-50 text-yellow-700 border-yellow-200";
-      case "green":
-        return "bg-emerald-50 text-emerald-700 border-emerald-200";
-      default:
-        return "bg-gray-50 text-gray-700 border-gray-200";
-    }
-  };
-
   return (
-    <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6 flex flex-col gap-4">
-      {/* Table Header and Search */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="h-full flex flex-col gap-4 bg-white rounded-3xl border border-gray-200 shadow-sm p-6 overflow-hidden">
+      {/* Table Header Section */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 flex-shrink-0">
         <div>
           <h3 className="font-extrabold text-indigo-950 text-lg">Individual Sample Records</h3>
-          <p className="text-xs text-gray-500">Comprehensive list of all generated and imported isolates</p>
+          <p className="text-xs text-gray-500">Comprehensive list of all generated and imported isolates (Click row to view statistics)</p>
         </div>
 
-        <div className="relative w-full sm:w-80">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+        <div className="relative w-full sm:w-80 group">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
           <input
             type="text"
             placeholder="Search by organism, sample name, site..."
@@ -170,156 +158,143 @@ export default function SampleList({ sites }: SampleListProps) {
               setSearchTerm(e.target.value);
               setCurrentPage(1);
             }}
-            className="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
           />
         </div>
       </div>
 
-      {/* Main Table */}
-      <div className="overflow-x-auto rounded-2xl border border-slate-100 shadow-inner">
-        <table className="min-w-full divide-y divide-slate-100">
-          <thead className="bg-slate-50/70 select-none">
-            <tr>
-              <th
-                onClick={() => handleSort("sampleName")}
-                className="px-6 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-indigo-600 transition-colors"
-              >
-                <span className="flex items-center gap-1">
-                  Sample Name
-                  <ArrowUpDown className="h-3 w-3" />
-                </span>
-              </th>
-              <th
-                onClick={() => handleSort("organism")}
-                className="px-6 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-indigo-600 transition-colors"
-              >
-                <span className="flex items-center gap-1">
-                  Organism
-                  <ArrowUpDown className="h-3 w-3" />
-                </span>
-              </th>
-              <th
-                onClick={() => handleSort("location")}
-                className="px-6 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-indigo-600 transition-colors"
-              >
-                <span className="flex items-center gap-1">
-                  Site / Location
-                  <ArrowUpDown className="h-3 w-3" />
-                </span>
-              </th>
-              <th
-                onClick={() => handleSort("date")}
-                className="px-6 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-indigo-600 transition-colors"
-              >
-                <span className="flex items-center gap-1">
-                  Collection Date
-                  <ArrowUpDown className="h-3 w-3" />
-                </span>
-              </th>
-              <th
-                onClick={() => handleSort("wqi")}
-                className="px-6 py-3.5 text-center text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-indigo-600 transition-colors"
-              >
-                <span className="flex items-center justify-center gap-1">
-                  WQI Score
-                  <ArrowUpDown className="h-3 w-3" />
-                </span>
-              </th>
-              <th
-                onClick={() => handleSort("risk")}
-                className="px-6 py-3.5 text-center text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-indigo-600 transition-colors"
-              >
-                <span className="flex items-center justify-center gap-1">
-                  Risk Status
-                  <ArrowUpDown className="h-3 w-3" />
-                </span>
-              </th>
-              <th className="px-6 py-3.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">AMR Genes</th>
-              <th className="px-6 py-3.5 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-slate-100">
-            {paginatedSites.map((iso, idx) => {
-              const wqi = calculateWQI(iso.dissolvedO2, iso.ph, iso.temperature, iso.tds);
-              return (
-                <tr key={iso.id ?? `${iso.sampleName}-${idx}`} className="hover:bg-slate-50/50 transition-colors">
-                  {/* Sample Name */}
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-slate-800">
-                    {iso.sampleName}
-                  </td>
-
-                  {/* Organism */}
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 italic font-medium">
-                    {iso.orgamism ?? <span className="text-gray-400 not-italic">—</span>}
-                  </td>
-
-                  {/* Location */}
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 font-medium">
-                    {parseLocationName(iso.geoLocName)}
-                  </td>
-
-                  {/* Collection Date */}
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 font-medium">
-                    {new Date(iso.collectionDate).toLocaleDateString("en-ZA", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </td>
-
-                  {/* WQI */}
-                  <td className="px-6 py-4 whitespace-nowrap text-center">
-                    {wqi !== null ? (
-                      <span className="text-sm font-extrabold text-slate-700">{wqi.toFixed(1)}</span>
-                    ) : (
-                      <span className="text-xs text-gray-400 italic">—</span>
-                    )}
-                  </td>
-
-                  {/* Danger Zone */}
-                  <td className="px-6 py-4 whitespace-nowrap text-center">
-                    <span
-                      className={`inline-block px-2 py-0.5 border rounded-full text-xs font-bold shadow-sm capitalize ${getDangerPillStyle(
-                        iso.dangerZone
-                      )}`}
-                    >
-                      {iso.dangerZone || "unknown"}
-                    </span>
-                  </td>
-
-                  {/* AMR Genes */}
-                  <td className="px-6 py-4 text-sm text-slate-500 font-mono truncate max-w-[150px]" title={iso.amrResGenes}>
-                    {iso.amrResGenes || <span className="text-gray-300">—</span>}
-                  </td>
-
-                  {/* Actions */}
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-xs">
-                    <Link
-                      href={`/samples?id=${iso.id}`}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 hover:text-indigo-800 rounded-xl text-xs font-extrabold transition-all shadow-sm"
-                    >
-                      View Details
-                    </Link>
+      {/* Main Table Content - Scrollable area */}
+      <div className="flex-1 min-h-0 overflow-hidden rounded-2xl border border-slate-100 shadow-inner flex flex-col">
+        <div className="overflow-auto flex-1">
+          <table className="w-full text-left border-collapse min-w-[800px]">
+            <thead className="sticky top-0 z-10 select-none">
+              <tr className="bg-slate-50 border-b border-slate-100">
+                <th
+                  onClick={() => handleSort("sampleName")}
+                  className="px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-indigo-600 transition-colors"
+                >
+                  <span className="flex items-center gap-1">
+                    Sample Name
+                    <ArrowUpDown className="h-3 w-3" />
+                  </span>
+                </th>
+                <th
+                  onClick={() => handleSort("location")}
+                  className="px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-indigo-600 transition-colors"
+                >
+                  <span className="flex items-center gap-1">
+                    Location
+                    <ArrowUpDown className="h-3 w-3" />
+                  </span>
+                </th>
+                <th
+                  onClick={() => handleSort("date")}
+                  className="px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-indigo-600 transition-colors"
+                >
+                  <span className="flex items-center gap-1">
+                    Date
+                    <ArrowUpDown className="h-3 w-3" />
+                  </span>
+                </th>
+                <th
+                  onClick={() => handleSort("wqi")}
+                  className="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-indigo-600 transition-colors"
+                >
+                  <span className="flex items-center justify-center gap-1">
+                    WQI
+                    <ArrowUpDown className="h-3 w-3" />
+                  </span>
+                </th>
+                <th
+                  onClick={() => handleSort("risk")}
+                  className="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-indigo-600 transition-colors"
+                >
+                  <span className="flex items-center justify-center gap-1">
+                    Risk
+                    <ArrowUpDown className="h-3 w-3" />
+                  </span>
+                </th>
+                <th className="px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">AMR Genes</th>
+                <th className="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider"></th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-slate-100">
+              {paginatedSites.map((iso, idx) => {
+                const wqi = calculateWQI(iso.dissolvedO2, iso.ph, iso.temperature, iso.tds);
+                const siteName = parseLocationName(iso.geoLocName);
+                const risk = iso.dangerZone?.toLowerCase();
+                
+                const riskLabel = risk === 'red' ? 'High' : risk === 'yellow' ? 'Moderate' : 'Low';
+                
+                return (
+                  <tr 
+                    key={iso.id ?? `${iso.sampleName}-${idx}`} 
+                    className="hover:bg-slate-50/50 transition-colors cursor-pointer"
+                    onClick={() => router.push(`/statistics?location=${encodeURIComponent(siteName)}&site=${iso.id}`)}
+                  >
+                    <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-slate-800">
+                      {iso.sampleName}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-600 font-medium">
+                      {siteName}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-500 font-medium">
+                      {new Date(iso.collectionDate).toLocaleDateString("en-ZA", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-center">
+                      {wqi !== null ? (
+                        <span
+                          className={`text-sm font-extrabold ${
+                            wqi >= 75
+                              ? "text-slate-800"
+                              : wqi >= 50
+                              ? "text-yellow-600"
+                              : wqi >= 25
+                              ? "text-orange-500"
+                              : "text-red-600"
+                          }`}
+                        >
+                          {wqi.toFixed(1)}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-gray-400 italic">—</span>
+                      )}
+                    </td>
+                    <td className={`px-4 py-3 whitespace-nowrap text-center text-sm font-extrabold capitalize ${
+                      risk === 'red' ? 'text-red-600' :
+                      risk === 'yellow' ? 'text-yellow-600' :
+                      'text-slate-800'
+                    }`}>
+                      {riskLabel}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-slate-500 font-mono truncate max-w-[120px]" title={iso.amrResGenes}>
+                      {iso.amrResGenes || <span className="text-gray-300">—</span>}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-right text-xs">
+                    </td>
+                  </tr>
+                );
+              })}
+              {sortedSites.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="px-6 py-12 text-center text-slate-400 text-sm">
+                    <FilterX className="h-8 w-8 mx-auto mb-2 opacity-50 text-slate-400" />
+                    No sample records match active filters or search terms.
                   </td>
                 </tr>
-              );
-            })}
-
-            {sortedSites.length === 0 && (
-              <tr>
-                <td colSpan={7} className="px-6 py-12 text-center text-slate-400 text-sm">
-                  <FilterX className="h-8 w-8 mx-auto mb-2 opacity-50 text-slate-400" />
-                  No sample records match active filters or search terms.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      {/* Pagination Controls */}
+      {/* Pagination Footer */}
       {sortedSites.length > 0 && (
-        <div className="flex items-center justify-between border-t border-slate-100 pt-4 select-none">
+        <div className="flex items-center justify-between pt-2 border-t border-slate-100 flex-shrink-0 select-none">
           <span className="text-xs text-slate-500 font-medium">
             Showing <strong className="text-slate-800">{(currentPage - 1) * itemsPerPage + 1}</strong> to{" "}
             <strong className="text-slate-800">
