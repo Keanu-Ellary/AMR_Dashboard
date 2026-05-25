@@ -36,29 +36,52 @@ function createMarkerIcon(
 ): L.DivIcon {
 
   let markerColour = RISK_COLOUR[riskLevel] ?? RISK_COLOUR.moderate;
-  const markerInner = isSelected ? 20 : 15;
-  const markerBox  = markerInner + 12;
-  
+  const size = isSelected ? 38 : 32;
+  const radius = isSelected ? 12 : 11;
 
   return L.divIcon({
     html: `
-      <svg xmlns="http://www.w3.org/2000/svg"
-        width="${markerBox}" height="${markerBox}" viewBox="0 0 ${markerBox} ${markerBox}">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="${size}"
+        height="${size + 10}"
+        viewBox="0 0 32 42"
+      >
+
+        <path
+          d="M16 33 L8 22 L24 22 Z"
+          fill="${markerColour.stroke}"
+          stroke="${markerColour.stroke}"
+          stroke-width="2"
+        />
+
         <circle
-          cx="${markerBox / 2}" cy="${markerBox / 2}" r="${markerBox / 2 - 1}"
-          fill="${markerColour.glow}"/>
-        <circle
-          cx="${markerBox / 2}" cy="${markerBox / 2}" r="${markerInner / 2}"
-          fill="${markerColour.fill}" stroke="${markerColour.stroke}" stroke-width="2.5"/>
-        ${isSelected ? `
-          <circle
-            cx="${markerBox / 2}" cy="${markerBox / 2}" r="${markerInner / 4}"
-            fill="white" opacity="0.9"/>
-        ` : ""}
-      </svg>`,
+          cx="16"
+          cy="14"
+          r="${radius}"
+          fill="${markerColour.fill}"
+          stroke="${markerColour.stroke}"
+          stroke-width="2"
+        />
+
+        ${
+          isSelected
+            ? `
+              <circle
+                cx="16"
+                cy="14"
+                r="4"
+                fill="white"
+                opacity="1.0"
+              />
+            `
+            : ""
+        }
+      </svg>
+    `,
     className: "",
-    iconSize: [markerBox, markerBox],
-    iconAnchor: [markerBox / 2, markerBox / 2],
+    iconSize: [size, size + 10],
+    iconAnchor: [size / 2, size + 10],
     popupAnchor: [175, 410],   
   });
 }
