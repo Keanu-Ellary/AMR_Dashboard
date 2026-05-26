@@ -18,13 +18,17 @@ jobs:
         with:
           node-version: 20
           cache: 'npm'
+          cache-dependency-path: './amr-dashboard/package-lock.json'
 
       - name: Install dependencies
         run: npm ci
+        working-directory: ./amr-dashboard
 
       - name: Lint
         run: npm run lint
+        working-directory: ./amr-dashboard
 
       - name: Run Tests
         run: npm run test
+        working-directory: ./amr-dashboard
         
