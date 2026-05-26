@@ -36,7 +36,7 @@ function createMarkerIcon(
 ): L.DivIcon {
 
   let markerColour = RISK_COLOUR[riskLevel] ?? RISK_COLOUR.moderate;
-  const size = isSelected ? 38 : 32;
+  const size = isSelected ? 50 : 42;
   const radius = isSelected ? 12 : 11;
 
   return L.divIcon({
