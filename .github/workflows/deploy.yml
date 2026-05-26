@@ -54,7 +54,7 @@ jobs:
       - name: Copy images
         run: |
           ssh -i ~/.ssh/id_rsa ubuntu@${{secrets.EC2_HOST}} "mkdir -p ~/app"
-          rsync -az -e "ssh -i ~/.ssh/id_rsa" next-app.tar ai-lambda.tar ./amr-dashboard/docker-compose.yml ./amr-dashboard/.env ubuntu@${{secrets.EC2_HOST}}:~/app/
+          rsync -az -e "ssh -i ~/.ssh/id_rsa" next-app.tar ai-lambda.tar ./amr-dashboard/docker-compose.yml ubuntu@${{secrets.EC2_HOST}}:~/app/
 
       - name: SSH into instance, load, and compose
         run: |
