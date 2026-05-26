@@ -14,8 +14,7 @@ RUN npm install
 # Copy application files
 COPY . .
 
-# Generate Prisma client
-RUN npx prisma generate
+RUN DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" npx prisma generate
 
 # Build the application (adjust if you are not using a build step)
 RUN npm run build
@@ -24,4 +23,4 @@ RUN npm run build
 EXPOSE 3000
 
 # Start the application
-CMD ["npm", "start"]
+CMD ["npm", "run", "start"]

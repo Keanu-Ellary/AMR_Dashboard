@@ -1,0 +1,75 @@
+name: Production Deployment
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  production-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: './amr-dashboard/package-lock.json'
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: ./amr-dashboard
+
+      - name: Run tests
+        run: npm run test
+        working-directory: ./amr-dashboard
+
+  build-and-deploy:
+    needs: production-check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Build docker images
+        run: |
+          docker build --build-arg DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" -t next-app:latest ./amr-dashboard
+          docker build -t ai-lambda:latest ./amr-dashboard/ai-lambda
+
+      - name: Save images
+        run: |
+          docker save next-app:latest -o next-app.tar
+          docker save ai-lambda:latest -o ai-lambda.tar
+
+      - name: Setting up SSH to instance
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{secrets.EC2_SSH_KEY}}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{secrets.EC2_HOST}} >> ~/.ssh/known_hosts
+
+      - name: Copy images
+        run: |
+          ssh -i ~/.ssh/id_rsa ubuntu@${{secrets.EC2_HOST}} "mkdir -p ~/app"
+          rsync -az -e "ssh -i ~/.ssh/id_rsa" next-app.tar ai-lambda.tar docker-compose.yml .env ubuntu@${{secrets.EC2_HOST}}:~/app/
+
+      - name: SSH into instance, load, and compose
+        run: |
+          ssh -i ~/.ssh/id_rsa ubuntu@${{secrets.EC2_HOST}} << 'EOF'
+            cd ~/app
+
+            docker load -i next-app.tar
+            rm next-app.tar
+
+            docker load -i ai-lambda.tar
+            rm ai-lambda.tar
+
+            docker compose down || true
+
+            docker compose up -d --remove-orphans
+
+            docker image prune -f
+          EOF
