@@ -1,6 +1,6 @@
 services:
   application:
-    image: ghcr.io/Keanu-Ellary/AMR_Dashboard/next-app:latest
+    image: ghcr.io/keanu-ellary/amr_dashboard/next-app:latest
     restart: unless-stopped
     env_file:
       - .env
@@ -40,7 +40,7 @@ services:
     command: server /data --console-address ":9001"
 
   ai-lambda:
-    image: ghcr.io/Keanu-Ellary/AMR_Dashboard/ai-lambda:latest
+    image: ghcr.io/keanu-ellary/amr_dashboard/ai-lambda:latest
     restart: unless-stopped
     build:
       context: ./ai-lambda
