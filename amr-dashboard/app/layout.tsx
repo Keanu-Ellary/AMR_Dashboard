@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Offline Maps PWA",
+  title: "AMR Dashboard",
   description: "Next.js Offline Maps with Serwist",
   manifest: "/manifest.json",
 };

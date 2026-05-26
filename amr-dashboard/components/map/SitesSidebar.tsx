@@ -22,7 +22,7 @@ interface SiteListProps {
 export default function SiteList({ points, selectedSite, onSelectSite, onRefresh }: SiteListProps) {
 
   const [siteToDelete, setSiteToDelete] = useState<SiteData | null>(null);
-  const getDanger = (zone?: DangerZone)=> zone ? getDangerZoneLabel(zone) : "unknown";
+  const getDanger = (zone?: DangerZone)=> zone ? getDangerZoneLabel(zone) : "low";
 
   const uniqueSites = Object.values(
     points.reduce<Record<string, SiteData>>((uniquePoints, point ) => {
@@ -106,7 +106,7 @@ export default function SiteList({ points, selectedSite, onSelectSite, onRefresh
       <ul style={styles.list}>
         {sortedPoints.map((site) => {
           const isSelected = selectedSite?.id === site.id;
-          let riskColor = RISK_COLOUR.unknown.fill;
+          let riskColor = RISK_COLOUR.low.fill;
           if (site.dangerZone) {
             const dangerZoneLabel = getDangerZoneLabel(site.dangerZone);
             riskColor  = RISK_COLOUR[dangerZoneLabel]?.fill;

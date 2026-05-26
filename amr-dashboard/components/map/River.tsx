@@ -65,17 +65,6 @@ export default function River({ map, activeRisks, selectedYear, points }: RiverP
         orderedPoints.push(remainingPoints.splice(nearestIndex, 1)[0]);
       }
 
-      const pointCoords: [number, number][] = orderedPoints.map(point => [Number(point.latitude), Number(point.longitude)]);
-
-      L.polyline(pointCoords, {
-        color: RISK_COLOUR.unknown.fill,
-        weight: 4,
-        opacity: 1.0,
-        lineCap: "round",
-        lineJoin: "round",
-      }).addTo(river);
-
-      const dangerZoneSegmentLength = 0.01;
       orderedPoints.forEach((point, index) => {
         if (!point.dangerZone) return;
 
@@ -91,42 +80,8 @@ export default function River({ map, activeRisks, selectedYear, points }: RiverP
 
         const dangerSegment: [number, number][] = [];
 
-        if (beforePoint) {
-          const latDistance = Number(beforePoint.latitude) - pointLat;
-          const longDistance = Number(beforePoint.longitude) - pointLong;
-          let quickMath = Math.sqrt(latDistance*latDistance + longDistance*longDistance);
-          if (quickMath === 0) {
-            quickMath = 1;
-          }
-          const newLat = latDistance/quickMath;
-          const newLong = longDistance/quickMath;
-          dangerSegment.push([pointLat+newLat*dangerZoneSegmentLength, pointLong+newLong*dangerZoneSegmentLength]);
-        }
-
         dangerSegment.push([pointLat, pointLong]);
-
-        if (afterPoint) {
-          const latDistance = Number(afterPoint.latitude) - pointLat;
-          const longDistance = Number(afterPoint.longitude) - pointLong;
-          let quickMath = Math.sqrt(latDistance*latDistance + longDistance*longDistance);
-          if (quickMath === 0) {
-            quickMath = 1;
-          }
-          const newLat = latDistance/quickMath;
-          const newLong = longDistance/quickMath;
-          dangerSegment.push([pointLat+newLat*dangerZoneSegmentLength, pointLong+newLong*dangerZoneSegmentLength]);
-        }
-
-        if (dangerSegment.length < 2) return;
-
-        // Main coloured segment
-        L.polyline(dangerSegment, {
-          color: dangerColour.fill,
-          weight: 5,
-          opacity: 0.9,
-          lineCap: "round",
-          lineJoin: "round",
-        }).addTo(river);
+       
       })
   }
 
