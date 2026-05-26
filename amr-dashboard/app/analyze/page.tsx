@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState } from "react";
@@ -180,7 +181,7 @@ export default function AnalyzePage() {
 
           {!result && !isProcessing && (
             <div className="flex-1 flex items-center justify-center text-gray-500 italic text-center px-4">
-              Select an image from your computer and click "Analyze Image" to
+              Select an image from your computer and click &quot;Analyze Image&quot; to
               see the AI predictions here.
             </div>
           )}
