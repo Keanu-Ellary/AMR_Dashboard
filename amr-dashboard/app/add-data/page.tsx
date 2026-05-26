@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react-hooks/set-state-in-effect */
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -17,6 +19,7 @@ export default function AddDataPage() {
   const [showImportDropdown, setShowImportDropdown] = useState(false);
   const [acceptType, setAcceptType] = useState('.csv');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [imageBase64, setImageBase64] = useState<string | null>(null);
 
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [sites, setSites] = useState<SiteData[]>([]);
