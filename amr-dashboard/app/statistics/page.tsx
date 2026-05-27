@@ -1,19 +1,15 @@
 "use client";
 
 import React, { useState, useEffect, Suspense } from "react";
+import TimeSeriesDashboard from "@/components/TimeSeriesDashboard";
 import { useSearchParams } from "next/navigation";
-import {
-  MapPin,
-  Download,
-  BarChart3,
-} from "lucide-react";
+import { MapPin, Download } from "lucide-react";
 import type { SiteData } from "@/types/site_types";
 import {
   exportStatistics,
   ExportFormat,
 } from "@/functions/statistics/exportData";
 import { toast } from "react-toastify";
-import Link from "next/link";
 import { parseLocationName } from "@/utils/siteUtils";
 import GeoLocationList from "@/components/GeoLocationList";
 import SampleList from "@/components/SampleList";
@@ -388,13 +384,6 @@ function StatisticsContent() {
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <Link
-                href={`/visualizations?site=${siteId}&location=${encodeURIComponent(locName)}`}
-                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors font-medium"
-              >
-                <BarChart3 size={18} />
-                View Visualizations
-              </Link>
               <ExportDropdown onExport={handleExportSiteSpecific} />
             </div>
           </div>
@@ -568,6 +557,8 @@ function StatisticsContent() {
               </div>
             )}
           </div>
+
+          <TimeSeriesDashboard siteId={siteId} />
 
           <SampleList sites={locationIsolates} />
         </div>
