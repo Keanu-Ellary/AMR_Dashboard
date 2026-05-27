@@ -27,9 +27,9 @@ const LEGEND_STYLES= {
     margin-bottom: 6px;
   `,
   swatch: (fill: string) => `
-    width: 28px;
-    height: 5px;
-    border-radius: 3px;
+    width: 15px;
+    height: 15px;
+    border-radius: 100%;
     background: ${fill};
     flex-shrink: 0;
   `,
