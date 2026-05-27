@@ -8,25 +8,19 @@ import { useMapContext } from "./MapContext";
 import Site from "./Site";
 import River from "./River";
 import addLegend from "./Legend";
-import addFilterPanel from "./FilterPanel";
 import { type MapProps } from "@/types/map_types";
-import { DEFAULT_FILTERS } from "@/constants/map_constants";
 
 export default function Map({
   points,
   selectedSite,
   onSelectSite,
   filters,
-  onFiltersChange,
-  allPoints,
 }: MapProps) {
   const mapDivRef = useRef<HTMLDivElement>(null); // Leaflet owns this
   const mapRef = useRef<L.Map | null>(null);
   const tileLayerRef = useRef<L.TileLayer | null>(null);
   const { setMap } = useMapContext();
   const [satelliteView, setMapView] = useState<boolean>(false);
-
-  const activeFilters = filters ?? DEFAULT_FILTERS;
 
   const [mapReady, setMapReady] = useState(false);
 
@@ -48,7 +42,6 @@ export default function Map({
 
     map.whenReady(() => {
       addLegend(map);
-      addFilterPanel(map, points, activeFilters, onFiltersChange);
       mapDivRef.current?.focus();
     });
 
@@ -78,22 +71,6 @@ export default function Map({
       maxZoom: 18,
     }).addTo(mapRef.current);
   }, [satelliteView]);
-
-  useEffect(() => {
-    if (!mapRef.current || !mapReady) return;
-
-    const filterPanel = mapRef.current
-      .getContainer()
-      .querySelector(".leaflet-top.leaflet-right");
-    if (filterPanel) {
-      const panelExists = filterPanel.querySelector(".amr-filter");
-      if (panelExists) {
-        panelExists.remove();
-      }
-    }
-
-    addFilterPanel(mapRef.current, allPoints, activeFilters, onFiltersChange);
-  }, [allPoints, mapReady]);
 
   const handleSwitchToSatelliteView = () => {
     setMapView(true);

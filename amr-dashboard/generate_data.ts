@@ -92,6 +92,17 @@ function generateData() {
   const startDate = new Date("2024-01-01T00:00:00Z");
   const weeksToGenerate = 150;
 
+  function shuffleArray<T>(arr: T[]): T[] {
+    const copy = [...arr];
+    for (let i = copy.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+  }
+
+  let totalRowsGenerated = 0;
+
   for (let week = 0; week < weeksToGenerate; week++) {
     const currentDate = new Date(startDate);
     currentDate.setDate(startDate.getDate() + week * 7);
@@ -109,52 +120,55 @@ function generateData() {
       if (isPollutionSpike) tds *= 1.5 + Math.random();
       let ec = tds * 1.55;
 
-      let profileIndex = Math.floor(Math.random() * AMR_PROFILES.length);
-      if (site.baseTds > 500 && Math.random() > 0.3) {
-        profileIndex = Math.floor(Math.random() * 2);
-      }
-      const bio = AMR_PROFILES[profileIndex];
+      // Select 1 to 3 random distinct organisms for this week's water sample
+      const numIsolates = Math.floor(Math.random() * 3) + 1; // 1, 2, or 3 isolates
+      const selectedOrgs = shuffleArray(ORGANISMS).slice(0, numIsolates);
 
-      const organism = ORGANISMS[Math.floor(Math.random() * ORGANISMS.length)];
-      const isolateId = `ISO-2026-${week}-${index}`;
+      selectedOrgs.forEach((organism, orgIdx) => {
+        let profileIndex = Math.floor(Math.random() * AMR_PROFILES.length);
+        if (site.baseTds > 500 && Math.random() > 0.3) {
+          profileIndex = Math.floor(Math.random() * 2);
+        }
+        const bio = AMR_PROFILES[profileIndex];
+        const isolateId = `ISO-2026-${week}-${index}-${orgIdx}`;
 
-      const row = [
-        site.name,
-        "River Water",
-        dateStr,
-        site.geo,
-        site.lat,
-        site.lon,
-        bio.genes, // CHANGED: Removed manual quotes around genes
-        bio.sir,
-        bio.zone,
-        "16S rRNA",
-        temp.toFixed(2),
-        ph.toFixed(2),
-        Math.round(tds),
-        doValue.toFixed(2),
-        Math.round(ec),
-        isolateId,
-        organism,
-        "Automated Script",
-        `Contig_${week}`,
-        (85 + Math.random() * 15).toFixed(1),
-      ];
+        const row = [
+          site.name,
+          "River Water",
+          dateStr,
+          site.geo,
+          site.lat,
+          site.lon,
+          bio.genes,
+          bio.sir,
+          bio.zone,
+          "16S rRNA",
+          temp.toFixed(2),
+          ph.toFixed(2),
+          Math.round(tds),
+          doValue.toFixed(2),
+          Math.round(ec),
+          isolateId,
+          organism,
+          "Automated Script",
+          `Contig_${week}_${orgIdx}`,
+          (85 + Math.random() * 15).toFixed(1),
+        ];
 
-      // CHANGED: Join row with a tab character
-      rows.push(row.join("\t"));
+        rows.push(row.join("\t"));
+        totalRowsGenerated++;
+      });
     });
   }
 
   const fileContent = rows.join("\n");
-  // CHANGED: Output as a .tsv file
   const outputPath = path.join(
     process.cwd(),
-    "apies_river_timeseries_2026.tsv",
+    "apies_river_timeseries_2026.tsv"
   );
   fs.writeFileSync(outputPath, fileContent);
   console.log(
-    `✅ Generated ${weeksToGenerate * SITES.length} rows of strictly-located time-series data!`,
+    `✅ Generated ${totalRowsGenerated} rows of multi-isolate time-series data across ${weeksToGenerate} weeks!`
   );
   console.log(`📂 Saved to: ${outputPath}`);
 }

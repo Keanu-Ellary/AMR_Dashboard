@@ -1,6 +1,7 @@
 import { prisma } from "../../lib/db";
 import { adminNeeded } from "../../lib/middleware/authMiddleware";
 import { minioClient, BUCKET } from "../../lib/minio";
+import { logChange } from "../changelog/changeLog";
 
 function checkSIR(predictedSir: string) {
   if (predictedSir.includes("R")) {
@@ -122,7 +123,7 @@ export async function uploadSiteData(
         ...data,
         dangerZone,
         admin: {
-          connect: { id: authorize.user.userId },
+          connect: { id: authorize.user!.userId },
         },
         images: imageURL
           ? {
@@ -135,6 +136,9 @@ export async function uploadSiteData(
           : undefined,
       },
     });
+
+    // Log the creation in the change log
+    await logChange("SiteData", newSite.id, "CREATE", null, newSite, authorize.user!.userId);
 
     return {
       statusCode: 201,
@@ -261,14 +265,24 @@ export async function uploadMultipleSiteData(token: string, file: File) {
       };
     });
 
-    const created = await prisma.siteData.createMany({
+    const createdSites = await prisma.siteData.createManyAndReturn({
       data: siteDataToInsert,
     });
+
+    // Log grouped bulk ingestion Change Log transaction
+    await logChange(
+      "SiteData",
+      0,
+      "BULK_CREATE",
+      null,
+      createdSites,
+      authorize.user!.userId
+    );
 
     return {
       statusCode: 200,
       body: {
-        message: `${created.count} uploaded successfully.`,
+        message: `${createdSites.length} uploaded successfully.`,
       },
     };
   } catch (error) {

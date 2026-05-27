@@ -105,15 +105,13 @@ export default function TimeSeriesDashboard({
   }
 
   return (
-    <div className="flex flex-col gap-8 w-full p-6 bg-gray-50 rounded-xl">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold text-gray-800">
-          Time-Series & Spatial Analysis
-        </h2>
+    <div className="flex flex-col gap-6 w-full">
+      <div className="flex items-center justify-end gap-2">
+        <span className="text-xs text-slate-500">Date range</span>
         <select
           value={dateRange}
           onChange={(e) => setDateRange(e.target.value)}
-          className="px-4 py-2 border rounded-lg shadow-sm bg-white text-gray-700"
+          className="px-3 py-1.5 border border-slate-200 rounded-lg bg-white text-slate-700 text-sm"
         >
           <option value="7days">Last 7 Days</option>
           <option value="30days">Last 30 Days</option>
@@ -122,7 +120,7 @@ export default function TimeSeriesDashboard({
         </select>
       </div>
 
-      <div className="grid grid-cols-1 gap-8 w-full max-w-[1400px] mx-auto">
+      <div className="grid grid-cols-1 gap-6 w-full">
         {/* 1. AMR Load vs. Water Quality (Dual-Axis Chart) */}
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-800 mb-4">

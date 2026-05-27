@@ -2,16 +2,20 @@
 
 import React, { useState, useEffect, Suspense } from "react";
 import TimeSeriesDashboard from "@/components/TimeSeriesDashboard";
-import TimeSeriesDashboardOverall from "@/components/TimeSeriesDashboardOverall";
 import { useSearchParams } from "next/navigation";
-import { MapPin, TrendingUp, TrendingDown, Download, AlertTriangle } from "lucide-react";
+import { MapPin, Download } from "lucide-react";
 import type { SiteData } from "@/types/site_types";
-import { exportStatistics, ExportFormat } from "@/functions/statistics/exportData";
+import {
+  exportStatistics,
+  ExportFormat,
+} from "@/functions/statistics/exportData";
 import { toast } from "react-toastify";
+import { parseLocationName } from "@/utils/siteUtils";
+import GeoLocationList from "@/components/GeoLocationList";
+import SampleList from "@/components/SampleList";
+import { DashboardProvider } from "@/components/DashboardContext";
 
 export const dynamic = "force-dynamic";
-
-
 
 interface AverageMetrics {
   avgpH: number;
@@ -42,19 +46,22 @@ function StatisticsContent() {
   const searchParams = useSearchParams();
   const siteIdParam = searchParams.get("site");
   const siteId = siteIdParam ? parseInt(siteIdParam) : null;
+  const locationName = searchParams.get("location");
 
   const [siteData, setSiteData] = useState<SiteData | null>(null);
+  const [allSites, setAllSites] = useState<SiteData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [waterQualityPercent, setWaterQualityPercent] = useState(0);
-  const [averageMetrics, setAverageMetrics] = useState<AverageMetrics | null>(null);
+  const [averageMetrics, setAverageMetrics] = useState<AverageMetrics | null>(
+    null,
+  );
   const [trendData, setTrendData] = useState<TrendData | null>(null);
   const [anomalies, setAnomalies] = useState<Anomaly[]>([]);
   const [siteAnomalies, setSiteAnomalies] = useState<Anomaly[]>([]);
   const [wqiData, setWqiData] = useState<WQIData[]>([]);
   const [timeInUnsafe, setTimeInUnsafe] = useState<number | null>(null);
   const [showExportMenu, setShowExportMenu] = useState(false);
-
 
   const handleExportSiteSpecific = (format: ExportFormat) => {
     const exportData = [
@@ -68,7 +75,9 @@ function StatisticsContent() {
       },
       {
         field: "Collection Date",
-        value: siteData?.collectionDate ? new Date(siteData.collectionDate).toLocaleDateString() : "N/A",
+        value: siteData?.collectionDate
+          ? new Date(siteData.collectionDate).toLocaleDateString()
+          : "N/A",
       },
       {
         field: "Latitude",
@@ -124,7 +133,6 @@ function StatisticsContent() {
       },
     ];
 
-
     if (siteAnomalies.length > 0) {
       exportData.push({ field: "---Anomalies---", value: "" });
       siteAnomalies.forEach((anomaly) => {
@@ -135,96 +143,15 @@ function StatisticsContent() {
       });
     }
 
-    const res = exportStatistics(exportData, format, `site_${siteData?.sampleName || "statistics"}`);
+    const res = exportStatistics(
+      exportData,
+      format,
+      `site_${siteData?.sampleName || "statistics"}`,
+    );
     if (res && res.status == 200) {
-      toast.success("Statistics exported successfully")
+      toast.success("Statistics exported successfully");
     } else {
-      toast.error("Could not export statistics")
-    }
-    setShowExportMenu(false);
-  };
-
-  const handleExportSystemWide = (format: ExportFormat) => {
-    const exportData: any[] = [];
-
-
-    if (averageMetrics) {
-      exportData.push({
-        section: "System Averages",
-        metric: "Average pH",
-        value: averageMetrics.avgpH.toFixed(1),
-      },
-        {
-          section: "System Averages",
-          metric: "Average Temperature (°C)",
-          value: averageMetrics.avgTemp.toFixed(1),
-        },
-        {
-          section: "System Averages",
-          metric: "Average Dissolved O₂ (mg/L)",
-          value: averageMetrics.avgDiss.toFixed(2),
-        },
-        {
-          section: "System Averages",
-          metric: "Average TDS (mg/L)",
-          value: averageMetrics.avgTDS.toFixed(1),
-        });
-    }
-
-
-    if (trendData) {
-      exportData.push(
-        {
-          section: "Water Quality Trend (Last 7 Days)",
-          metric: "Current Score (%)",
-          value: (trendData.currScore * 100).toFixed(1),
-        },
-        {
-          section: "Water Quality Trend (Last 7 Days)",
-          metric: "Previous Score (%)",
-          value: (trendData.prevScore * 100).toFixed(1),
-        },
-        {
-          section: "Water Quality Trend (Last 7 Days)",
-          metric: "Overall Trend",
-          value: trendData.trend,
-        },
-        {
-          section: "Water Quality Trend (Last 7 Days)",
-          metric: "Change (%)",
-          value: ((trendData.currScore - trendData.prevScore) * 100).toFixed(1),
-        }
-      );
-    }
-
-
-    if (anomalies.length > 0) {
-      anomalies.forEach((anomaly) => {
-        exportData.push({
-          section: "Detected Anomalies",
-          metric: anomaly.sampleName,
-          submetric: anomaly.issues,
-          value: anomaly.changes.toFixed(2),
-        });
-      });
-    }
-
-
-    if (wqiData.length > 0) {
-      wqiData.forEach((site) => {
-        exportData.push({
-          section: "Water Quality Index (All Sites)",
-          metric: `Site ${site.id}`,
-          value: site.WQI.toFixed(1),
-        });
-      });
-    }
-
-    const res = exportStatistics(exportData, format, "system_statistics");
-    if (res && res.status == 200) {
-      toast.success("Statistics exported successfully")
-    } else {
-      toast.error("Could not export statistics")
+      toast.error("Could not export statistics");
     }
     setShowExportMenu(false);
   };
@@ -232,13 +159,19 @@ function StatisticsContent() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const [averageRes, trendRes, anomalyRes, wqiRes, allSitesRes] =
+          await Promise.all([
+            fetch(`/api/statistics/averageMetrics`),
+            fetch(`/api/statistics/trendOverTime`),
+            fetch(`/api/statistics/anomalyPerSite`),
+            fetch(`/api/statistics/waterQualityIndex`),
+            fetch(`/api/site`),
+          ]);
 
-        const [averageRes, trendRes, anomalyRes, wqiRes] = await Promise.all([
-          fetch(`/api/statistics/averageMetrics`),
-          fetch(`/api/statistics/trendOverTime`),
-          fetch(`/api/statistics/anomalyPerSite`),
-          fetch(`/api/statistics/waterQualityIndex`),
-        ]);
+        if (allSitesRes.ok) {
+          const allSitesData = await allSitesRes.json();
+          setAllSites(allSitesData.sites || []);
+        }
 
         if (averageRes.ok) {
           const avgData = await averageRes.json();
@@ -262,12 +195,13 @@ function StatisticsContent() {
 
         // If site ID provided, fetch site-specific data
         if (siteId) {
-          const [siteRes, waterQualityRes, timeInUnsafeRes, siteAnomalyRes] = await Promise.all([
-            fetch(`/api/site/${siteId}`),
-            fetch(`/api/statistics/waterQuality?siteId=${siteId}`),
-            fetch(`/api/statistics/timeInUnsafe?siteId=${siteId}`),
-            fetch(`/api/statistics/anomalyForSite?siteId=${siteId}`),
-          ]);
+          const [siteRes, waterQualityRes, timeInUnsafeRes, siteAnomalyRes] =
+            await Promise.all([
+              fetch(`/api/site/${siteId}`),
+              fetch(`/api/statistics/waterQuality?siteId=${siteId}`),
+              fetch(`/api/statistics/timeInUnsafe?siteId=${siteId}`),
+              fetch(`/api/statistics/anomalyForSite?siteId=${siteId}`),
+            ]);
 
           if (!siteRes.ok) {
             throw new Error("Failed to fetch site data");
@@ -275,7 +209,7 @@ function StatisticsContent() {
 
           const siteDataRes = await siteRes.json();
           setSiteData(siteDataRes.site);
-          
+
           if (waterQualityRes.ok) {
             const waterRes = await waterQualityRes.json();
             setWaterQualityPercent(waterRes.results?.[0]?.WQI || 0);
@@ -304,7 +238,7 @@ function StatisticsContent() {
     return (
       <main className="flex-1 overflow-auto p-6">
         <div className="flex items-center justify-center h-96">
-          <p className="text-gray-500">Loading statistics...</p>
+          <p className="text-gray-500">Loading samples...</p>
         </div>
       </main>
     );
@@ -321,12 +255,14 @@ function StatisticsContent() {
   }
 
   const getDefaultImage = () => {
-    // Use the login background image as default placeholder
     return "/login-bg.jpg";
   };
 
- 
-  const ExportDropdown = ({ onExport }: { onExport: (format: ExportFormat) => void }) => (
+  const ExportDropdown = ({
+    onExport,
+  }: {
+    onExport: (format: ExportFormat) => void;
+  }) => (
     <div className="relative inline-block">
       <button
         onClick={() => setShowExportMenu(!showExportMenu)}
@@ -355,7 +291,7 @@ function StatisticsContent() {
               onClick={() => onExport("json")}
               className="w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-700"
             >
-              { } Export as JSON
+              Export as JSON
             </button>
           </div>
         </div>
@@ -363,397 +299,278 @@ function StatisticsContent() {
     </div>
   );
 
-  // SITE-SPECIFIC VIEW
+  // LOCATION-SPECIFIC VIEW
   if (siteId && siteData) {
+    const locName = locationName || parseLocationName(siteData.geoLocName);
+
+    const latestBatchImage = siteData.imageBatches?.[0]?.images?.[0]?.url;
+    const latestImage =
+      latestBatchImage || siteData.images?.[siteData.images.length - 1]?.url;
+    const locationImageSrc = latestImage
+      ? `/api/image?url=${encodeURIComponent(latestImage)}`
+      : siteData.imageBase64 || getDefaultImage();
+
+    const coordinatesLabel =
+      siteData.latitude !== null &&
+      siteData.latitude !== undefined &&
+      siteData.longitude !== null &&
+      siteData.longitude !== undefined
+        ? `${siteData.latitude.toFixed(5)}, ${siteData.longitude.toFixed(5)}`
+        : "—";
+    const zoneLabel = siteData.dangerZone || "—";
+    const regionLabel = siteData.geoLocName || "—";
+
+    const locationIsolates = allSites.filter(
+      (s) => parseLocationName(s.geoLocName) === parseLocationName(locName),
+    );
+
+    const totalSamples = locationIsolates.length;
+    let phSum = 0,
+      phCount = 0;
+    let tempSum = 0,
+      tempCount = 0;
+    let doSum = 0,
+      doCount = 0;
+    let tdsSum = 0,
+      tdsCount = 0;
+
+    locationIsolates.forEach((s) => {
+      if (s.ph !== null && s.ph !== undefined) {
+        phSum += s.ph;
+        phCount++;
+      }
+      if (s.temperature !== null && s.temperature !== undefined) {
+        tempSum += s.temperature;
+        tempCount++;
+      }
+      if (s.dissolvedO2 !== null && s.dissolvedO2 !== undefined) {
+        doSum += s.dissolvedO2;
+        doCount++;
+      }
+      if (s.tds !== null && s.tds !== undefined) {
+        tdsSum += s.tds;
+        tdsCount++;
+      }
+    });
+
+    const locAverages = {
+      ph: phCount > 0 ? phSum / phCount : null,
+      temp: tempCount > 0 ? tempSum / tempCount : null,
+      do: doCount > 0 ? doSum / doCount : null,
+      tds: tdsCount > 0 ? tdsSum / tdsCount : null,
+    };
+
+    const phValue = locAverages.ph;
+    const tempValue = locAverages.temp;
+    const doValue = locAverages.do;
+
+    const phOutOfRange = phValue !== null && (phValue < 7 || phValue > 7.5);
+    const tempOutOfRange =
+      tempValue !== null && (tempValue < 15 || tempValue > 25);
+    const doOutOfRange = doValue !== null && doValue < 8;
+
     return (
-      <main className="flex-1 overflow-auto p-6">
-        <div className="mb-6 flex items-start justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">{siteData.sampleName} - Statistics</h1>
-            <p className="text-gray-600 mt-2">Detailed metrics for this sampling site</p>
+      <main className="flex-1 overflow-auto bg-slate-50">
+        <div className="mx-auto w-full max-w-6xl px-6 py-6 flex flex-col gap-6">
+          {/* Top Header */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <h1 className="text-xl sm:text-2xl font-semibold text-slate-900 flex items-center gap-2">
+                <MapPin className="h-5 w-5 text-slate-500" />
+                {locName} - Samples & Geolocations
+              </h1>
+              <p className="text-sm text-slate-500">
+                Geographic details and sample inventory for this location
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <ExportDropdown onExport={handleExportSiteSpecific} />
+            </div>
           </div>
-          <ExportDropdown onExport={handleExportSiteSpecific} />
-        </div>
 
-        {siteData.imageBatches && siteData.imageBatches.length > 0 && siteData.imageBatches[0].algaeDetected && (
-          <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <AlertTriangle className="h-5 w-5 text-red-500" />
+          {/* Location + Key Metrics */}
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-6">
+            {/* Location Card */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+              <div className="flex flex-col gap-4">
+                <div className="rounded-xl overflow-hidden h-44 bg-slate-100 border border-slate-100">
+                  <img
+                    src={locationImageSrc}
+                    alt={locName}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div>
+                  <h3 className="text-base font-semibold text-slate-900">
+                    {locName}
+                  </h3>
+                  <dl className="grid grid-cols-1 gap-3 text-sm mt-3">
+                    <div>
+                      <dt className="text-slate-500">Zone</dt>
+                      <dd className="font-semibold text-slate-800 capitalize">
+                        {zoneLabel}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-slate-500">GPS Coordinates</dt>
+                      <dd className="font-semibold text-slate-800">
+                        {coordinatesLabel}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-slate-500">Region</dt>
+                      <dd className="font-semibold text-slate-800">
+                        {regionLabel}
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
               </div>
-              <div className="ml-3">
-                <p className="text-sm text-red-700 font-bold">
-                  Algae Detected in latest photos!
-                </p>
-                <p className="text-xs text-red-600 mt-1">
-                  The AI scanner detected potential algae presence in the latest photo batch (taken on {new Date(siteData.imageBatches[0].dateTaken).toLocaleDateString()}).
-                </p>
+            </div>
+
+            {/* Dynamic Aggregates Card Row */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-3 flex flex-col gap-1">
+                <span className="text-xs font-medium text-slate-500">
+                  Total Samples Taken
+                </span>
+                <span className="text-2xl font-semibold text-slate-900">
+                  {totalSamples}
+                </span>
+                <span className="text-xs text-slate-500">
+                  Across all historical dates
+                </span>
+              </div>
+              <div
+                className={`bg-white rounded-lg border shadow-sm p-3 flex flex-col gap-1 ${
+                  phOutOfRange ? "border-red-400" : "border-slate-200"
+                }`}
+              >
+                <span className="text-xs font-medium text-slate-500">
+                  Avg pH Level
+                </span>
+                <span className="text-2xl font-semibold text-slate-900">
+                  {phValue !== null ? phValue.toFixed(1) : "—"}
+                </span>
+                <span className="text-xs text-slate-500">
+                  Ideal range: 7.0 - 7.5
+                </span>
+              </div>
+              <div
+                className={`bg-white rounded-lg border shadow-sm p-3 flex flex-col gap-1 ${
+                  tempOutOfRange ? "border-red-400" : "border-slate-200"
+                }`}
+              >
+                <span className="text-xs font-medium text-slate-500">
+                  Avg Temperature
+                </span>
+                <span className="text-2xl font-semibold text-slate-900">
+                  {tempValue !== null ? `${tempValue.toFixed(1)}°C` : "—"}
+                </span>
+                <span className="text-xs text-slate-500">
+                  Ideal range: 15°C - 25°C
+                </span>
+              </div>
+              <div
+                className={`bg-white rounded-lg border shadow-sm p-3 flex flex-col gap-1 ${
+                  doOutOfRange ? "border-red-400" : "border-slate-200"
+                }`}
+              >
+                <span className="text-xs font-medium text-slate-500">
+                  Avg Dissolved O₂
+                </span>
+                <span className="text-2xl font-semibold text-slate-900">
+                  {doValue !== null ? `${doValue.toFixed(2)} mg/L` : "—"}
+                </span>
+                <span className="text-xs text-slate-500">Ideal: ≥ 8 mg/L</span>
               </div>
             </div>
           </div>
-        )}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-[1400px] mx-auto w-full">
-
-          {/* Left Column (Info Card & Water Quality) */}
-          <div className="md:col-span-1 flex flex-col gap-6">
-
-            {/* Location Info Card */}
-            <div className="bg-blue-50 rounded-2xl p-4 shadow-sm border border-blue-100">
-              <div className="rounded-xl overflow-hidden mb-4 h-40 bg-gray-200">
-                {(() => {
-                  const latestBatchImage = siteData.imageBatches?.[0]?.images?.[0]?.url;
-                  const latestImage = latestBatchImage || siteData.images?.[siteData.images.length - 1]?.url;
-                  return latestImage ? (
-                    <img src={`/api/image?url=${encodeURIComponent(latestImage)}`} alt={siteData.sampleName} className="w-full h-full object-cover" />
-                  ) : (
-                    <img src={siteData.imageBase64 || getDefaultImage()} alt={siteData.sampleName} className="w-full h-full object-cover" />
-                  );
-                })()}
-              </div>
-              <h3 className="font-bold text-gray-800 flex items-center gap-2">
-                <MapPin size={16} className="text-gray-700" />
-                {siteData.sampleName}
+          {/* Historical analysis + anomalies */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Historical Parameter Averages */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-col gap-4">
+              <h3 className="text-sm font-semibold text-slate-800">
+                Historical Parameter Analysis
               </h3>
-              <div className="flex gap-2 mt-3">
-                <a
-                  href={`/gallery?site=${siteId}`}
-                  className="flex-1 text-center px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-semibold rounded-lg hover:bg-gray-200 transition-colors border border-gray-200"
-                >
-                  View Gallery
-                </a>
-                <a
-                  href={`/add-images?site=${siteId}`}
-                  className="flex-1 text-center px-3 py-1.5 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Add Images
-                </a>
-              </div>
-              <div className="mt-4 text-sm text-gray-700 space-y-1">
-                <p><strong>GPS Coordinates:</strong> {siteData.latitude.toFixed(5)}° S, {siteData.longitude.toFixed(5)}° E</p>
-                <p><strong>Zone:</strong> {siteData.dangerZone || "Unknown"}</p>
-                <p><strong>Region:</strong> {siteData.geoLocName}</p>
-                <p><strong>Collection Date:</strong> {siteData.collectionDate ? new Date(siteData.collectionDate).toLocaleDateString() : "N/A"}</p>
-                <p className="mt-2 text-gray-800 font-semibold flex items-center gap-2">Water Temperature: {siteData.temperature?.toFixed(1) || "N/A"}°C</p>
-                <p><strong>pH:</strong> {siteData.ph?.toFixed(1) || "N/A"}</p>
-                <p><strong>TDS:</strong> {siteData.tds?.toFixed(1) || "N/A"} mg/L</p>
-                <p><strong>EC:</strong> {siteData.ec?.toFixed(1) || "N/A"} µS/cm</p>
-                <p><strong>DO:</strong> {siteData.dissolvedO2?.toFixed(2) || "N/A"} mg/L</p>
-                <p className="font-bold mt-2">Isolation Source: <span className="font-normal">{siteData.isolationSource}</span></p>
-              </div>
-            </div>
-            
-
-            {/* Water Quality Donut */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 flex flex-col items-center justify-center text-center h-full min-h-[300px]">
-              <div className="relative w-32 h-32 mb-4">
-                <svg viewBox="0 0 36 36" className="w-full h-full">
-                  <path
-                    className="text-gray-100"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                    fill="none"
-                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                  />
-                  <path
-                    className="text-blue-500"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                    strokeDasharray={`${Math.max(0, Math.min(100, waterQualityPercent))}, 100`}
-                    fill="none"
-                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                  />
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className={`text-xl font-bold ${Math.round(waterQualityPercent) < 70 ? "text-red-600" : "text-slate-800"}`}>
-                    {waterQualityPercent >= 0 && waterQualityPercent <= 100 ? waterQualityPercent.toFixed(0) : "N/A"}%
+              <div className="flex flex-col gap-3 text-sm">
+                <div className="flex justify-between border-b border-slate-100 pb-2">
+                  <span className="text-slate-500">Average pH:</span>
+                  <span className="font-semibold text-slate-800">
+                    {locAverages.ph ? locAverages.ph.toFixed(2) : "—"}
+                  </span>
+                </div>
+                <div className="flex justify-between border-b border-slate-100 pb-2">
+                  <span className="text-slate-500">Average Temp:</span>
+                  <span className="font-semibold text-slate-800">
+                    {locAverages.temp
+                      ? `${locAverages.temp.toFixed(2)}°C`
+                      : "—"}
+                  </span>
+                </div>
+                <div className="flex justify-between border-b border-slate-100 pb-2">
+                  <span className="text-slate-500">Average Dissolved O₂:</span>
+                  <span className="font-semibold text-slate-800">
+                    {locAverages.do ? `${locAverages.do.toFixed(2)} mg/L` : "—"}
+                  </span>
+                </div>
+                <div className="flex justify-between pb-1">
+                  <span className="text-slate-500">Average TDS:</span>
+                  <span className="font-semibold text-slate-800">
+                    {locAverages.tds
+                      ? `${locAverages.tds.toFixed(1)} mg/L`
+                      : "—"}
                   </span>
                 </div>
               </div>
-              <h3 className="font-bold text-xl text-gray-900">Water Quality</h3>
-              <div className="flex gap-4 mt-4 text-sm font-medium">
-                <div className="flex items-center gap-2"><span className="w-3 h-3 bg-blue-500 rounded-sm"></span> Clean</div>
-                <div className="flex items-center gap-2"><span className="w-3 h-3 bg-gray-200 rounded-sm"></span> Contaminated</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column */}
-          <div className="md:col-span-2 flex flex-col gap-6">
-
-            {/* Water Quality Metrics */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-              <h3 className="text-indigo-900 font-bold text-lg mb-4">Water Quality Metrics</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <p className="text-sm text-gray-600">pH Level</p>
-                  <p className="text-2xl font-bold text-blue-600">{siteData.ph?.toFixed(1) || "N/A"}</p>
-                </div>
-                <div className="bg-green-50 p-4 rounded-lg">
-                  <p className="text-sm text-gray-600">Temperature</p>
-                  <p className="text-2xl font-bold text-green-600">{siteData.temperature?.toFixed(1) || "N/A"}°C</p>
-                </div>
-                <div className="bg-orange-50 p-4 rounded-lg">
-                  <p className="text-sm text-gray-600">Dissolved O₂</p>
-                  <p className="text-2xl font-bold text-orange-600">{siteData.dissolvedO2?.toFixed(2) || "N/A"} mg/L</p>
-                </div>
-                <div className="bg-purple-50 p-4 rounded-lg">
-                  <p className="text-sm text-gray-600">TDS</p>
-                  <p className="text-2xl font-bold text-purple-600">{siteData.tds?.toFixed(1) || "N/A"} mg/L</p>
-                </div>
-              </div>
             </div>
 
-            {/* Time In Unsafe */}
-            {timeInUnsafe !== null && (
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                <h3 className="text-indigo-900 font-bold text-lg mb-4">Time in Unsafe Zone</h3>
-                <div className="bg-red-50 p-6 rounded-lg border border-red-100 text-center">
-                  <p className="text-sm text-gray-600 mb-2">Total time in unsafe conditions</p>
-                  <p className="text-4xl font-bold text-red-600">{timeInUnsafe.toFixed(1)}</p>
-                  <p className="text-xs text-gray-600 mt-2">Hours</p>
-                </div>
-              </div>
-            )}
-
-            {/* Sample Information */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-              <h3 className="text-indigo-900 font-bold text-lg mb-4">Sample Information</h3>
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Sample Analysis Type:</span>
-                  <span className="font-semibold text-gray-800">{siteData.sampleAnalysisType}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">AMR Resistance Genes:</span>
-                  <span className="font-semibold text-gray-800">{siteData.amrResGenes}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Predicted SIR:</span>
-                  <span className="font-semibold text-gray-800">{siteData.predictedSir}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Detected Anomalies for This Site */}
+            {/* Location-specific anomalies */}
             {siteAnomalies.length > 0 && (
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                <h3 className="text-indigo-900 font-bold text-lg mb-4">Detected Anomalies</h3>
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+                <h3 className="text-sm font-semibold text-slate-800 mb-3">
+                  Detected Anomalies
+                </h3>
                 <div className="space-y-3">
                   {siteAnomalies.map((anomaly, index) => (
-                    <div key={index} className="bg-yellow-50 p-4 rounded-lg border border-yellow-200 flex justify-between items-center">
+                    <div
+                      key={index}
+                      className="bg-white p-3 rounded-xl border border-amber-500 flex justify-between items-center text-xs"
+                    >
                       <div>
-                        <p className="font-semibold text-gray-800">{anomaly.issues}</p>
+                        <p className="font-semibold text-slate-800">
+                          {anomaly.issues}
+                        </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold text-yellow-600">{anomaly.changes.toFixed(2)}</p>
-                        <p className="text-xs text-gray-600">Change magnitude</p>
+                        <p className="font-semibold text-amber-700">
+                          {anomaly.changes.toFixed(2)}
+                        </p>
+                        <p className="text-[10px] text-slate-500">
+                          Change magnitude
+                        </p>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
             )}
-
           </div>
-        </div>
-        <div className="mt-8">
+
           <TimeSeriesDashboard siteId={siteId} />
+
+          <SampleList sites={locationIsolates} />
         </div>
       </main>
     );
   }
 
-  // SYSTEM-WIDE VIEW (no site selected)
+  // SYSTEM-WIDE VIEW
   return (
-    <main className="flex-1 overflow-auto p-6">
-      <div className="mb-8 flex items-start justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">System Statistics</h1>
-          <p className="text-gray-600 mt-2">Overall metrics across all sampling sites</p>
-        </div>
-        <ExportDropdown onExport={handleExportSystemWide} />
-      </div>
-
-      <div className="space-y-6 max-w-[1400px] mx-auto w-full">
-        
-
-        {/* System-wide Averages */}
-        {averageMetrics && (
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-            <div className="mb-6">
-              <h3 className="text-indigo-900 font-bold text-lg">Water Quality Metrics - System Averages</h3>
-              <p className="text-sm text-gray-600 mt-1">Average measurements across all sampling sites in the system</p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="bg-blue-50 p-6 rounded-lg border border-blue-100">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide">pH Level</p>
-                    <p className="text-xs text-gray-600 mt-1">Acidity/Alkalinity</p>
-                  </div>
-                </div>
-                <p className="text-3xl font-bold text-blue-600">{averageMetrics.avgpH.toFixed(1)}</p>
-                <p className="text-xs text-gray-500 mt-2">(Scale: 0-14)</p>
-              </div>
-              <div className="bg-green-50 p-6 rounded-lg border border-green-100">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <p className="text-xs font-semibold text-green-600 uppercase tracking-wide">Temperature</p>
-                    <p className="text-xs text-gray-600 mt-1">Water Warmth</p>
-                  </div>
-                </div>
-                <p className="text-3xl font-bold text-green-600">{averageMetrics.avgTemp.toFixed(1)}<span className="text-lg">°C</span></p>
-                <p className="text-xs text-gray-500 mt-2">Degrees Celsius</p>
-              </div>
-              <div className="bg-orange-50 p-6 rounded-lg border border-orange-100">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <p className="text-xs font-semibold text-orange-600 uppercase tracking-wide">Dissolved O₂</p>
-                    <p className="text-xs text-gray-600 mt-1">Oxygen Content</p>
-                  </div>
-                </div>
-                <p className="text-3xl font-bold text-orange-600">{averageMetrics.avgDiss.toFixed(2)}</p>
-                <p className="text-xs text-gray-500 mt-2">mg/Liter</p>
-              </div>
-              <div className="bg-purple-50 p-6 rounded-lg border border-purple-100">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <p className="text-xs font-semibold text-purple-600 uppercase tracking-wide">TDS</p>
-                    <p className="text-xs text-gray-600 mt-1">Dissolved Solids</p>
-                  </div>
-                </div>
-                <p className="text-3xl font-bold text-purple-600">{averageMetrics.avgTDS.toFixed(1)}</p>
-                <p className="text-xs text-gray-500 mt-2">mg/Liter</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Overall Trend */}
-        {trendData && (
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-            <div className="mb-6">
-              <h3 className="text-indigo-900 font-bold text-lg">Water Quality Trend (Last 7 Days)</h3>
-              <p className="text-sm text-gray-600 mt-1">Comparison of water quality between current period and previous period</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Current Score */}
-              <div className="bg-blue-50 p-6 rounded-lg border border-blue-100">
-                <p className="text-sm font-semibold text-blue-600 uppercase tracking-wide mb-3">Current Score (Last 7 Days)</p>
-                <p className="text-4xl font-bold text-blue-600 mb-2">{(trendData.currScore * 100).toFixed(1)}%</p>
-                <p className="text-xs text-gray-600">Percentage of sites with good quality</p>
-              </div>
-
-              {/* Previous Score */}
-              <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
-                <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-3">Previous Score (7 Days Prior)</p>
-                <p className="text-4xl font-bold text-gray-600 mb-2">{(trendData.prevScore * 100).toFixed(1)}%</p>
-                <p className="text-xs text-gray-600">Percentage of sites with good quality</p>
-              </div>
-
-              {/* Trend Direction */}
-              <div className={`p-6 rounded-lg border-2 flex flex-col items-center justify-center ${trendData.trend === "Improving" ? "bg-green-50 border-green-200" :
-                trendData.trend === "Worsening" ? "bg-red-50 border-red-200" :
-                  "bg-yellow-50 border-yellow-200"
-                }`}>
-                <p className="text-sm font-semibold uppercase tracking-wide mb-4" style={{
-                  color: trendData.trend === "Improving" ? "#059669" :
-                    trendData.trend === "Worsening" ? "#dc2626" :
-                      "#d97706"
-                }}>
-                  Overall Trend
-                </p>
-                <div className="flex items-center gap-3 mb-2">
-                  {trendData.trend === "Improving" && <TrendingUp className="text-green-600" size={48} />}
-                  {trendData.trend === "Worsening" && <TrendingDown className="text-red-600" size={48} />}
-                  {trendData.trend === "Stable" && <div className="text-yellow-600 text-5xl">→</div>}
-                </div>
-                <span className={`font-bold text-2xl ${trendData.trend === "Improving" ? "text-green-600" :
-                  trendData.trend === "Worsening" ? "text-red-600" :
-                    "text-yellow-600"
-                  }`}>
-                  {trendData.trend}
-                </span>
-                <p className="text-xs text-gray-600 mt-3 text-center">
-                  {trendData.trend === "Improving" && "Water quality is getting better"}
-                  {trendData.trend === "Worsening" && "Water quality is getting worse"}
-                  {trendData.trend === "Stable" && "Water quality remains unchanged"}
-                </p>
-              </div>
-            </div>
-
-            {/* Change indicator */}
-            <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-700">
-                <span className="font-semibold">Change: </span>
-                <span className={trendData.currScore >= trendData.prevScore ? "text-green-600" : "text-red-600"}>
-                  {trendData.currScore >= trendData.prevScore ? "+" : ""}{((trendData.currScore - trendData.prevScore) * 100).toFixed(1)}%
-                </span>
-              </p>
-            </div>
-          </div>
-        )}
-
-        <TimeSeriesDashboardOverall />
-        
-        {/* Detected Anomalies */}
-        {anomalies.length > 0 && (
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-            <div className="mb-6">
-              <h3 className="text-indigo-900 font-bold text-lg">Detected Anomalies</h3>
-              <p className="text-sm text-gray-600 mt-1">Sudden changes detected across sites in the system</p>
-            </div>
-            <div className="space-y-3">
-              {anomalies.map((anomaly, index) => (
-                <div key={index} className="bg-yellow-50 p-4 rounded-lg border border-yellow-200 flex justify-between items-center">
-                  <div>
-                    <p className="font-semibold text-gray-800">{anomaly.sampleName}</p>
-                    <p className="text-sm text-gray-600">{anomaly.issues}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold text-yellow-600">{anomaly.changes.toFixed(2)}</p>
-                    <p className="text-xs text-gray-600">Change detected</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Water Quality Index - All Sites */}
-        {wqiData.length > 0 && (
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-            <div className="mb-6">
-              <h3 className="text-indigo-900 font-bold text-lg">Water Quality Index (WQI) - All Sites</h3>
-              <p className="text-sm text-gray-600 mt-1">Calculated quality score for each sampling site (0-100)</p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {wqiData.map((site) => (
-                <div key={site.id} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <p className="font-semibold text-gray-800">Site {site.id}</p>
-                      <p className="text-xs text-gray-600">Water Quality Index</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-3xl font-bold text-indigo-600">{site.WQI.toFixed(1)}</p>
-                      <p className="text-xs text-gray-600">Score</p>
-                    </div>
-                  </div>
-                  {/* Progress bar */}
-                  <div className="mt-3 w-full bg-gray-300 rounded-full h-2">
-                    <div
-                      className="bg-indigo-600 h-2 rounded-full"
-                      style={{ width: `${Math.min(100, (site.WQI / 100) * 100)}%` }}
-                    ></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+    <main className="flex-1 overflow-auto bg-slate-50">
+      <div className="mx-auto w-full max-w-6xl px-6 py-6">
+        <GeoLocationList sites={allSites} />
       </div>
     </main>
   );
@@ -761,14 +578,18 @@ function StatisticsContent() {
 
 export default function StatisticsPage() {
   return (
-    <Suspense fallback={
-      <main className="flex-1 overflow-auto p-6">
-        <div className="flex items-center justify-center h-96">
-          <p className="text-gray-500">Loading statistics...</p>
-        </div>
-      </main>
-    }>
-      <StatisticsContent />
+    <Suspense
+      fallback={
+        <main className="flex-1 overflow-auto p-6">
+          <div className="flex items-center justify-center h-96">
+            <p className="text-gray-500">Loading samples...</p>
+          </div>
+        </main>
+      }
+    >
+      <DashboardProvider>
+        <StatisticsContent />
+      </DashboardProvider>
     </Suspense>
   );
 }

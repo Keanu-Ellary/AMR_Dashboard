@@ -1,6 +1,7 @@
 import {prisma} from "../../lib/db"
 import { adminNeeded } from "../../lib/middleware/authMiddleware";
 import { minioClient, BUCKET } from "../../lib/minio";
+import { logChange } from "../changelog/changeLog";
 
 export async function deleteSite(token: string, siteId: number) {
     const authorize = adminNeeded(token);
@@ -40,6 +41,9 @@ export async function deleteSite(token: string, siteId: number) {
         await prisma.siteData.delete({
             where: {id: siteId},
         });
+
+        // Log the deletion in changelog
+        await logChange("SiteData", siteId, "DELETE", site, null, authorize.user!.userId);
 
         return {
             statusCode: 200,
