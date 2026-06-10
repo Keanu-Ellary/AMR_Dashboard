@@ -1,7 +1,11 @@
+/* eslint-disable react/jsx-no-undef */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/set-state-in-effect */
 'use client';
 
+import ConfirmFile from "@/components/add-data/confirmFile";
+import { MapProvider } from "@/components/map/MapContext";
+import SitesSidebar from "@/components/map/SitesSidebar";
 import { redirect } from "next/navigation";
 
 export default function AddDataRedirectPage() {
@@ -605,4 +609,5 @@ export default function AddDataPage() {
 
       </div>
   );
+}
 }
