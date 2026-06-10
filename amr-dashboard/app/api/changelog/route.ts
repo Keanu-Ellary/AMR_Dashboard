@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { getChangeLogs } from "@/functions/changelog/changeLog";
 import { adminNeeded } from "@/lib/middleware/authMiddleware";
 

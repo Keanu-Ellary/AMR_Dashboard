@@ -111,14 +111,14 @@ function generateData() {
     const seasonalFactor = Math.cos((week / 52) * 2 * Math.PI);
 
     SITES.forEach((site, index) => {
-      let temp = 22 + seasonalFactor * 6 + (Math.random() * 2 - 1);
-      let doValue = 12 - temp * 0.25 + (Math.random() * 1 - 0.5);
-      let ph = site.basePh + (Math.random() * 0.4 - 0.2);
+      const temp = 22 + seasonalFactor * 6 + (Math.random() * 2 - 1);
+      const doValue = 12 - temp * 0.25 + (Math.random() * 1 - 0.5);
+      const ph = site.basePh + (Math.random() * 0.4 - 0.2);
 
       let tds = site.baseTds + Math.random() * site.baseTds * 0.1;
       const isPollutionSpike = Math.random() > 0.9;
       if (isPollutionSpike) tds *= 1.5 + Math.random();
-      let ec = tds * 1.55;
+      const ec = tds * 1.55;
 
       // Select 1 to 3 random distinct organisms for this week's water sample
       const numIsolates = Math.floor(Math.random() * 3) + 1; // 1, 2, or 3 isolates
