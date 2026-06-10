@@ -31,6 +31,9 @@ jest.mock("@/lib/db", () => ({
         siteImage: {
             createMany: jest.fn(),
         },
+        siteImageBatch: {
+            create: jest.fn(),
+        },
     },
 }));
 
