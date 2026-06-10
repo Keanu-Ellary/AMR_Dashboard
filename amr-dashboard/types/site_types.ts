@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { ContaminationLevel, DangerZone } from "@/types/map_types";
 
 export interface SamplingPoint {
