@@ -24,8 +24,8 @@ export interface MapProps {
   allPoints: SiteData[];
 }
 
-export type ContaminationLevel = "low" | "moderate" | "high" | "unknown" | "filtered";
-export type DangerZone = "green" | "yellow" | "red" | "blue" | "grey";
+export type ContaminationLevel = "low" | "moderate" | "high" | "filtered";
+export type DangerZone = "green" | "yellow" | "red" | "grey";
 export type DangerZonesLabels = Record<DangerZone, ContaminationLevel>;
 
 export function getDangerZoneLabel(zone: DangerZone): ContaminationLevel {
@@ -33,7 +33,6 @@ export function getDangerZoneLabel(zone: DangerZone): ContaminationLevel {
     green: "low",
     yellow: "moderate",
     red: "high",
-    blue: "unknown",
     grey: "filtered",
   };
   return labels[zone];

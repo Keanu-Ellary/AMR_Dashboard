@@ -2,6 +2,7 @@ import { prisma } from "../../lib/db"
 import { adminNeeded } from "../../lib/middleware/authMiddleware";
 import { timeInUnsafe } from "../statistics/timeInUnsafe";
 import { determineDangerZone } from "./uploadSiteData";
+import { logChange } from "../changelog/changeLog";
 
 export async function updateSite(
     token: string,
@@ -112,6 +113,9 @@ export async function updateSite(
             where: {id: siteId},
             data: {...fieldsToUpdate, dangerZone},
         });
+
+        // Log the change in the changelog
+        await logChange("SiteData", siteId, "UPDATE", siteExists, siteToUpdate, authorize.user!.userId);
 
         return {
             statusCode: 200,

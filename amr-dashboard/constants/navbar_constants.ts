@@ -1,10 +1,10 @@
 import { NavItem } from "@/types/navbar_types";
-import { LayoutDashboard, PieChartIcon, PlusCircleIcon, FileScan } from "lucide-react";
+import { LayoutDashboard, PieChartIcon, PlusCircleIcon, FileScan, History, Settings } from "lucide-react";
 
 export const NAV_ITEMS: NavItem[] = [
   { href: "/home", icon: LayoutDashboard, label: "Overview" },
-  { href: "/add-data", icon: PlusCircleIcon, label: "Add Data" },
-  { href: "/add-images", icon: PlusCircleIcon, label: "Add Images" },
   { href: "/analyze", icon: FileScan, label: "Analyze Single Image" },
-  { href: "/statistics", icon: PieChartIcon, label: "Statistics" },
+  { href: "/visualizations", icon: PieChartIcon, label: "Visualizations" },
+  { href: "/changelog", icon: History, label: "Change Log" },
+  { href: "/data-management", icon: Settings, label: "Data Management" },
 ];

@@ -1,20 +1,15 @@
+/* eslint-disable react/jsx-no-undef */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/set-state-in-effect */
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { MapProvider } from '@/components/map/MapContext';
-import SitesSidebar from '@/components/map/SitesSidebar';
-import { Map } from "@/components/map/LoadMap";
-import { SiteData } from '@/types/site_types';
-import { toast } from 'react-toastify';
-import { addSiteData, addMutlipleSiteData, getAllSites, updateSite, addSiteImage } from '@/app/services/siteService';
-import ConfirmFile from '@/components/add-data/confirmFile';
-import { DEFAULT_FILTERS } from '@/constants/map_constants';
-import { getDangerZoneLabel, MapFilters } from '@/types/map_types';
-import { parseLocationName } from '@/utils/siteUtils';
-import { Upload } from "lucide-react"
+import ConfirmFile from "@/components/add-data/confirmFile";
+import { MapProvider } from "@/components/map/MapContext";
+import SitesSidebar from "@/components/map/SitesSidebar";
+import { redirect } from "next/navigation";
 
+export default function AddDataRedirectPage() {
+  redirect("/data-management");
 export default function AddDataPage() {
   const [showImportDropdown, setShowImportDropdown] = useState(false);
   const [acceptType, setAcceptType] = useState('.csv');
@@ -614,4 +609,5 @@ export default function AddDataPage() {
 
       </div>
   );
+}
 }
