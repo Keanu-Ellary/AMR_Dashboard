@@ -43,7 +43,6 @@ export default function NavBars() {
           setIsAdminUser(false);
         }
       } catch (err) {
-        console.error("Failed to check admin status:", err);
         setIsLoggedIn(false);
         setIsAdminUser(false);
       }
