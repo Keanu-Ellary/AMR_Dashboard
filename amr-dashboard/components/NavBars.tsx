@@ -9,6 +9,8 @@ import { NavItem } from "@/types/navbar_types";
 import { LogOutIcon, UserIcon } from "lucide-react";
 import { logout, getMe } from "@/app/services/authService";
 
+const HIDDEN_NAVS = ['/login', '/forgot-password'];
+
 function NavLink({ href, icon: Icon, label, isActive }: NavItem & { isActive: boolean }) {
   return (
     <Link
@@ -50,6 +52,7 @@ export default function NavBars() {
     checkAdmin();
   }, []);
 
+  if (HIDDEN_NAVS.includes(pathname)) return null;
   return (
     <div className="w-64 bg-white border-r flex flex-col p-4">
       <div className="flex items-center justify-between mb-8">
