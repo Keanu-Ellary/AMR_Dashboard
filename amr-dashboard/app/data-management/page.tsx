@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import type { SiteData } from "@/types/site_types";
 import { parseLocationName, calculateWQI } from "@/utils/siteUtils";
 import { getMe } from "@/app/services/authService";
@@ -10,11 +9,8 @@ import { getAllSites, addSiteData, addMutlipleSiteData, updateSite } from "@/app
 import {
   Search,
   RefreshCw,
-  X,
   ArrowLeft,
   ChevronDown,
-  Trash2,
-  ArrowUpDown,
   ChevronLeft,
   ChevronRight,
   FilterX,

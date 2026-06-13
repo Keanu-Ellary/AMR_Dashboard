@@ -19,13 +19,13 @@ export default function ForgotPasswordPage() {
     setError("");
     setSuccess("");
 
-    if (!email) {
-      setError("Please enter your email");
+    if (!email || !password || !confirmPassword) {
+      toast.error("Please enter email and password.");
       return;
     }
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      toast.error("Passwords do not match.");
       return;
     }
 
@@ -36,9 +36,8 @@ export default function ForgotPasswordPage() {
       setTimeout(() => {
         router.push("/login");
       }, 2000);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
-      setError(err.message);
+      toast.error(err.message);
     }
   };
 

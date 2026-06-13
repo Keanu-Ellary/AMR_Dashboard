@@ -87,6 +87,69 @@ export default function OverviewCharts({
 
   return (
     <div className="flex flex-col gap-6">
+      {/* Danger Zone Donut Chart */}
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+        <div className="flex justify-between items-start">
+          <div>
+            <h3 className="text-indigo-900 font-bold text-lg">
+              AMR Levels Distribution
+            </h3>
+            <p className="text-[11px] text-gray-600 mt-1 mb-4">
+              Sites by AMR contamination level
+            </p>
+          </div>
+          {isAnyZoneSelected && (
+            <span className="text-[10px] font-semibold text-red-600 bg-red-50 px-2 py-1 rounded">
+              Filtered ({activeContaminationLevels.length})
+            </span>
+          )}
+        </div>
+        <ResponsiveContainer width="100%" height={260}>
+          <PieChart>
+            <Pie
+              data={zoneData}
+              cx="50%"
+              cy="45%"
+              innerRadius={50}
+              outerRadius={80}
+              dataKey="value"
+              label={renderPieLabel}
+              labelLine={false}
+              strokeWidth={2}
+              stroke="#fff"
+            >
+              {zoneData.map((entry, index) => {
+                const isSelected = activeContaminationLevels.includes(entry.level);
+                const opacity = !isAnyZoneSelected || isSelected ? 1.0 : 0.35;
+                return (
+                  <Cell
+                    key={`pie-cell-${index}`}
+                    fill={entry.color}
+                    style={{ cursor: "pointer" }}
+                    fillOpacity={opacity}
+                    onClick={(e) => toggleContaminationLevel(entry.level, e.ctrlKey || e.metaKey)}
+                  />
+                );
+              })}
+            </Pie>
+            <Tooltip
+              contentStyle={{
+                borderRadius: "0.75rem",
+                border: "1px solid #e5e7eb",
+                boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)",
+                fontSize: 12,
+              }}
+            />
+            <Legend
+              verticalAlign="bottom"
+              iconType="circle"
+              iconSize={8}
+              wrapperStyle={{ fontSize: 11, paddingTop: 8 }}
+            />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+
       {/* WQI Distribution Pie Chart */}
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
         <div className="flex justify-between items-start">
@@ -150,68 +213,7 @@ export default function OverviewCharts({
         </ResponsiveContainer>
       </div>
 
-      {/* Danger Zone Donut Chart */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-        <div className="flex justify-between items-start">
-          <div>
-            <h3 className="text-indigo-900 font-bold text-lg">
-              Risk Zone Distribution
-            </h3>
-            <p className="text-[11px] text-gray-600 mt-1 mb-4">
-              Sites by contamination risk level
-            </p>
-          </div>
-          {isAnyZoneSelected && (
-            <span className="text-[10px] font-semibold text-red-600 bg-red-50 px-2 py-1 rounded">
-              Filtered ({activeContaminationLevels.length})
-            </span>
-          )}
-        </div>
-        <ResponsiveContainer width="100%" height={260}>
-          <PieChart>
-            <Pie
-              data={zoneData}
-              cx="50%"
-              cy="45%"
-              innerRadius={50}
-              outerRadius={80}
-              dataKey="value"
-              label={renderPieLabel}
-              labelLine={false}
-              strokeWidth={2}
-              stroke="#fff"
-            >
-              {zoneData.map((entry, index) => {
-                const isSelected = activeContaminationLevels.includes(entry.level);
-                const opacity = !isAnyZoneSelected || isSelected ? 1.0 : 0.35;
-                return (
-                  <Cell
-                    key={`pie-cell-${index}`}
-                    fill={entry.color}
-                    style={{ cursor: "pointer" }}
-                    fillOpacity={opacity}
-                    onClick={(e) => toggleContaminationLevel(entry.level, e.ctrlKey || e.metaKey)}
-                  />
-                );
-              })}
-            </Pie>
-            <Tooltip
-              contentStyle={{
-                borderRadius: "0.75rem",
-                border: "1px solid #e5e7eb",
-                boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)",
-                fontSize: 12,
-              }}
-            />
-            <Legend
-              verticalAlign="bottom"
-              iconType="circle"
-              iconSize={8}
-              wrapperStyle={{ fontSize: 11, paddingTop: 8 }}
-            />
-          </PieChart>
-        </ResponsiveContainer>
-      </div>
+      
     </div>
   );
 }
