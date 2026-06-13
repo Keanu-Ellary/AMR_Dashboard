@@ -52,7 +52,7 @@ function DashboardHome() {
 
   const hasActiveFilters = useMemo(() => {
     return (
-      (filters.contaminationLevels && filters.contaminationLevels.length > 0) ||
+      (filters.contaminationLevels && filters.contaminationLevels.length > 0 && filters.contaminationLevels.length < 4) ||
       (filters.sites && filters.sites.length > 0) ||
       selectedWqiBrackets.length > 0 ||
       !!filters.startDate ||
@@ -106,7 +106,7 @@ function DashboardHome() {
       return uniqueSitesFiltered;
     }
     return uniqueSitesFiltered.filter((s) => 
-      filters.contaminationLevels.includes(getDangerZoneLabel(s.dangerZone as any))
+      filters.contaminationLevels?.includes(getDangerZoneLabel(s.dangerZone as any))
     );
   }, [uniqueSitesFiltered, filters.contaminationLevels]);
 
