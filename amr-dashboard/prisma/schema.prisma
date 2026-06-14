@@ -33,10 +33,10 @@ model SiteData {
   // mandatory
   sampleName         String
   isolationSource    String
-  collectionDate     DateTime
+  collectionDate     DateTime?
   geoLocName         String
-  latitude           Float
-  longitude          Float
+  latitude           Float?
+  longitude          Float?
   amrResGenes        String
   predictedSir       String
   sampleAnalysisType String
