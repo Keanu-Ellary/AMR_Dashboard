@@ -32,7 +32,7 @@ interface ChangeLogEntry {
   previousData: string | null;
   newData: string | null;
   undone: boolean;
-  createdAt: string;
+  changedAt: string;
   admin?: AdminInfo;
 }
 
@@ -485,7 +485,7 @@ export default function ChangeLogPage() {
                           </span>
                         </div>
                         <div className="flex items-center gap-3 mt-0.5">
-                          <span className="text-[10px] font-bold text-slate-400">{formatAbsoluteDate(entry.createdAt)}</span>
+                          <span className="text-[10px] font-bold text-slate-400">{formatAbsoluteDate(entry.changedAt)}</span>
                           {entry.admin?.name && (
                             <span className="text-[10px] font-bold text-indigo-600/70 uppercase">By {entry.admin.name}</span>
                           )}
