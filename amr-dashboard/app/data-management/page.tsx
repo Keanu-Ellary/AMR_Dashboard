@@ -1065,7 +1065,8 @@ export default function DataManagementPage() {
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-slate-800">{loc.name}</td>
                             <td className="px-4 py-3 whitespace-nowrap text-xs text-slate-500 font-mono font-medium">
-                              {loc.latitude.toFixed(5)}, {loc.longitude.toFixed(5)}
+                              {loc.latitude !== null ? loc.latitude.toFixed(5) : "Missing"}
+                              {loc.longitude !== null ? ", " +loc.longitude.toFixed(5) : ""}
                             </td>
                             <td className="px-3 py-3 whitespace-nowrap text-center text-sm font-medium text-slate-600">{loc.totalSamples}</td>
                             <td className="px-4 py-3 whitespace-nowrap text-right text-sm text-slate-500 font-medium">

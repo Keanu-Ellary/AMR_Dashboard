@@ -49,12 +49,12 @@ export async function uploadSiteData(
     // required:
     sampleName: string;
     isolationSource: string;
-    collectionDate: Date;
-    geoLocName: string;
-    latitude: number;
-    longitude: number;
-    amrResGenes: string;
-    predictedSir: string;
+    collectionDate: Date | null;
+    geoLocName: string | null;
+    latitude: number | null;
+    longitude: number | null;
+    amrResGenes: string | null;
+    predictedSir: string | null;
     sampleAnalysisType: string;
 
     // optional
@@ -103,6 +103,23 @@ export async function uploadSiteData(
       throw new Error("Invalid pH level");
     }
 
+    if (data.isolationSource == null || data.isolationSource == undefined || data.isolationSource == "") {
+      data.isolationSource = "Missing";
+    }
+    if (data.amrResGenes == null || data.amrResGenes == undefined || data.amrResGenes=="") {
+      data.amrResGenes = "Not collected";
+    }
+    if (data.predictedSir == null || data.predictedSir == undefined || data.predictedSir == "") {
+      data.predictedSir = "Not collected";
+    }
+    if (data.geoLocName == null || data.geoLocName == undefined || data.geoLocName=="") {
+      data.geoLocName = "Missing";
+    }
+    const geoLocName = data.geoLocName ?? "Missing";
+    const isolationSource = data.isolationSource ?? "Missing";
+    const amrResGenes = data.amrResGenes ?? "Not collected";
+    const predictedSir = data.predictedSir ?? "Not collected";
+
     const dangerZone = determineDangerZone(data.predictedSir, data.amrResGenes);
 
     let imageURL: string | null = null;
@@ -121,6 +138,10 @@ export async function uploadSiteData(
     const newSite = await prisma.siteData.create({
       data: {
         ...data,
+        geoLocName,
+        isolationSource,
+        amrResGenes,
+        predictedSir,
         dangerZone,
         admin: {
           connect: { id: authorize.user!.userId },
@@ -176,16 +197,40 @@ export async function uploadMultipleSiteData(token: string, file: File) {
 
   try {
     if (fileExtension === ".csv") {
-      const [headerLine, ...dataLines] = fileText.trim().split("\n");
-      const headers = headerLine.split(",").map((h) => h.trim());
+      const cleanedText = fileText.replace(/^\uFEFF/, "");
+      const lines = cleanedText
+        .split("\n")
+        .map((l) => {
+          if (l.endsWith("\r")) l = l.slice(0, -1);
+            return l.trim();
+        })
+        .map((l) => {
+          if (l.startsWith("\uFEFF")) l = l.slice(1);
+            return l;
+        })
+        .filter((l) => {
+          if (l === "") return false;
+          if (l.startsWith("#")) return false;
+          if (l.split(";").join("").trim() === "") return false;
+          return true;
+        });
+
+      if (lines.length < 2) {
+        return { statusCode: 400, body: { error: "File is empty." } };
+      }
+
+      const [headerLine, ...dataLines] = lines;
+      const delimiterUsed = headerLine.includes(';') ? ';' : ',';
+      const headers = headerLine.split(delimiterUsed).map((h) => h.trim());
       rows = dataLines
         .filter((line) => line.trim() !== "")
         .map((line) => {
-          const values = line.split(",").map((v) => v.trim());
+          const values = line.split(delimiterUsed).map((v) => v.trim());
           return Object.fromEntries(
             headers.map((h, i) => [h, values[i] ?? ""]),
           );
         });
+
     } else if (fileExtension === ".tsv") {
       const [headerLine, ...dataLines] = fileText.trim().split("\n");
       const headers = headerLine.split("\t").map((h) => h.trim());
@@ -221,47 +266,61 @@ export async function uploadMultipleSiteData(token: string, file: File) {
     const siteDataToInsert = rows.map((row) => {
       const dangerZone =
         row.dangerZone ||
-        determineDangerZone(row.predictedSir || "", row.amrResGenes || "");
+        determineDangerZone(row['Predicted_SIR profile'] || "", row['AMR_Resistance_genes'] || "");
+
+      const parseDate = (val: string) => {
+        if (!val) return null;
+        const parts = val.split("/");
+        if (parts.length === 3) {
+          const [d, m, y] = parts;
+          return new Date(`${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`);
+        }
+        return new Date(val);
+      };
+
+      const parseNullableFields = (val: string) => {
+        const tempVal = parseFloat((val ?? "").replace(",","."));
+        return isNaN(tempVal) ? null : tempVal;
+      }
 
       return {
-        sampleName: row.sampleName,
-        isolationSource: row.isolationSource,
-        collectionDate: new Date(row.collectionDate),
-        geoLocName: row.geoLocName,
-        latitude: parseFloat(row.latitude),
-        longitude: parseFloat(row.longitude),
-        amrResGenes: row.amrResGenes,
-        predictedSir: row.predictedSir,
-        sampleAnalysisType: row.sampleAnalysisType,
+        sampleName: row['*Sample_name'] || row['Sample_name'] || "Missing",
+        isolationSource: row['Isolation source'] || "Missing",
+        collectionDate: parseDate(row['Collection date']),
+        geoLocName: row['*geo_loc_name'] || row['geo_loc_name'] || "Missing",
+        latitude: parseNullableFields(row['latitude']) || null,
+        longitude: parseNullableFields(row['longitude']) || null,
+        amrResGenes: row['AMR_Resistance_genes'] || "Not collected",
+        predictedSir: row['Predicted_SIR profile'] || "Not collected",
+        sampleAnalysisType: row['*Sample_Analysis_Type'] || row['Sample_Analysis_Type'] || "Not collected",
         dangerZone: dangerZone as string,
         adminId: authorize.user!.userId,
 
-        ...(row.isolateId && { isolateId: row.isolateId }),
-        ...(row.orgamism && { organism: row.orgamism }),
-        ...(row.organism && { organism: row.organism }),
-        ...(row.sampleId && { sampleId: row.sampleId }),
-        ...(row.collectedBy && { collectedBy: row.collectedBy }),
-        ...(row.sequenceName && { sequenceName: row.sequenceName }),
-        ...(row.elementType && { elementType: row.elementType }),
-        ...(row.class && { class: row.class }),
-        ...(row.subclass && { subclass: row.subclass }),
-        ...(row.accession && { accession: row.accession }),
-        ...(row.virtulenceGenes && { virtulenceGenes: row.virtulenceGenes }),
-        ...(row.plasmidReplicons && { plasmidReplicons: row.plasmidReplicons }),
-        ...(row.targetLength && { targetLength: parseFloat(row.targetLength) }),
+        ...(row.isolateId && { isolateId: row['Isolate ID'] }),
+        ...(row.orgamism && { organism: row['Organism'] }),
+        ...(row.sampleId && { sampleId: row['Sample ID'] }),
+        ...(row.collectedBy && { collectedBy: row['Collected by'] }),
+        ...(row.sequenceName && { sequenceName: row['Sequence Name']}),
+        ...(row.elementType && { elementType: row['Element type']}),
+        ...(row.class && { class: row['Class'] }),
+        ...(row.subclass && { subclass: row['Subclass'] }),
+        ...(row.accession && { accession: row['Accession of closest sequence'] }),
+        ...(row.virtulenceGenes && { virtulenceGenes: row['Virulence_genes'] }),
+        ...(row.plasmidReplicons && { plasmidReplicons: row['Plasmid_replicons'] }),
+        ...(row.targetLength && { targetLength: parseFloat(row['Target length']) }),
         ...(row.referenceLength && {
-          referenceLength: parseFloat(row.referenceLength),
+          referenceLength: parseFloat(row['Reference sequence length']),
         }),
         ...(row.alignmentLength && {
-          alignmentLength: parseFloat(row.alignmentLength),
+          alignmentLength: parseFloat(row['Alignment length']),
         }),
-        ...(row.coverage && { coverage: parseFloat(row.coverage) }),
-        ...(row.identity && { identity: parseFloat(row.identity) }),
-        ...(row.temperature && { temperature: parseFloat(row.temperature) }),
-        ...(row.ph && { ph: parseFloat(row.ph) }),
-        ...(row.tds && { tds: parseFloat(row.tds) }),
+        ...(row.coverage && { coverage: parseFloat(row['% Coverage of reference sequence']) }),
+        ...(row.identity && { identity: parseFloat(row['% Identity to reference sequence']) }),
+        ...(row.temperature && { temperature: parseFloat(row['Temp of water']) }),
+        ...(row.ph && { ph: parseFloat(row['pH']) }),
+        ...(row.tds && { tds: parseFloat(row['TDS (mg/L)']) }),
         ...(row.ec && { ec: parseFloat(row.ec) }),
-        ...(row.dissolvedO2 && { dissolvedO2: parseFloat(row.dissolvedO2) }),
+        ...(row.dissolvedO2 && { dissolvedO2: parseFloat(row['Dissolved Oxygen (mg/L)']) }),
       };
     });
 

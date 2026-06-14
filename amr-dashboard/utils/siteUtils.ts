@@ -10,6 +10,10 @@ import type { SiteData } from "@/types/site_types";
 export function parseLocationName(geoLocName: string): string {
   if (!geoLocName) return "";
 
+  if (geoLocName == "Missing") {
+    return "Unknown"
+  }
+
   let name = geoLocName;
 
   if (name.includes("Apies River - ")) {
