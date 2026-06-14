@@ -22,7 +22,9 @@ export default function StatisticsFilterPanel() {
         if (res.ok) {
           const json = await res.json();
           const names = Array.from(
-            new Set((json.sites || []).map((s: { geoLocName: string }) => s.geoLocName).filter(Boolean))
+            new Set((json.sites || []).map((s: { geoLocName: string }) => 
+              s.geoLocName === "Missing" ? "Unknown" : s.geoLocName
+          ).filter(Boolean))
           ) as string[];
           setAllSiteNames(names.sort((a, b) => a.localeCompare(b)));
         }

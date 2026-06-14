@@ -246,7 +246,8 @@ export default function GeoLocationList({ sites }: GeoLocationListProps) {
 
                   {/* Coordinates */}
                   <td className="px-4 py-3 whitespace-nowrap text-xs text-slate-500 font-mono font-medium">
-                    {loc.latitude.toFixed(5)}, {loc.longitude.toFixed(5)}
+                    {loc.latitude !== null ? loc.latitude.toFixed(5) : "Missing"}
+                    {loc.longitude !== null ? ", " +loc.longitude.toFixed(5) : ""}
                   </td>
 
                   {/* Samples Count */}
