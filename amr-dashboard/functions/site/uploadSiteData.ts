@@ -1,3 +1,4 @@
+import { data } from "autoprefixer";
 import { prisma } from "../../lib/db";
 import { adminNeeded } from "../../lib/middleware/authMiddleware";
 import { minioClient, BUCKET } from "../../lib/minio";
@@ -175,6 +176,39 @@ export async function uploadSiteData(
   }
 }
 
+function parseDelimitedText(fileText: string, delimiter: string): Record<string, string>[] {
+  const cleanedText = fileText.replace(/^\uFEFF/, "");
+      const lines = cleanedText
+        .split("\n")
+        .map((l) => {
+          if (l.endsWith("\r")) l = l.slice(0, -1);
+            return l.trim();
+        })
+        .map((l) => {
+          if (l.startsWith("\uFEFF")) l = l.slice(1);
+            return l;
+        })
+        .filter((l) => {
+          if (l === "") return false;
+          if (l.startsWith("#")) return false;
+          if (l.split(";").join("").trim() === "") return false;
+          return true;
+        });
+
+      if (lines.length < 2) {
+        return [];
+      }
+
+      const [headerLine, ...dataLines] = lines;
+      const headers = headerLine.split(delimiter).map((h) => h.trim());
+      return dataLines.map((line) => {
+        const values = line.split(delimiter).map((v) => v.trim());
+        return Object.fromEntries(
+            headers.map((h, i) => [h, values[i] ?? ""]),
+          );
+      })
+}
+
 export async function uploadMultipleSiteData(token: string, file: File) {
   const fileExtension = file.name
     .slice(file.name.lastIndexOf("."))
@@ -197,54 +231,62 @@ export async function uploadMultipleSiteData(token: string, file: File) {
 
   try {
     if (fileExtension === ".csv") {
-      const cleanedText = fileText.replace(/^\uFEFF/, "");
-      const lines = cleanedText
+      const firstDataLine = fileText
+        .replace(/^\uFEFF/,"")
         .split("\n")
-        .map((l) => {
-          if (l.endsWith("\r")) l = l.slice(0, -1);
-            return l.trim();
-        })
-        .map((l) => {
-          if (l.startsWith("\uFEFF")) l = l.slice(1);
-            return l;
-        })
-        .filter((l) => {
-          if (l === "") return false;
-          if (l.startsWith("#")) return false;
-          if (l.split(";").join("").trim() === "") return false;
-          return true;
-        });
-
-      if (lines.length < 2) {
-        return { statusCode: 400, body: { error: "File is empty." } };
-      }
-
-      const [headerLine, ...dataLines] = lines;
-      const delimiterUsed = headerLine.includes(';') ? ';' : ',';
-      const headers = headerLine.split(delimiterUsed).map((h) => h.trim());
-      rows = dataLines
-        .filter((line) => line.trim() !== "")
-        .map((line) => {
-          const values = line.split(delimiterUsed).map((v) => v.trim());
-          return Object.fromEntries(
-            headers.map((h, i) => [h, values[i] ?? ""]),
-          );
-        });
+        .map((line) => line.replace(/\r$/, ""). trim())
+        .find((line) => line !== "" && !line.startsWith("#") && line.split(";").join("").trim() !== "");
+      const delimiterUsed = firstDataLine?.includes(";") ? ";" : ",";
+      rows = parseDelimitedText(fileText, delimiterUsed);
 
     } else if (fileExtension === ".tsv") {
-      const [headerLine, ...dataLines] = fileText.trim().split("\n");
-      const headers = headerLine.split("\t").map((h) => h.trim());
-      rows = dataLines
-        .filter((line) => line.trim() !== "")
-        .map((line) => {
-          const values = line.split("\t").map((v) => v.trim());
-          return Object.fromEntries(
-            headers.map((h, i) => [h, values[i] ?? ""]),
-          );
-        });
+      rows = parseDelimitedText(fileText, "\t");
+
     } else if (fileExtension === ".json") {
-      const parsed = JSON.parse(fileText);
-      rows = Array.isArray(parsed) ? parsed : [parsed];
+      const parsed = JSON.parse(fileText.replace(/^\uFEFF/,""));
+      const dataArray = Array.isArray(parsed) ? parsed : [parsed];
+      const hasExcelArtifacts = dataArray.some((obj) => Object.keys(obj).some((index) => index === "__EMPTY" || index.startsWith("__EMPTY")));
+      
+      if (hasExcelArtifacts) {
+        const headerRowIndex = dataArray.findIndex((obj) => Object.values(obj).some(
+          (val) => typeof val === "string" && (val.trim() === "*Sample_name" || val.trim() === "Sample_name")
+        ))
+        if (headerRowIndex === -1) {
+          return {
+            statusCode: 400,
+            body: { error: "Could not find header row in JSON file."}
+          };
+        }
+        const headerRow = dataArray[headerRowIndex]
+        const keyMap: Record<string, string> = {};
+        for (const [index, val] of Object.entries(headerRow)) {
+          if (typeof val === "string" && !val.startsWith("#")) {
+            keyMap[index] = val.trim();
+          }
+        }
+        rows = dataArray
+          .slice(headerRowIndex +1)
+          .map((obj) => {
+            const remapped: Record<string, string> = {};
+            for (const [index, val] of Object.entries(obj)) {
+              const realName = keyMap[index];
+              if (realName) {
+                remapped[realName] = val == null ? "" : String(val);
+              }
+            }
+            return remapped;
+          })
+          .filter((row) => Object.keys(row).length > 0);
+
+      } else {
+        rows = dataArray.map((obj: Record<string, unknown>) => {
+          const stringiedObject: Record<string, string> = {};
+          for (const [index, val] of Object.entries(obj)) {
+            stringiedObject[index] = val == null ? "" : String(val);
+          }
+          return stringiedObject;
+        });
+      }
     }
 
     if (rows.length === 0) {
