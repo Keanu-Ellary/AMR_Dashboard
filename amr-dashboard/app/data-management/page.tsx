@@ -1254,12 +1254,12 @@ export default function DataManagementPage() {
 
       {showDeleteAllModal && (
         <div className="fixed inset-0 bg-indigo-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 max-md w-full shadow-2xl flex flex-col gap-4 border border-rose-100">
-            <h3 className="font-black text-base text-rose-950 uppercase tracking-widest">Critical Database Reset</h3>
-            <p className="text-xs text-slate-500 font-medium">
+          <div className="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl flex flex-col gap-4 border border-rose-100">
+            <h3 className="font-black text-lg text-rose-950 uppercase tracking-widest">Critical Database Reset</h3>
+            <p className="text-sm text-slate-500 font-medium">
               This action will **permanently delete all water samples and isolates** from the database. 
             </p>
-            <p className="text-[10px] text-rose-600 font-black uppercase tracking-widest">
+            <p className="text-sm text-rose-600 font-black uppercase tracking-widest">
               Type <strong className="text-rose-800 bg-rose-50 px-1 py-0.5 rounded">DELETE ALL DATA</strong> to proceed:
             </p>
             <input
@@ -1267,19 +1267,19 @@ export default function DataManagementPage() {
               value={confirmDeleteAllText}
               onChange={(e) => setConfirmDeleteAllText(e.target.value)}
               placeholder="Verification text..."
-              className="px-4 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-rose-500 font-black text-rose-900"
+              className="px-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-rose-500 font-black text-rose-900"
             />
             <div className="flex gap-2 mt-2">
               <button
                 onClick={() => setShowDeleteAllModal(false)}
-                className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-xl text-xs font-black uppercase tracking-widest transition-all"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDeleteAll}
                 disabled={confirmDeleteAllText !== "DELETE ALL DATA"}
-                className="flex-1 py-2 bg-rose-600 hover:bg-rose-700 disabled:opacity-30 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm"
+                className="flex-1 py-2 bg-rose-600 hover:bg-rose-700 disabled:opacity-30 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-sm"
               >
                 Confirm Wipe
               </button>
@@ -1290,15 +1290,15 @@ export default function DataManagementPage() {
 
       {showDeleteDateRangeModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-5 max-w-xs w-full shadow-2xl flex flex-col gap-4 border border-slate-100">
+          <div className="bg-white rounded-3xl p-5 max-w-md w-full shadow-2xl flex flex-col gap-4 border border-slate-100 p-8">
             <div>
-              <h3 className="font-black text-indigo-950 text-sm uppercase tracking-widest">Delete by Date Range</h3>
-              <p className="text-[10px] text-slate-500 font-medium">Select a range to delete isolate records</p>
+              <h3 className="font-black text-indigo-950 text-lg uppercase tracking-widest">Delete by Date Range</h3>
+              <p className="text-md text-slate-500 font-medium">Select a range to delete isolate records</p>
             </div>
 
             <div className="flex flex-col gap-3">
               <div className="flex flex-col gap-1">
-                <span className="text-[9px] font-black text-slate-400 uppercase">Start Date</span>
+                <span className="text-[12px] font-black text-slate-400 uppercase">Start Date</span>
                 <input
                   type="date"
                   value={startDate}
@@ -1307,7 +1307,7 @@ export default function DataManagementPage() {
                 />
               </div>
               <div className="flex flex-col gap-1">
-                <span className="text-[9px] font-black text-slate-400 uppercase">End Date</span>
+                <span className="text-[12px] font-black text-slate-400 uppercase">End Date</span>
                 <input
                   type="date"
                   value={endDate}
@@ -1320,14 +1320,14 @@ export default function DataManagementPage() {
             <div className="flex gap-2 mt-2">
               <button
                 onClick={() => setShowDeleteDateRangeModal(false)}
-                className="flex-1 py-2 bg-slate-50 hover:bg-slate-100 text-slate-500 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                className="flex-1 py-2 bg-slate-50 hover:bg-slate-100 text-slate-500 rounded-xl text-xs font-black uppercase tracking-widest transition-all"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDeleteDateRange}
                 disabled={!startDate && !endDate}
-                className="flex-1 py-2 bg-rose-600 hover:bg-rose-700 disabled:opacity-30 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm"
+                className="flex-1 py-2 bg-rose-600 hover:bg-rose-700 disabled:opacity-30 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-sm"
               >
                 Delete Data
               </button>
@@ -1338,9 +1338,9 @@ export default function DataManagementPage() {
 
       {showDeleteLocationsModal && (
         <div className="fixed inset-0 bg-indigo-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 max-sm w-full shadow-2xl flex flex-col gap-4">
-            <h3 className="font-black text-indigo-950 text-base uppercase tracking-widest">Delete Locations</h3>
-            <p className="text-xs text-slate-500 font-medium leading-relaxed">
+          <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl flex flex-col gap-4 p-8">
+            <h3 className="text-lg font-black text-indigo-950 text-base uppercase tracking-widest">Delete Locations</h3>
+            <p className="text-md text-slate-500 font-medium leading-relaxed">
               Confirm deletion of samples at:
               <strong className="text-indigo-950 block mt-1 max-h-24 overflow-y-auto font-black border border-slate-50 p-2 rounded-lg bg-slate-50">
                 {selectedLocations.join(", ")}
@@ -1349,13 +1349,13 @@ export default function DataManagementPage() {
             <div className="flex gap-2 mt-2">
               <button
                 onClick={() => setShowDeleteLocationsModal(false)}
-                className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-xl text-sm font-black uppercase tracking-widest transition-all"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDeleteLocations}
-                className="flex-1 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm"
+                className="flex-1 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-sm font-black uppercase tracking-widest transition-all shadow-sm"
               >
                 Delete Sites
               </button>
@@ -1366,21 +1366,21 @@ export default function DataManagementPage() {
 
       {showDeleteSamplesModal && (
         <div className="fixed inset-0 bg-indigo-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 max-sm w-full shadow-2xl flex flex-col gap-4">
-            <h3 className="font-black text-indigo-950 text-base uppercase tracking-widest">Delete Samples</h3>
-            <p className="text-xs text-slate-500 font-medium">
+          <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl flex flex-col gap-4 p-9">
+            <h3 className="text-lg font-black text-indigo-950 text-base uppercase tracking-widest">Delete Samples</h3>
+            <p className="text-md text-slate-500 font-medium">
               Delete the <strong className="font-black text-indigo-950">{selectedSampleIds.length}</strong> selected individual sample records?
             </p>
             <div className="flex gap-2 mt-2">
               <button
                 onClick={() => setShowDeleteSamplesModal(false)}
-                className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-xl text-sm  font-black uppercase tracking-widest transition-all"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDeleteSamples}
-                className="flex-1 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm"
+                className="flex-1 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-sm font-black uppercase tracking-widest transition-all shadow-sm"
               >
                 Delete Records
               </button>
