@@ -4,15 +4,16 @@ import { execSync } from "child_process";
 dotenv.config();
 
 // Enforce using the test database
-if (process.env.DATABASE_URL_TEST) {
-  process.env.DATABASE_URL = process.env.DATABASE_URL_TEST;
+if (process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = process.env.DATABASE_URL;
 } else {
-  console.error("DATABASE_URL_TEST is not defined in the environment.");
+  console.error("DATABASE_URL is not defined in the environment.");
   process.exit(1);
 }
 
 // Override to point to the running docker container port (8080)
-process.env.ALGAE_DETECTOR_LAMBDA_URL = "http://localhost:8080/2015-03-31/functions/function/invocations";
+process.env.ALGAE_DETECTOR_LAMBDA_URL =
+  "http://localhost:8080/2015-03-31/functions/function/invocations";
 
 beforeAll(async () => {
   // Silence console error logs during tests
