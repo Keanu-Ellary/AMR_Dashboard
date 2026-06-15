@@ -40,6 +40,20 @@ module.exports = createJestConfig({
       },
     },
 
+    {
+      displayName: "backend-integration",
+      preset: "ts-jest",
+      testEnvironment: "node",
+      setupFilesAfterEnv: ["<rootDir>/tests/setup.integration.ts"],
+      testMatch: ["<rootDir>/tests/integration/**/*.test.ts"],
+      moduleNameMapper: {
+        "^@/(.*)$": "<rootDir>/$1",
+      },
+      transform: {
+        ...tsJestTransformCfg,
+      },
+    },
+
     frontendConfig,
   ],
 });
