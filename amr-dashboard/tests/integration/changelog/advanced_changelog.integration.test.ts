@@ -2,6 +2,8 @@ import { prisma } from "@/lib/db";
 import { GET as changelogGet } from "@/app/api/changelog/route";
 import { POST as undoPost } from "@/app/api/changelog/undo/route";
 
+let mockAdminId = 1;
+
 // Mock cookies
 jest.mock("next/headers", () => ({
   cookies: jest.fn().mockImplementation(async () => ({
@@ -11,10 +13,10 @@ jest.mock("next/headers", () => ({
 
 // Provide a mock adminNeeded bypass for GET route (which uses token extraction)
 jest.mock("@/lib/middleware/authMiddleware", () => ({
-  adminNeeded: jest.fn().mockReturnValue({
+  adminNeeded: jest.fn().mockImplementation(() => ({
     authorized: true,
-    user: { userId: 1, isAdmin: true },
-  }),
+    user: { userId: mockAdminId, isAdmin: true },
+  })),
 }));
 
 describe("Advanced Changelog and Bulk Undo Integration", () => {
@@ -26,6 +28,7 @@ describe("Advanced Changelog and Bulk Undo Integration", () => {
       data: { name: "Admin", surname: "Log", email: "log@example.com", password: "hash", isAdmin: true },
     });
     adminId = admin.id;
+    mockAdminId = admin.id;
     (global as any).adminToken = "mock_jwt_token";
   });
 
