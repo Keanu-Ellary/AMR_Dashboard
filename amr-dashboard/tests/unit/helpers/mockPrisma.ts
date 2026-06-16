@@ -24,4 +24,7 @@ export const mockPrisma = prisma as unknown as {
     siteImage: {
         createMany: jest.Mock,
     },
+    siteImageBatch: {
+        create: jest.Mock,
+    },
 }

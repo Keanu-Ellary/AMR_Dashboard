@@ -48,7 +48,17 @@ describe("uploadSiteData", () => {
         expect(mockPrisma.siteData.create).toHaveBeenCalledWith(
             expect.objectContaining({
                 data: expect.objectContaining({
-                    adminId: 1,
+                    admin: {"connect": {"id" : 1}},
+                    "amrResGenes": "geneA, geneB",
+                    "collectionDate": new Date("2026-04-01T00:00:00.000Z"), 
+                    "dangerZone": "red", 
+                    "geoLocName": "Apies River - Point F",
+                    "isolationSource": "River water", 
+                    "latitude": -26.8075, 
+                    "longitude": 29.6677, 
+                    "predictedSir": "Resistant", 
+                    "sampleAnalysisType": "Metagenomic", 
+                    "sampleName": "Sample A",
                     images: {
                         create: expect.arrayContaining([
                             expect.objectContaining({

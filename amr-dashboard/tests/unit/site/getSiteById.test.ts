@@ -63,6 +63,14 @@ describe("getSiteById", () => {
                         url: true,
                     }
                 },
+                imageBatches: {
+                    include: {
+                        images: true,
+                    },
+                    orderBy: {
+                        "dateTaken": "desc",
+                    },
+                },
             }
         });
     });

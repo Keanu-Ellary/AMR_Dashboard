@@ -85,7 +85,9 @@ export async function POST(req: Request) {
 
     const body = await req.json();
 
-    const res = await uploadSiteData(token, body, body.imageBase64);
+    const {imageBase64, ...restOfBody} = body;
+
+    const res = await uploadSiteData(token, restOfBody, imageBase64);
 
     return Response.json(res.body, {
         status: res.statusCode

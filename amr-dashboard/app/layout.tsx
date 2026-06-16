@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Offline Maps PWA",
+  title: "AMR Dashboard",
   description: "Next.js Offline Maps with Serwist",
   manifest: "/manifest.json",
 };
@@ -36,7 +36,12 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-      <NavBars>{children}</NavBars>
+        <div className="flex flex-1">
+          <NavBars />
+          <main className="flex-1 overflow-auto">
+            {children}
+          </main>
+        </div>
         <ToastContainer
           position="top-center"
           autoClose={3000}
