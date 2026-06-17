@@ -1,17 +1,22 @@
 // get normal users
 import {prisma} from "../../lib/db"
+import { adminNeeded } from "@/lib/middleware/authMiddleware";
 
-export async function getUsers()
+export async function getUsers(token: string)
 {
     try{
-        const usersNormal = await prisma.user.findMany({
-            select: {
-                id: true,
-                name: true,
-                surname: true,
-                email: true,
+
+        const authorize = adminNeeded(token);
+            
+            if (!authorize.authorized)
+            {
+                return {
+                    statusCode: authorize.statusCode,
+                    body: {error: authorize.message}
+                };
             }
-        });
+        
+
         const adminUsers = await prisma.adminUser.findMany({
             select: {
                 id: true,
@@ -23,7 +28,7 @@ export async function getUsers()
 
         return {
             statusCode: 200,
-            body: {usersNormal, adminUsers},
+            body: {adminUsers},
         };
     } catch(error) {
         console.error(error);

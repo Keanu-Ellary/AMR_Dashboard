@@ -17,6 +17,17 @@ model AdminUser {
   isAdmin    Boolean
   siteDatas  SiteData[]
   changeLogs ChangeLog[]
+  mustChangePassword Boolean @default(true)
+  passwordResetTokens  PasswordResetToken[]
+}
+
+model PasswordResetToken {
+  id        Int       @id @default(autoincrement())
+  adminId    Int
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  admin     AdminUser      @relation(fields: [adminId], references: [id])
 }
 
 model User {

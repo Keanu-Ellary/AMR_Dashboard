@@ -1,7 +1,7 @@
 import {prisma} from "../../lib/db";
 import { adminNeeded } from "../../lib/middleware/authMiddleware";
 
-export async function deleteUser(id: number, token: string) {
+export async function deleteAdmin(id: number, token: string) {
     const authorize = adminNeeded(token);
 
     if (!authorize.authorized)
@@ -13,13 +13,13 @@ export async function deleteUser(id: number, token: string) {
     }
 
     try {
-        await prisma.user.delete({
+        await prisma.adminUser.delete({
             where: {id}
         });
 
         return {
             statusCode: 200,
-            body: {error: "User successfully deleted"}
+            body: {error: "Admin successfully deleted"}
         };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any)
@@ -30,13 +30,13 @@ export async function deleteUser(id: number, token: string) {
         {
             return {
                 statusCode: 404,
-                body: {error: "User not found"}
+                body: {error: "Admin not found"}
             };
         }
 
         return {
             statusCode: 500,
-            body: {error: "Failed to delete user"}
+            body: {error: "Failed to delete admin"}
         };
     }
 }
