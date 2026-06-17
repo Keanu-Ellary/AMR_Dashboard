@@ -4,6 +4,7 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function main() {
+
   await prisma.adminUser.createMany({
     data: [
       {
@@ -13,6 +14,7 @@ async function main() {
         isAdmin: true,
         password:
           "$2a$10$CTqHkBOLwZrL2EtOtt6vdOAT9.l4upP9qfahGkUw4A13UVbrewPqO",
+        mustChangePassword: false
       },
       {
         name: "Jackson",
@@ -21,6 +23,7 @@ async function main() {
         isAdmin: true,
         password:
           "$2a$10$.8f4aTZ47fwjwd0P3.yZze6vxJ11WGT9vu1gwaFRmCAmi2z4WdJ/i",
+        mustChangePassword: false
       },
       {
         name: "Tony",
@@ -29,6 +32,7 @@ async function main() {
         isAdmin: true,
         password:
           "$2a$10$m/eQJJ46DgsuQ1l2RsFbCOd6Xkcm105bKdyd6pX9RlDznutaHyZ5W",
+        mustChangePassword: false
       },
       {
         name: "Admin",
@@ -37,6 +41,7 @@ async function main() {
         isAdmin: true,
         password:
           "$2b$10$YDBCyVML8N91OiYsMqJO3ut6Fr.d.WVbqKmFA2mOYJn8v1zdmRw7m", //"password"
+        mustChangePassword: false
       },
     ],
     skipDuplicates: true,
@@ -69,10 +74,16 @@ async function main() {
     skipDuplicates: true,
   });
 
+  const tony = await prisma.adminUser.findUnique({
+    where: { email: "tony@industries.com" }
+  });
+
+  if (!tony) throw new Error("Admin seed failed");
+
   await prisma.siteData.createMany({
     data: [
       {
-        adminId: 3,
+        adminId: tony.id,
         sampleName: "Sample A",
         isolationSource: "River water",
         collectionDate: new Date("2026-04-01"),
@@ -89,7 +100,7 @@ async function main() {
         dangerZone: "red",
       },
       {
-        adminId: 3,
+        adminId: tony.id,
         sampleName: "Sample B",
         isolationSource: "River water",
         collectionDate: new Date("2026-04-09"),
