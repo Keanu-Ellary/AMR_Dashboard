@@ -21,7 +21,7 @@ export async function updateSite(
 
         // optional
         isolateId?: string,
-        orgamism?: string,
+        organism?: string,
         sampleId?: string,
         collectedBy?: string,
         sequenceName?: string,

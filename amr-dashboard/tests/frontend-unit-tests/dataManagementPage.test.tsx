@@ -61,7 +61,7 @@ const mockSite = {
     dangerZone: 'green',
     latitude: -20.0,
     longitude: 20.0,
-    orgamism: 'Fake Organism',
+    organism: 'Fake Organism',
     isolateId: 'Fake ID',
     predictedSir: 'Resistant',
     sampleAnalysisType: 'Fake Sample Type',

@@ -178,7 +178,7 @@ export default function DataManagementPage() {
     return sites.filter((s) => {
       const lowerSearch = sampleSearch.toLowerCase();
       const matchesName = s.sampleName.toLowerCase().includes(lowerSearch);
-      const matchesOrg = (s.orgamism ?? "").toLowerCase().includes(lowerSearch);
+      const matchesOrg = (s.organism ?? "").toLowerCase().includes(lowerSearch);
       const matchesLoc = s.geoLocName.toLowerCase().includes(lowerSearch);
       const matchesId = (s.isolateId ?? "").toLowerCase().includes(lowerSearch);
       return matchesName || matchesOrg || matchesLoc || matchesId;
@@ -332,7 +332,7 @@ export default function DataManagementPage() {
       sampleAnalysisType: site.sampleAnalysisType ?? "",
 
       isolateId: site.isolateId ?? "",
-      organism: site.orgamism ?? "",
+      organism: site.organism ?? "",
       sampleId: site.sampleId ?? "",
       collectedBy: site.collectedBy ?? "",
       sequenceName: site.sequenceName ?? "",
@@ -390,7 +390,7 @@ export default function DataManagementPage() {
         dissolvedO2: formData.dissolvedO2 ? parseFloat(formData.dissolvedO2) : undefined,
 
         isolateId: formData.isolateId || undefined,
-        orgamism: formData.organism || undefined,
+        organism: formData.organism || undefined,
         sampleId: formData.sampleId || undefined,
         collectedBy: formData.collectedBy || undefined,
         sequenceName: formData.sequenceName || undefined,
@@ -445,7 +445,7 @@ export default function DataManagementPage() {
         dissolvedO2: formData.dissolvedO2 ? parseFloat(formData.dissolvedO2) : undefined,
 
         isolateId: formData.isolateId || undefined,
-        orgamism: formData.organism || undefined,
+        organism: formData.organism || undefined,
         sampleId: formData.sampleId || undefined,
         collectedBy: formData.collectedBy || undefined,
         sequenceName: formData.sequenceName || undefined,
@@ -1152,7 +1152,7 @@ export default function DataManagementPage() {
                               />
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-slate-800">{s.sampleName}</td>
-                            <td className="px-4 py-3 whitespace-nowrap text-sm italic text-slate-600 font-medium">{s.orgamism || "—"}</td>
+                            <td className="px-4 py-3 whitespace-nowrap text-sm italic text-slate-600 font-medium">{s.organism || "—"}</td>
                             <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-600 font-medium">{parseLocationName(s.geoLocName)}</td>
                             <td className="px-4 py-3 whitespace-nowrap text-center text-sm text-slate-500 font-medium">
                               {new Date(s.collectionDate).toLocaleDateString("en-ZA", {
