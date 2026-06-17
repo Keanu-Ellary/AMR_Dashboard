@@ -71,7 +71,7 @@ export default function SampleList({ sites }: SampleListProps) {
       if (searchTerm) {
         const lowerSearch = searchTerm.toLowerCase();
         const matchesName = s.sampleName.toLowerCase().includes(lowerSearch);
-        const matchesOrg = (s.orgamism ?? "").toLowerCase().includes(lowerSearch);
+        const matchesOrg = (s.organism ?? "").toLowerCase().includes(lowerSearch);
         const matchesLoc = s.geoLocName.toLowerCase().includes(lowerSearch);
         const matchesId = (s.isolateId ?? "").toLowerCase().includes(lowerSearch);
         if (!matchesName && !matchesOrg && !matchesLoc && !matchesId) return false;
@@ -94,8 +94,8 @@ export default function SampleList({ sites }: SampleListProps) {
           valB = b.sampleName;
           break;
         case "organism":
-          valA = a.orgamism ?? "";
-          valB = b.orgamism ?? "";
+          valA = a.organism ?? "";
+          valB = b.organism ?? "";
           break;
         case "location":
           valA = parseLocationName(a.geoLocName);

@@ -39,8 +39,8 @@ const SIR_ORDER: Record<string, number> = {
 function compareSiteData(a: SiteData, b: SiteData, key: SortKey): number {
   switch (key) {
     case "organism": {
-      const aVal = (a.orgamism ?? "").toLowerCase();
-      const bVal = (b.orgamism ?? "").toLowerCase();
+      const aVal = (a.organism ?? "").toLowerCase();
+      const bVal = (b.organism ?? "").toLowerCase();
       return aVal.localeCompare(bVal);
     }
     case "date": {
@@ -225,7 +225,7 @@ export default function IsolateList({
             >
               <div className="min-w-0 flex-1">
                 <p className="font-medium text-gray-800 truncate group-hover:text-blue-700 transition-colors">
-                  {iso.orgamism ?? <span className="italic text-gray-400">Unknown organism</span>}
+                  {iso.organism ?? <span className="italic text-gray-400">Unknown organism</span>}
                 </p>
                 <p className="text-xs text-gray-400 mt-0.5">{formatDate(iso.collectionDate)}</p>
               </div>
@@ -301,7 +301,7 @@ export default function IsolateList({
               >
                 {/* Organism */}
                 <td className="px-4 py-3 text-sm font-medium text-gray-800 whitespace-nowrap">
-                  {iso.orgamism ?? <span className="italic text-gray-400">Unknown</span>}
+                  {iso.organism ?? <span className="italic text-gray-400">Unknown</span>}
                 </td>
 
                 {/* Isolate ID */}
