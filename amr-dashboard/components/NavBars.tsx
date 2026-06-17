@@ -9,7 +9,7 @@ import { NavItem } from "@/types/navbar_types";
 import { LogOutIcon, UserIcon } from "lucide-react";
 import { logout, getMe } from "@/app/services/authService";
 
-const HIDDEN_NAVS = ['/login', '/forgot-password'];
+const HIDDEN_NAVS = ['/login', '/forgot-password', '/reset-password'];
 
 function NavLink({ href, icon: Icon, label, isActive }: NavItem & { isActive: boolean }) {
   return (
@@ -87,12 +87,17 @@ export default function NavBars() {
       </div>
 
       <nav className="flex flex-col gap-2 flex-1">
-        {NAV_ITEMS.filter(item => item.href !== "/changelog" && item.href !== "/data-management")
+        {NAV_ITEMS.filter(item => item.href !== "/changelog" && item.href !== "/data-management" && item.href !== "/user-management")
           .map((item) => (
             <NavLink key={item.href} {...item} isActive={pathname === item.href} />
           ))}
         {isAdminUser && (
           <>
+             <NavLink
+              key="/user-management"
+              {...NAV_ITEMS.find(i => i.href === "/user-management")!}
+              isActive={pathname === "/user-management"}
+            />
             <NavLink
               key="/changelog"
               {...NAV_ITEMS.find(i => i.href === "/changelog")!}

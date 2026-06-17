@@ -33,7 +33,7 @@ describe("Login Page Tests", () => {
         expect(screen.getByPlaceholderText("Password")).toBeInTheDocument();
         expect(screen.getByRole("button", { name: "Login" })).toBeInTheDocument();
         expect(screen.getByRole("button", { name: "✖ Go Back" })).toBeInTheDocument();
-        expect(screen.getByRole("link", { name: "Forgot Password"} )).toBeInTheDocument();
+        expect(screen.getByRole("link", { name: "Reset Password"} )).toBeInTheDocument();
     });
 
     it("Displays error toast if email and password is missing", async () => {
@@ -128,11 +128,11 @@ describe("Login Page Tests", () => {
         historyBackSpy.mockRestore();
     });
 
-    it("Navigates to forgot-password page when 'Forgot Password' is clicked", async () => {
+    it("Navigates to reset-password page when 'Forgot Password' is clicked", async () => {
         render(<LoginPage />);
 
-        const forgotPasswordButton = screen.getByRole("link", { name: "Forgot Password" });
-        expect(forgotPasswordButton).toHaveAttribute("href", "/forgot-password");
+        const forgotPasswordButton = screen.getByRole("link", { name: "Reset Password" });
+        expect(forgotPasswordButton).toHaveAttribute("href", "/reset-password");
     });
 
 });
