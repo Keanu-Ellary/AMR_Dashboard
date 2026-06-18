@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { prisma } from "@/lib/db";
 import { POST as authPost } from "@/app/api/auth/route";
 import { POST as sitePost } from "@/app/api/site/route";

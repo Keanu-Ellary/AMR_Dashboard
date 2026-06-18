@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { prisma } from "@/lib/db";
 import { GET as changelogGet } from "@/app/api/changelog/route";
 import { POST as undoPost } from "@/app/api/changelog/undo/route";

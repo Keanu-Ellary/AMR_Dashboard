@@ -245,7 +245,7 @@ describe("Changelog and Undo Stateful Integration Tests", () => {
     expect(deleteRes.status).toBe(200);
 
     // Confirm it is gone
-    let siteInDb = await prisma.siteData.findUnique({ where: { id: site.id } });
+    const siteInDb = await prisma.siteData.findUnique({ where: { id: site.id } });
     expect(siteInDb).toBeNull();
 
     // Fetch the DELETE changelog entry
