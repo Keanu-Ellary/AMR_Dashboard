@@ -31,7 +31,7 @@ module.exports = createJestConfig({
       preset: "ts-jest",
       testEnvironment: "node",
       setupFilesAfterEnv: ["<rootDir>/tests/setup.ts"],
-      testMatch: ["<rootDir>/tests/unit/**/*.test.ts"],
+      testMatch: ["<rootDir>/tests/backend-unit-tests/**/*.test.ts"],
       moduleNameMapper: {
         "^@/(.*)$": "<rootDir>/$1",
       },

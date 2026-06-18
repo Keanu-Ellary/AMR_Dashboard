@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "jest",
+    "test:backend-unit": "jest --config jest.config.js --selectProjects backend-tests --runInBand",
+    "test:frontend-unit": "jest --config jest.config.js --selectProjects frontend-tests --runInBand",
     "test:integration": "jest --config jest.config.js --selectProjects backend-integration --runInBand",
     "test:e2e": "npx playwright test"
   },
