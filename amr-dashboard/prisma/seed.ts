@@ -22,7 +22,7 @@ async function main() {
         email: "JackAdmin@gmail.com",
         isAdmin: true,
         password:
-          "$2a$10$.8f4aTZ47fwjwd0P3.yZze6vxJ11WGT9vu1gwaFRmCAmi2z4WdJ/i",
+          "$2a$10$TQqOKRFa/y49o.j4ke5kx.9WA5v.IuoYAJBY1EZiv..UjxtULA57e",
         mustChangePassword: false
       },
       {
