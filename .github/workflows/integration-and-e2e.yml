@@ -1,4 +1,4 @@
-name: Integration and E2E Tests
+name: Continuous Integration - Integration and E2E Tests
 on:
   push:
     branches: [main]
