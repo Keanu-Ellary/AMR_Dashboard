@@ -74,6 +74,18 @@ export default function UserManagementPage() {
         }
     }
 
+    const handleCancelAddNewAdmin = async () => {
+        setShowAddNewAdminModal(false)
+        setNewAdminName("");
+        setNewAdminSurname("");
+        setNewAdminEmail("");
+    }
+
+    const handleCancelDeleteAdmin = async () => {
+        setShowDeleteAdminModal(false)
+        setSelectedAdminToDelete(null);
+    }
+
     const handleConfirmDeleteAdmin = async (admin: AdminUser) => {
         try {
             setShowDeleteAdminModal(true)
@@ -105,7 +117,7 @@ export default function UserManagementPage() {
       }, [adminUsers, adminSearch]);
 
     return(
-        <main className="flex-1 overflow-auto p-6 bg-slate-50/50 flex flex-col gap-6">
+        <main className="flex-1 overflow-auto p-6 bg-slate-50/50 flex flex-col gap-6 min-h-screen">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h1 className="text-2xl font-black text-indigo-950 tracking-tight">Admin Management</h1>
@@ -194,7 +206,7 @@ export default function UserManagementPage() {
 
                 <div className="flex gap-2 mt-2">
                 <button
-                    onClick={() => setShowDeleteAdminModal(false)}
+                    onClick={handleCancelDeleteAdmin}
                     className="flex-1 py-2 bg-slate-50 hover:bg-slate-100 text-slate-500 rounded-xl text-xs font-black uppercase tracking-widest transition-all"
                 >
                     Cancel
@@ -252,14 +264,14 @@ export default function UserManagementPage() {
 
                 <div className="flex gap-2 mt-2">
                 <button
-                    onClick={() => setShowAddNewAdminModal(false)}
+                    onClick={handleCancelAddNewAdmin}
                     className="flex-1 py-2 bg-slate-50 hover:bg-slate-100 text-slate-500 rounded-xl text-xs font-black uppercase tracking-widest transition-all"
                 >
                     Cancel
                 </button>
                 <button
                     onClick={handleAddNewAdmin}
-                    disabled={!newAdminName && !newAdminSurname && !newAdminEmail}
+                    disabled={!newAdminName || !newAdminSurname || !newAdminEmail}
                     className="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-30 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-sm"
                 >
                     Add Admin

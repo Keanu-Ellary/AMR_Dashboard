@@ -87,6 +87,9 @@ describe("Login Page Tests", () => {
     });
 
     it("Displays error toast if credentials are incorrect", async () => {
+        mockedLogin.mockResolvedValue({ status: 500,
+            json: jest.fn().mockResolvedValue({})
+         } as any);
         render(<LoginPage />);
 
         const emailInput = screen.getByPlaceholderText("Email");
@@ -102,7 +105,10 @@ describe("Login Page Tests", () => {
     });
 
     it("Displays success toast if credentials are correct", async () => {
-        mockedLogin.mockResolvedValue({ status: 200, data: { token: "valid-token" } } as any);
+        mockedLogin.mockResolvedValue({ 
+            status: 200, 
+            json: jest.fn().mockResolvedValue({ token: "valid-token" }),
+        } as any);
         render(<LoginPage />);
 
         const emailInput = screen.getByPlaceholderText("Email");

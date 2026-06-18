@@ -57,7 +57,7 @@ export async function deleteAdmin(token: string, id: number) {
     
     if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.message || "Failed to register admin");
+        throw new Error(data.message || "Failed to delete admin");
     }
 
     return response;

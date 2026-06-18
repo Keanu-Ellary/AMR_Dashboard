@@ -61,6 +61,16 @@ export async function login(data:{
 
         if (!foundUser && foundAdmin)
         {
+            if (foundAdmin.mustChangePassword) {
+                return {
+                    statusCode: 403,
+                    body: {
+                        error: "Password reset required.",
+                        mustChangePassword: true
+                    }
+                };
+            }
+
             const validPassword = await bcrypt.compare(data.password, foundAdmin.password);
 
             if (!validPassword)
