@@ -17,7 +17,7 @@ describe("API Routes & Middleware Integration Tests", () => {
   beforeEach(async () => {
     // Clean up tables
     await prisma.$executeRawUnsafe(
-      `TRUNCATE TABLE "SiteImage", "SiteImageBatch", "SiteData", "ChangeLog", "AdminUser", "User" CASCADE;`
+      `TRUNCATE TABLE "SiteImage", "SiteImageBatch", "SiteData", "ChangeLog", "AdminUser", "User" CASCADE;`,
     );
   });
 
@@ -28,7 +28,7 @@ describe("API Routes & Middleware Integration Tests", () => {
   describe("Authentication & Registration API Flow", () => {
     it("should register a user, hash password, and then login successfully", async () => {
       // 1. Register a user via POST /api/users
-      const registerReq = new Request("http://localhost/api/users", {
+      const registerReq = new Request("http://localhost:3000/api/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -50,11 +50,14 @@ describe("API Routes & Middleware Integration Tests", () => {
       });
       expect(dbUser).not.toBeNull();
       expect(dbUser!.password).not.toBe("securepassword"); // should be hashed
-      const passwordMatch = await bcrypt.compare("securepassword", dbUser!.password);
+      const passwordMatch = await bcrypt.compare(
+        "securepassword",
+        dbUser!.password,
+      );
       expect(passwordMatch).toBe(true);
 
       // 2. Login as the newly created user via POST /api/auth
-      const loginReq = new Request("http://localhost/api/auth", {
+      const loginReq = new Request("http://localhost:3000/api/auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -83,7 +86,7 @@ describe("API Routes & Middleware Integration Tests", () => {
       });
 
       // Attempt login with incorrect password
-      const loginReq = new Request("http://localhost/api/auth", {
+      const loginReq = new Request("http://localhost:3000/api/auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -101,7 +104,7 @@ describe("API Routes & Middleware Integration Tests", () => {
 
   describe("API Endpoint Protection (authMiddleware)", () => {
     it("should return 401 Unauthorized if authorization header is missing on protected route", async () => {
-      const siteReq = new Request("http://localhost/api/site", {
+      const siteReq = new Request("http://localhost:3000/api/site", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -135,7 +138,7 @@ describe("API Routes & Middleware Integration Tests", () => {
         },
       });
 
-      const loginReq = new Request("http://localhost/api/auth", {
+      const loginReq = new Request("http://localhost:3000/api/auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -147,11 +150,11 @@ describe("API Routes & Middleware Integration Tests", () => {
       const { jwtToken } = await loginRes.json();
 
       // Attempt to post site data as regular user
-      const siteReq = new Request("http://localhost/api/site", {
+      const siteReq = new Request("http://localhost:3000/api/site", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${jwtToken}`,
+          Authorization: `Bearer ${jwtToken}`,
         },
         body: JSON.stringify({
           sampleName: "Sample X",
@@ -184,10 +187,11 @@ describe("API Routes & Middleware Integration Tests", () => {
           email: "admin@example.com",
           password: hashed,
           isAdmin: true,
+          mustChangePassword: false,
         },
       });
 
-      const loginReq = new Request("http://localhost/api/auth", {
+      const loginReq = new Request("http://localhost:3000/api/auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -199,11 +203,11 @@ describe("API Routes & Middleware Integration Tests", () => {
       const { jwtToken } = await loginRes.json();
 
       // Submit site data with invalid pH
-      const siteReq = new Request("http://localhost/api/site", {
+      const siteReq = new Request("http://localhost:3000/api/site", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${jwtToken}`,
+          Authorization: `Bearer ${jwtToken}`,
         },
         body: JSON.stringify({
           sampleName: "Sample Y",

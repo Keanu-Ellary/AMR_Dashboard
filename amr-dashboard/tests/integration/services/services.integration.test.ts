@@ -24,7 +24,7 @@ describe("External Services Integration Tests (MinIO & AI Lambda)", () => {
   beforeAll(async () => {
     // Clean up tables
     await prisma.$executeRawUnsafe(
-      `TRUNCATE TABLE "SiteImage", "SiteImageBatch", "SiteData", "ChangeLog", "AdminUser", "User" CASCADE;`
+      `TRUNCATE TABLE "SiteImage", "SiteImageBatch", "SiteData", "ChangeLog", "AdminUser", "User" CASCADE;`,
     );
 
     // Create admin user
@@ -36,11 +36,12 @@ describe("External Services Integration Tests (MinIO & AI Lambda)", () => {
         email: "admin.servicetest@example.com",
         password: hashed,
         isAdmin: true,
+        mustChangePassword: false,
       },
     });
 
     // Log in to get token
-    const loginReq = new Request("http://localhost/api/auth", {
+    const loginReq = new Request("http://localhost:3000/api/auth", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -64,14 +65,20 @@ describe("External Services Integration Tests (MinIO & AI Lambda)", () => {
       const buffer = Buffer.from(fileContent, "utf-8");
 
       // Upload directly to MinIO
-      await minioClient.putObject(BUCKET, testObjectName, buffer, buffer.length, {
-        "Content-Type": "text/plain",
-      });
+      await minioClient.putObject(
+        BUCKET,
+        testObjectName,
+        buffer,
+        buffer.length,
+        {
+          "Content-Type": "text/plain",
+        },
+      );
 
       // Retrieve and verify
       const stream = await minioClient.getObject(BUCKET, testObjectName);
       let retrievedContent = "";
-      
+
       await new Promise<void>((resolve, reject) => {
         stream.on("data", (chunk) => {
           retrievedContent += chunk.toString();
@@ -87,11 +94,11 @@ describe("External Services Integration Tests (MinIO & AI Lambda)", () => {
     });
 
     it("should upload image via /api/site and save it to MinIO", async () => {
-      const siteReq = new Request("http://localhost/api/site", {
+      const siteReq = new Request("http://localhost:3000/api/site", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${adminToken}`,
+          Authorization: `Bearer ${adminToken}`,
         },
         body: JSON.stringify({
           sampleName: "MinIO Site Test",
@@ -125,7 +132,7 @@ describe("External Services Integration Tests (MinIO & AI Lambda)", () => {
       // Extract filename from URL (format: http://127.0.0.1:9000/site-images/site-<timestamp>.jpg)
       const imageUrl = siteInDb!.images[0].url;
       expect(imageUrl).toContain(`http://127.0.0.1:9000/${BUCKET}/site-`);
-      
+
       const fileName = imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
 
       // Verify file exists in MinIO bucket
@@ -139,7 +146,7 @@ describe("External Services Integration Tests (MinIO & AI Lambda)", () => {
 
   describe("AI Lambda Integration", () => {
     it("should successfully invoke local AI Lambda to detect algae", async () => {
-      const algaeReq = new Request("http://localhost/api/algae", {
+      const algaeReq = new Request("http://localhost:3000/api/algae", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

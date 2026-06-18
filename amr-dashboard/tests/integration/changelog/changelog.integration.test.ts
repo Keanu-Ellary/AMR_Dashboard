@@ -1,7 +1,10 @@
 import { prisma } from "@/lib/db";
 import { POST as authPost } from "@/app/api/auth/route";
 import { POST as sitePost } from "@/app/api/site/route";
-import { PATCH as updatePost, DELETE as deletePost } from "@/app/api/site/[id]/route";
+import {
+  PATCH as updatePost,
+  DELETE as deletePost,
+} from "@/app/api/site/[id]/route";
 import { POST as undoPost } from "@/app/api/changelog/undo/route";
 import bcrypt from "bcrypt";
 
@@ -21,7 +24,7 @@ describe("Changelog and Undo Stateful Integration Tests", () => {
   beforeEach(async () => {
     // Clean up tables
     await prisma.$executeRawUnsafe(
-      `TRUNCATE TABLE "SiteImage", "SiteImageBatch", "SiteData", "ChangeLog", "AdminUser", "User" CASCADE;`
+      `TRUNCATE TABLE "SiteImage", "SiteImageBatch", "SiteData", "ChangeLog", "AdminUser", "User" CASCADE;`,
     );
 
     // Create admin user
@@ -33,12 +36,13 @@ describe("Changelog and Undo Stateful Integration Tests", () => {
         email: "admin.changelog@example.com",
         password: hashed,
         isAdmin: true,
+        mustChangePassword: false,
       },
     });
     adminId = admin.id;
 
     // Log in to get token
-    const loginReq = new Request("http://localhost/api/auth", {
+    const loginReq = new Request("http://localhost:3000/api/auth", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -57,11 +61,11 @@ describe("Changelog and Undo Stateful Integration Tests", () => {
 
   it("should undo a CREATE action by deleting the created SiteData", async () => {
     // 1. Create site data
-    const siteReq = new Request("http://localhost/api/site", {
+    const siteReq = new Request("http://localhost:3000/api/site", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${adminToken}`,
+        Authorization: `Bearer ${adminToken}`,
       },
       body: JSON.stringify({
         sampleName: "Create Undo Test",
@@ -94,11 +98,11 @@ describe("Changelog and Undo Stateful Integration Tests", () => {
     expect(siteInDb).not.toBeNull();
 
     // 2. Undo the creation via POST /api/changelog/undo
-    const undoReq = new Request("http://localhost/api/changelog/undo", {
+    const undoReq = new Request("http://localhost:3000/api/changelog/undo", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${adminToken}`,
+        Authorization: `Bearer ${adminToken}`,
       },
       body: JSON.stringify({ changeLogId }),
     });
@@ -111,7 +115,9 @@ describe("Changelog and Undo Stateful Integration Tests", () => {
     expect(siteInDb).toBeNull();
 
     // Verify the changelog log is marked undone
-    const updatedLog = await prisma.changeLog.findUnique({ where: { id: changeLogId } });
+    const updatedLog = await prisma.changeLog.findUnique({
+      where: { id: changeLogId },
+    });
     expect(updatedLog!.undone).toBe(true);
 
     // Verify UNDO_CREATE log exists
@@ -151,11 +157,11 @@ describe("Changelog and Undo Stateful Integration Tests", () => {
     });
 
     // 2. Update site data via PATCH /api/site/[id]
-    const updateReq = new Request(`http://localhost/api/site/${site.id}`, {
+    const updateReq = new Request(`http://localhost:3000/api/site/${site.id}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${adminToken}`,
+        Authorization: `Bearer ${adminToken}`,
       },
       body: JSON.stringify({
         sampleName: "Updated Name",
@@ -164,7 +170,9 @@ describe("Changelog and Undo Stateful Integration Tests", () => {
       }),
     });
 
-    const updateRes = await updatePost(updateReq, { params: Promise.resolve({ id: site.id.toString() }) });
+    const updateRes = await updatePost(updateReq, {
+      params: Promise.resolve({ id: site.id.toString() }),
+    });
     expect(updateRes.status).toBe(200);
 
     // Confirm update in database
@@ -180,11 +188,11 @@ describe("Changelog and Undo Stateful Integration Tests", () => {
     const updateLogId = logs[0].id;
 
     // 3. Undo the update via POST /api/changelog/undo
-    const undoReq = new Request("http://localhost/api/changelog/undo", {
+    const undoReq = new Request("http://localhost:3000/api/changelog/undo", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${adminToken}`,
+        Authorization: `Bearer ${adminToken}`,
       },
       body: JSON.stringify({ changeLogId: updateLogId }),
     });
@@ -198,7 +206,9 @@ describe("Changelog and Undo Stateful Integration Tests", () => {
     expect(siteInDb!.dangerZone).toBe("green");
 
     // Verify update log is marked undone
-    const updatedLog = await prisma.changeLog.findUnique({ where: { id: updateLogId } });
+    const updatedLog = await prisma.changeLog.findUnique({
+      where: { id: updateLogId },
+    });
     expect(updatedLog!.undone).toBe(true);
   });
 
@@ -221,15 +231,17 @@ describe("Changelog and Undo Stateful Integration Tests", () => {
     });
 
     // 2. Delete site via DELETE /api/site/[id]
-    const deleteReq = new Request(`http://localhost/api/site/${site.id}`, {
+    const deleteReq = new Request(`http://localhost:3000/api/site/${site.id}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${adminToken}`,
+        Authorization: `Bearer ${adminToken}`,
       },
     });
 
-    const deleteRes = await deletePost(deleteReq, { params: Promise.resolve({ id: site.id.toString() }) });
+    const deleteRes = await deletePost(deleteReq, {
+      params: Promise.resolve({ id: site.id.toString() }),
+    });
     expect(deleteRes.status).toBe(200);
 
     // Confirm it is gone
@@ -244,11 +256,11 @@ describe("Changelog and Undo Stateful Integration Tests", () => {
     const deleteLogId = logs[0].id;
 
     // 3. Undo the delete via POST /api/changelog/undo
-    const undoReq = new Request("http://localhost/api/changelog/undo", {
+    const undoReq = new Request("http://localhost:3000/api/changelog/undo", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${adminToken}`,
+        Authorization: `Bearer ${adminToken}`,
       },
       body: JSON.stringify({ changeLogId: deleteLogId }),
     });

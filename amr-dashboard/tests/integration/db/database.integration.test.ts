@@ -45,6 +45,7 @@ describe("Database Integration Tests", () => {
           email: "admin@example.com",
           password: "password123",
           isAdmin: true,
+          mustChangePassword: false,
         },
       });
 
@@ -57,6 +58,7 @@ describe("Database Integration Tests", () => {
             email: "admin@example.com",
             password: "password123",
             isAdmin: true,
+            mustChangePassword: false,
           },
         })
       ).rejects.toThrow();
@@ -94,6 +96,7 @@ describe("Database Integration Tests", () => {
           email: "john.admin@example.com",
           password: "password123",
           isAdmin: true,
+          mustChangePassword: false,
         },
       });
 

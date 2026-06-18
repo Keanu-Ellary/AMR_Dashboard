@@ -3,11 +3,14 @@ import { execSync } from "child_process";
 
 dotenv.config();
 
+// Increase default timeout for integration tests (e.g. prisma db push, MinIO checks)
+jest.setTimeout(10000);
+
 // Enforce using the test database
-if (process.env.DATABASE_URL) {
-  process.env.DATABASE_URL = process.env.DATABASE_URL;
+if (process.env.DATABASE_URL_TEST) {
+  process.env.DATABASE_URL = process.env.DATABASE_URL_TEST;
 } else {
-  console.error("DATABASE_URL is not defined in the environment.");
+  console.error("DATABASE_URL_TEST is not defined in the environment.");
   process.exit(1);
 }
 
