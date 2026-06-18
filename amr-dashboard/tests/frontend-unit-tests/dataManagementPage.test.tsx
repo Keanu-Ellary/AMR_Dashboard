@@ -1,3 +1,6 @@
+/* eslint-disable react/display-name */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-require-imports */
 import { act, fireEvent, render,screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 

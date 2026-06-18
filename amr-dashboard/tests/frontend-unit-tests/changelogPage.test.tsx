@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { act, render,screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
