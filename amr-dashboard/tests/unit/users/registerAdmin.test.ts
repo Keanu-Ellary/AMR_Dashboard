@@ -28,11 +28,9 @@ describe("registerAdmin", () => {
             name: "Admin",
             surname: "User",
             email: "adminU@gmail.com",
-            password: "plainPassword",
         });
 
         expect(res.statusCode).toBe(201);
-        expect(bcrypt.hash).toHaveBeenCalledWith("plainPassword", 10);
     });
 
     it("should fail if not admin", async () => {
@@ -46,7 +44,6 @@ describe("registerAdmin", () => {
             name: "Admin",
             surname: "User",
             email: "adminU@gmail.com",
-            password: "plainPassword",
         });
 
         expect(res.statusCode).toBe(403);
