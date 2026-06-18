@@ -164,7 +164,7 @@ function DiffView({ entry }: { entry: ChangeLogEntry }) {
               <tbody className="divide-y divide-slate-100">
                 {list.map((item, idx) => {
                   const sampleName = String(item.sampleName || "—");
-                  const organism = String(item.organism || item.orgamism || "—");
+                  const organism = String(item.organism || item.organism || "—");
                   const geoLocName = String(item.geoLocName || "—");
                   const collectionDate = item.collectionDate ? new Date(String(item.collectionDate)).toLocaleDateString("en-ZA", { year: "numeric", month: "short", day: "numeric" }) : "—";
                   const amrResGenes = String(item.amrResGenes || "—");

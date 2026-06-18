@@ -244,7 +244,7 @@ function SampleViewerContent() {
                     Organism
                   </span>
                   <span className="text-slate-800 font-semibold italic">
-                    {sampleData.orgamism || "Unknown"}
+                    {sampleData.organism || "Unknown"}
                   </span>
                 </div>
                 <div>

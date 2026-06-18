@@ -60,7 +60,7 @@ export async function uploadSiteData(
 
     // optional
     isolateId?: string;
-    orgamism?: string;
+    organism?: string;
     sampleId?: string;
     collectedBy?: string;
     sequenceName?: string;
@@ -339,7 +339,7 @@ export async function uploadMultipleSiteData(token: string, file: File) {
         adminId: authorize.user!.userId,
 
         ...((row['Isolate ID'] || row['isolateId']) && { isolateId: row['Isolate ID'] || row['isolateId'] }),
-        ...((row['Organism'] || row['organism'] || row['orgamism']) && { organism: row['Organism'] || row['organism'] || row['orgamism'] }),
+        ...((row['Organism'] || row['organism'] || row['organism']) && { organism: row['Organism'] || row['organism'] || row['organism'] }),
         ...((row['Sample ID'] || row['sampleId']) && { sampleId: row['Sample ID'] || row['sampleId'] }),
         ...((row['Collected by'] || row['collectedBy']) && { collectedBy: row['Collected by'] || row['collectedBy'] }),
         ...((row['Sequence Name'] || row['sequenceName']) && { sequenceName: row['Sequence Name'] || row['sequenceName'] }),
