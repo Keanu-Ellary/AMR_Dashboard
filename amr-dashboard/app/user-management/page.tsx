@@ -105,7 +105,7 @@ export default function UserManagementPage() {
       }, [adminUsers, adminSearch]);
 
     return(
-        <main className="flex-1 overflow-auto p-6 bg-slate-50/50 flex flex-col gap-6">
+        <main className="flex-1 overflow-auto p-6 bg-slate-50/50 flex flex-col gap-6 min-h-screen">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h1 className="text-2xl font-black text-indigo-950 tracking-tight">Admin Management</h1>
