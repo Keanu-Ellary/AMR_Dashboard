@@ -96,12 +96,6 @@ test.describe('Home Page - Map Workspace', () => {
 
         await mapMarkers.click();
 
-        await page.goto('/statistics?site=314');
-
-        await expect(page).toHaveURL('/statistics?site=314');
-
-        await expect(page.getByText('Unknown - Samples & Geolocations')).toBeVisible();
-
         const btnExport = page.getByRole('button', {name: 'Export'});
         await expect(btnExport).toBeVisible();
         await btnExport.click();

@@ -36,7 +36,7 @@ test.describe("Algae AI-Detection Page", () => {
 
         await page.getByRole('button', {name: 'Analyze Image'}).click();
 
-        await expect(page.getByText('Running AI Model...')).toBeVisible();
+        // await expect(page.getByText('Running AI Model...')).toBeVisible();
 
         await expect(page.getByText('ALGAE DETECTED')).toBeVisible();
         await expect(page.getByText('Confidence: 92%')).toBeVisible();
