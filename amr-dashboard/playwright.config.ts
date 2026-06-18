@@ -9,7 +9,8 @@ export default defineConfig({
     use: {
         baseURL: 'http://localhost:3000',
         headless: true,
-        video: 'retain-on-failure'
+        video: 'retain-on-failure',
+        trace: 'retain-on-failure'
     },
 
     webServer: {
