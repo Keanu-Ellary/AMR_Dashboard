@@ -19,6 +19,7 @@ describe("Statistics and Aggregation Integration Tests", () => {
         email: "test.admin@example.com",
         password: "password123",
         isAdmin: true,
+        mustChangePassword: false,
       },
     });
     adminId = admin.id;
