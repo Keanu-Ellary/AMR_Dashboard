@@ -8,7 +8,8 @@ import type { AdminUser } from "@/types/user_types";
 import { toast } from "react-toastify";
 import {
   Search,
-  Trash
+  Trash,
+  FilterX,
 } from "lucide-react";
 
 export default function UserManagementPage() {
@@ -164,6 +165,14 @@ export default function UserManagementPage() {
                                     </tr>
                                     );
                                 })}
+                                {filteredAdmins.length === 0 && (
+                                    <tr>
+                                    <td colSpan={8} className="px-6 py-12 text-center text-slate-400 text-sm">
+                                        <FilterX className="h-8 w-8 mx-auto mb-2 opacity-50 text-slate-400" />
+                                        No admins match the search terms.
+                                    </td>
+                                    </tr>
+                                )}
                                 </tbody>
                             </table>
                         </div>
@@ -212,16 +221,18 @@ export default function UserManagementPage() {
                     <div className="flex flex-col gap-1">
                         <span className="text-[12px] font-black text-slate-400 uppercase">Name</span>
                         <input
-                        type="text"
-                        value={newAdminName}
-                        onChange={(e) => setNewAdminName(e.target.value)}
-                        className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs text-indigo-950 font-bold focus:outline-none focus:ring-1 focus:ring-indigo-500 w-full"
+                            type="text"
+                            placeholder="Name" 
+                            value={newAdminName}
+                            onChange={(e) => setNewAdminName(e.target.value)}
+                            className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs text-indigo-950 font-bold focus:outline-none focus:ring-1 focus:ring-indigo-500 w-full"
                         />
                     </div>
                     <div className="flex flex-col gap-1">
                         <span className="text-[12px] font-black text-slate-400 uppercase">Surname</span>
                         <input
                             type="text"
+                            placeholder="Surname" 
                             value={newAdminSurname}
                             onChange={(e) => setNewAdminSurname(e.target.value)}
                             className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs text-indigo-950 font-bold focus:outline-none focus:ring-1 focus:ring-indigo-500 w-full"
@@ -231,6 +242,7 @@ export default function UserManagementPage() {
                         <span className="text-[12px] font-black text-slate-400 uppercase">Email</span>
                         <input
                             type="text"
+                            placeholder="admin@example.com" 
                             value={newAdminEmail}
                             onChange={(e) => setNewAdminEmail(e.target.value)}
                             className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs text-indigo-950 font-bold focus:outline-none focus:ring-1 focus:ring-indigo-500 w-full"
