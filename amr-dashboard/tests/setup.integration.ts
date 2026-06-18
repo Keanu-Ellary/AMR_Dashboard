@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 import dotenv from "dotenv";
 import { execSync } from "child_process";
 
 dotenv.config();
 
 // Increase default timeout for integration tests (e.g. prisma db push, MinIO checks)
-jest.setTimeout(10000);
+jest.setTimeout(30000);
 
 // Enforce using the test database
 if (process.env.DATABASE_URL_TEST) {
