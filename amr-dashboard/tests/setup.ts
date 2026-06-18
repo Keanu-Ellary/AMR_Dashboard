@@ -19,6 +19,7 @@ jest.mock("@/lib/db", () => ({
             findMany: jest.fn(),
             findUnique: jest.fn(),
             create: jest.fn(),
+            delete: jest.fn(),
         },
         siteData: {
             findMany: jest.fn(),

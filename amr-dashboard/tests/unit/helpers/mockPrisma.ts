@@ -12,6 +12,7 @@ export const mockPrisma = prisma as unknown as {
         findMany: jest.Mock,
         findUnique: jest.Mock,
         create: jest.Mock,
+        delete: jest.Mock,
     },
     siteData: {
         findMany: jest.Mock,
