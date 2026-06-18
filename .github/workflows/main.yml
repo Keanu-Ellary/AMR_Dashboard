@@ -28,7 +28,11 @@ jobs:
         run: npm run lint
         working-directory: ./amr-dashboard
 
-      - name: Run Tests
-        run: npm run test
+      - name: Run Backend Unit Tests
+        run: npm run test:backend-unit
+        working-directory: ./amr-dashboard
+
+      - name: Run Frontend Unit Tests
+        run: npm run test:frontend-unit
         working-directory: ./amr-dashboard
         
