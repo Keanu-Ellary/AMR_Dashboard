@@ -1,4 +1,4 @@
-name: Continuous Integration - Backend + Frontend Unit Tests
+name: Continuous Integration - Backend and Frontend Unit Tests
 
 on:
   push:
