@@ -84,7 +84,7 @@ const renderAndWait = async (ui: React.ReactElement) => {
     return result;
 };
 
-describe("Visualizations Page Tests", () => {
+describe("Date Management Page Tests", () => {
 
     beforeEach(() => {
         jest.clearAllMocks();

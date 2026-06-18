@@ -1,11 +1,11 @@
 import { render,screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-const { default: ForgotPasswordPage } = require("@/app/forgot-password/page");
-import { resetPassword } from "@/app/services/authService";
+const { default: ResetPasswordPage } = require("@/app/reset-password/page");
+import { resetPassword } from "@/app/services/adminService";
 import { toast } from "react-toastify";
 
-jest.mock("@/app/services/authService", () => ({
+jest.mock("@/app/services/adminService", () => ({
     resetPassword: jest.fn(),
 }));
 
@@ -25,18 +25,19 @@ jest.mock("next/navigation", () => ({
 
 const mockedResetPassword = resetPassword as jest.MockedFunction<typeof resetPassword>;
 
-describe("Forgot Password Page Tests", () => {
+describe("Reset Password Page Tests", () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
     });
 
-    it("Renders Forgot Password Page Successfully", () => {
-        render(<ForgotPasswordPage />);
+    it("Renders Reset Password Page Successfully", () => {
+        render(<ResetPasswordPage />);
 
         expect(screen.getByText("AMR SURVEILLANCE DASHBOARD")).toBeInTheDocument();
-        expect(screen.getByText("Change your password")).toBeInTheDocument();
+        expect(screen.getByText("Reset your password")).toBeInTheDocument();
         expect(screen.getByPlaceholderText("Email Address")).toBeInTheDocument();
+        expect(screen.getByPlaceholderText("Temporary Password")).toBeInTheDocument();
         expect(screen.getByPlaceholderText("New Password")).toBeInTheDocument();
         expect(screen.getByPlaceholderText("Confirm New Password")).toBeInTheDocument();
         expect(screen.getByRole("button", { name: "Confirm Change" })).toBeInTheDocument();
@@ -44,7 +45,7 @@ describe("Forgot Password Page Tests", () => {
     });
 
     it("Displays error toast if email and password is missing", async () => {
-        render(<ForgotPasswordPage />);
+        render(<ResetPasswordPage />);
 
         const changePasswordButton = screen.getByRole("button", { name: "Confirm Change" });
         await userEvent.click(changePasswordButton);
@@ -55,7 +56,7 @@ describe("Forgot Password Page Tests", () => {
     });
 
     it("Displays error toast if only email is missing", async () => {
-        render(<ForgotPasswordPage />);
+        render(<ResetPasswordPage />);
 
         const passwordInput = screen.getByPlaceholderText("New Password");
         await userEvent.type(passwordInput, "testpassword");
@@ -70,7 +71,7 @@ describe("Forgot Password Page Tests", () => {
     });
 
     it("Displays error popup if email is invalid", async () => {
-        render(<ForgotPasswordPage />);
+        render(<ResetPasswordPage />);
 
         const emailInput = screen.getByPlaceholderText("Email Address");
         await userEvent.type(emailInput, "testemail");
@@ -85,7 +86,7 @@ describe("Forgot Password Page Tests", () => {
     });
 
     it("Displays error toast if only password is missing", async () => {
-        render(<ForgotPasswordPage />);
+        render(<ResetPasswordPage />);
 
         const emailInput = screen.getByPlaceholderText("Email Address");
         await userEvent.type(emailInput, "test@email.com");
@@ -98,7 +99,7 @@ describe("Forgot Password Page Tests", () => {
     });
 
     it("Displays error toast if passwords don't match", async () => {
-        render(<ForgotPasswordPage />);
+        render(<ResetPasswordPage />);
 
         const emailInput = screen.getByPlaceholderText("Email Address");
         await userEvent.type(emailInput, "test@email.com");
@@ -115,7 +116,7 @@ describe("Forgot Password Page Tests", () => {
     });
 
     it("Show password successfully unhides password", async () => {
-        render(<ForgotPasswordPage />);
+        render(<ResetPasswordPage />);
 
         const passwordInput = screen.getByPlaceholderText("New Password");
         await userEvent.type(passwordInput, "testpassword1");
@@ -136,7 +137,7 @@ describe("Forgot Password Page Tests", () => {
 
     it("Displays error toast if user does not exist", async () => {
         mockedResetPassword.mockRejectedValue(new Error("User not found"));
-        render(<ForgotPasswordPage />);
+        render(<ResetPasswordPage />);
 
         const emailInput = screen.getByPlaceholderText("Email Address");
         await userEvent.type(emailInput, "test@email.com");
@@ -154,7 +155,7 @@ describe("Forgot Password Page Tests", () => {
 
     it("Displays success toast if credentials are correct", async () => {
         mockedResetPassword.mockResolvedValue({ status: 200, data: { token: "valid-token" } } as any);
-        render(<ForgotPasswordPage />);
+        render(<ResetPasswordPage />);
 
         const emailInput = screen.getByPlaceholderText("Email Address");
         await userEvent.type(emailInput, "test@email.com");
@@ -171,7 +172,7 @@ describe("Forgot Password Page Tests", () => {
     });
 
     it("Navigates to login when 'Go Back' is clicked", async () => {
-        render(<ForgotPasswordPage />);
+        render(<ResetPasswordPage />);
 
         const goBackButton = screen.getByRole("button", { name: "✖ Go Back" });
         await userEvent.click(goBackButton);
