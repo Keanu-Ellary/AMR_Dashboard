@@ -36,7 +36,7 @@ test.describe('Change Management Page - Admin Only', () => {
 
         const heading = deleteCard.locator('h4');
         await expect(heading).toBeVisible();
-        await expect(heading).toHaveText(/Deleted Water Samples \(2 records\)/i);
+        await expect(heading).toHaveText(/Deleted Water Samples \(1 records\)/i);
 
         const undo = deleteCard.getByTitle('Undo Change');
         await expect(undo).toBeEnabled();

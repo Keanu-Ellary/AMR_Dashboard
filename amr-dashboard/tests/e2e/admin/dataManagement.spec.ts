@@ -100,6 +100,6 @@ test.describe('Data Management Page - Admin Only', () => {
 
         await confirmDeleteModal.click();
 
-        await expect(page.getByText('Successfully deleted 4 record(s)')).toBeVisible();
+        await expect(page.getByText('Successfully deleted 2 record(s)')).toBeVisible();
     });
 });

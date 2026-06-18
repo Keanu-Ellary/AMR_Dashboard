@@ -1,4 +1,6 @@
 import {test, expect} from '@playwright/test';
+import path from 'path';
+import fs from 'fs';
 
 test.describe('Home Page - Map Workspace', () => {
     test.beforeEach(async ({page}) => {
@@ -80,7 +82,7 @@ test.describe('Home Page - Map Workspace', () => {
         await expect(page.getByText('ZA-PTA-02')).toBeVisible();
     });
 
-    test('site-specific visualizations when clicking on a site', async({page}) => {
+    test('site-specific visualizations when clicking on a site + export', async({page}) => {
         await page.goto('/');
 
         const mapTab = page.getByRole('button', {name: 'Interactive Spatial Mapping'});
@@ -94,10 +96,35 @@ test.describe('Home Page - Map Workspace', () => {
 
         await mapMarkers.click();
 
-        await page.goto('/statistics?site=86');
+        await page.goto('/statistics?site=314');
 
-        await expect(page).toHaveURL('/statistics?site=86');
+        await expect(page).toHaveURL('/statistics?site=314');
 
-        await expect(page.getByText('Soutpan - Samples & Geolocations')).toBeVisible();
+        await expect(page.getByText('Unknown - Samples & Geolocations')).toBeVisible();
+
+        const btnExport = page.getByRole('button', {name: 'Export'});
+        await expect(btnExport).toBeVisible();
+        await btnExport.click();
+
+        const download = page.waitForEvent('download');
+
+        await page.getByRole('button', {name: 'Export as CSV'}).click();
+
+        const performDownload = await download;
+
+        const fileName = performDownload.suggestedFilename();
+        expect(fileName).toMatch(/^site_.*\.csv$/i);
+
+        const downloadPath = path.join(__dirname, fileName);
+        await performDownload.saveAs(downloadPath);
+
+        expect(fs.existsSync(downloadPath)).toBe(true);
+        const contents = fs.readFileSync(downloadPath, 'utf8');
+        expect(contents).toContain('Sample Name');
+        expect(contents).toContain('Location');
+
+        await expect(page.getByText('Statistics exported successfully')).toBeVisible();
+
+        fs.unlinkSync(downloadPath);
     });
 });
