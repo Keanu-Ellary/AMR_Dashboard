@@ -12,8 +12,8 @@ session = ort.InferenceSession(MODEL_PATH)
 def preprocess_image(image_bytes):
     # Open image
     image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
-    # Resize to typical generic input shape, e.g., 224x224
-    image = image.resize((224, 224), Image.Resampling.BILINEAR)
+    # Resize to typical generic input shape, e.g., 800x800
+    image = image.resize((800, 800), Image.Resampling.BILINEAR)
     # Convert to numpy array and normalize
     img_data = np.array(image).astype('float32') / 255.0
     # Change data layout from HWC to CHW
@@ -62,8 +62,11 @@ def lambda_handler(event, context):
         input_name = session.get_inputs()[0].name
         outputs = session.run(None, {input_name: input_data})
 
-        # Flatten extra dimensions to get a 1D array of probabilities/logits for [Algae, Clean, Polluted]
+        # Flatten extra dimensions to get a 1D array of logits for [Algae, Clean, Polluted]
         preds = np.array(outputs[0]).flatten()
+        
+        # Apply sigmoid function to convert logits to probabilities
+        preds = 1 / (1 + np.exp(-preds))
 
         algae_prob = float(preds[0])
         clean_prob = float(preds[1])
