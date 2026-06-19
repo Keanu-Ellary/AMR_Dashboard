@@ -37,7 +37,7 @@ export async function POST(
         );
     }
 
-    const res = await addPhotosToSite(token, siteId, body.images, body.dateTaken, body.checkAlgae);
+    const res = await addPhotosToSite(token, siteId, body.images, body.dateTaken, body.runAiScan);
 
     return Response.json(res.body, {
         status: res.statusCode

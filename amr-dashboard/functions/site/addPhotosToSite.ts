@@ -7,7 +7,7 @@ export async function addPhotosToSite(
     siteId: number,
     imagesBase64: string[],
     dateTaken?: string,
-    checkAlgae?: boolean
+    runAiScan?: boolean
 ) {
     const authorize = adminNeeded(token);
     
@@ -42,14 +42,15 @@ export async function addPhotosToSite(
 
         const imagesToUpload = [];
         let algaeDetected = false;
+        let pollutionDetected = false;
 
         for (const baseString of imagesBase64)
         { 
             const base64Data = baseString.replace(/^data:image\/\w+;base64,/, '');
 
-            if (checkAlgae) {
+            if (runAiScan) {
                 try {
-                    const lambdaUrl = process.env.ALGAE_DETECTOR_LAMBDA_URL;
+                    const lambdaUrl = process.env.AI_CLASSIFIER_LAMBDA_URL || process.env.ALGAE_DETECTOR_LAMBDA_URL;
                     if (lambdaUrl) {
                         const lambdaResponse = await fetch(lambdaUrl, {
                             method: "POST",
@@ -63,8 +64,11 @@ export async function addPhotosToSite(
                             if (result.body && typeof result.body === "string") {
                                 parsedData = JSON.parse(result.body);
                             }
-                            if (parsedData.results && Array.isArray(parsedData.results) && parsedData.results.length > 0) {
+                            if (parsedData.algaeDetected) {
                                 algaeDetected = true;
+                            }
+                            if (parsedData.pollutionDetected) {
+                                pollutionDetected = true;
                             }
                         }
                     }
@@ -96,7 +100,8 @@ export async function addPhotosToSite(
                 siteId,
                 dateTaken: dateTaken ? new Date(dateTaken) : new Date(),
                 algaeDetected,
-                algaeScanRun: checkAlgae ?? false,
+                pollutionDetected,
+                aiScanRun: runAiScan ?? false,
             }
         });
 

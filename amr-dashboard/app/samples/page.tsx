@@ -156,18 +156,22 @@ function SampleViewerContent() {
         </div>
       </div>
 
-      {/* Algae Alert Banner */}
+      {/* AI Detection Alerts */}
       {sampleData.imageBatches &&
         sampleData.imageBatches.length > 0 &&
-        sampleData.imageBatches[0].algaeDetected && (
+        (sampleData.imageBatches[0].algaeDetected || (sampleData.imageBatches[0] as any).pollutionDetected) && (
           <div className="bg-amber-50 border border-amber-200 p-3 rounded-xl flex items-start gap-3">
             <AlertTriangle className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
             <div>
               <p className="text-sm text-amber-900 font-semibold">
-                Algae alert
+                AI Detection Alert
               </p>
               <p className="text-xs text-amber-700 mt-0.5">
-                Potential algae presence detected in the latest image batch.
+                {sampleData.imageBatches[0].algaeDetected && (sampleData.imageBatches[0] as any).pollutionDetected
+                  ? "Potential algae presence and pollution detected in the latest image batch."
+                  : sampleData.imageBatches[0].algaeDetected
+                  ? "Potential algae presence detected in the latest image batch."
+                  : "Potential pollution detected in the latest image batch."}
               </p>
             </div>
           </div>

@@ -40,7 +40,7 @@ function AddImagesContent() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
   const [imageBase64, setImageBase64] = useState<string[]>([]);
-  const [checkAlgae, setCheckAlgae] = useState<boolean>(false);
+  const [runAiScan, setRunAiScan] = useState<boolean>(false);
   const [imageDateTaken, setImageDateTaken] = useState<string>(
     new Date().toISOString().split("T")[0],
   );
@@ -124,12 +124,12 @@ function AddImagesContent() {
         selectedSite.id,
         imageBase64,
         imageDateTaken,
-        checkAlgae,
+        runAiScan,
       );
       if (response.ok) {
         toast.success("Images uploaded successfully!");
         setImageBase64([]);
-        setCheckAlgae(false);
+        setRunAiScan(false);
         if (imageInputRef.current) {
           imageInputRef.current.value = "";
         }
@@ -311,16 +311,16 @@ function AddImagesContent() {
               <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
                 <input
                   type="checkbox"
-                  id="checkAlgae"
-                  checked={checkAlgae}
-                  onChange={(e) => setCheckAlgae(e.target.checked)}
+                  id="runAiScan"
+                  checked={runAiScan}
+                  onChange={(e) => setRunAiScan(e.target.checked)}
                   className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 cursor-pointer"
                 />
                 <label
-                  htmlFor="checkAlgae"
+                  htmlFor="runAiScan"
                   className="text-sm text-gray-700 cursor-pointer select-none"
                 >
-                  Run AI Algae Scanner on images
+                  Run AI Image Scanner (Algae & Pollution)
                 </label>
               </div>
             </div>

@@ -16,11 +16,11 @@ export async function POST(req: NextRequest) {
     console.log("Image payload start:", image.substring(0, 50));
 
     // The URL of your deployed AWS Lambda function (e.g., Lambda Function URL or API Gateway)
-    const lambdaUrl = process.env.ALGAE_DETECTOR_LAMBDA_URL;
+    const lambdaUrl = process.env.AI_CLASSIFIER_LAMBDA_URL || process.env.ALGAE_DETECTOR_LAMBDA_URL;
 
     if (!lambdaUrl) {
       console.warn(
-        "ALGAE_DETECTOR_LAMBDA_URL is not configured in environment variables.",
+        "AI_CLASSIFIER_LAMBDA_URL or ALGAE_DETECTOR_LAMBDA_URL is not configured in environment variables.",
       );
       return NextResponse.json(
         { error: "AI processing service is not configured." },
