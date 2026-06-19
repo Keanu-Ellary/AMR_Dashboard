@@ -197,12 +197,11 @@ function SampleViewerContent() {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center text-slate-300 gap-2">
-                  <MapPin className="h-8 w-8" />
-                  <span className="text-xs font-bold uppercase tracking-wider">
-                    No Image Available
-                  </span>
-                </div>
+                <img
+                  src="/login-bg.jpg"
+                  alt={sampleData.sampleName}
+                  className="w-full h-full object-cover"
+                />
               )}
             </div>
 
