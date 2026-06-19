@@ -497,6 +497,21 @@ export default function WaterQualityFormula({
   // Determine effective mode
   const hasSiteData =
     ph != null && temperature != null && dissolvedO2 != null && tds != null;
+    
+  if (mode === "site" && !hasSiteData) {
+    return (
+      <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 flex flex-col items-center justify-center text-center text-slate-500 gap-3 h-full min-h-[200px]">
+        <Info className="w-8 h-8 text-slate-400" />
+        <div>
+          <p className="font-semibold text-slate-700">Incomplete Water Quality Data</p>
+          <p className="text-sm mt-1 max-w-sm">
+            Cannot calculate or display Water Quality Index because one or more core parameters are missing.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   const effectiveMode = mode === "site" && hasSiteData ? "site" : "reference";
 
   // ── Site mode calculations ──
