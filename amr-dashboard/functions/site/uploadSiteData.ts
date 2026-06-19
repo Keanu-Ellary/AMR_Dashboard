@@ -1,3 +1,4 @@
+import { data } from "autoprefixer";
 import { prisma } from "../../lib/db";
 import { adminNeeded } from "../../lib/middleware/authMiddleware";
 import { minioClient, BUCKET } from "../../lib/minio";
@@ -49,17 +50,17 @@ export async function uploadSiteData(
     // required:
     sampleName: string;
     isolationSource: string;
-    collectionDate: Date;
-    geoLocName: string;
-    latitude: number;
-    longitude: number;
-    amrResGenes: string;
-    predictedSir: string;
+    collectionDate: Date | null;
+    geoLocName: string | null;
+    latitude: number | null;
+    longitude: number | null;
+    amrResGenes: string | null;
+    predictedSir: string | null;
     sampleAnalysisType: string;
 
     // optional
     isolateId?: string;
-    orgamism?: string;
+    organism?: string;
     sampleId?: string;
     collectedBy?: string;
     sequenceName?: string;
@@ -103,6 +104,23 @@ export async function uploadSiteData(
       throw new Error("Invalid pH level");
     }
 
+    if (data.isolationSource == null || data.isolationSource == undefined || data.isolationSource == "") {
+      data.isolationSource = "Missing";
+    }
+    if (data.amrResGenes == null || data.amrResGenes == undefined || data.amrResGenes=="") {
+      data.amrResGenes = "Not collected";
+    }
+    if (data.predictedSir == null || data.predictedSir == undefined || data.predictedSir == "") {
+      data.predictedSir = "Not collected";
+    }
+    if (data.geoLocName == null || data.geoLocName == undefined || data.geoLocName=="") {
+      data.geoLocName = "Missing";
+    }
+    const geoLocName = data.geoLocName ?? "Missing";
+    const isolationSource = data.isolationSource ?? "Missing";
+    const amrResGenes = data.amrResGenes ?? "Not collected";
+    const predictedSir = data.predictedSir ?? "Not collected";
+
     const dangerZone = determineDangerZone(data.predictedSir, data.amrResGenes);
 
     let imageURL: string | null = null;
@@ -121,6 +139,10 @@ export async function uploadSiteData(
     const newSite = await prisma.siteData.create({
       data: {
         ...data,
+        geoLocName,
+        isolationSource,
+        amrResGenes,
+        predictedSir,
         dangerZone,
         admin: {
           connect: { id: authorize.user!.userId },
@@ -154,6 +176,39 @@ export async function uploadSiteData(
   }
 }
 
+function parseDelimitedText(fileText: string, delimiter: string): Record<string, string>[] {
+  const cleanedText = fileText.replace(/^\uFEFF/, "");
+      const lines = cleanedText
+        .split("\n")
+        .map((l) => {
+          if (l.endsWith("\r")) l = l.slice(0, -1);
+            return l.trim();
+        })
+        .map((l) => {
+          if (l.startsWith("\uFEFF")) l = l.slice(1);
+            return l;
+        })
+        .filter((l) => {
+          if (l === "") return false;
+          if (l.startsWith("#")) return false;
+          if (l.split(";").join("").trim() === "") return false;
+          return true;
+        });
+
+      if (lines.length < 2) {
+        return [];
+      }
+
+      const [headerLine, ...dataLines] = lines;
+      const headers = headerLine.split(delimiter).map((h) => h.trim());
+      return dataLines.map((line) => {
+        const values = line.split(delimiter).map((v) => v.trim());
+        return Object.fromEntries(
+            headers.map((h, i) => [h, values[i] ?? ""]),
+          );
+      })
+}
+
 export async function uploadMultipleSiteData(token: string, file: File) {
   const fileExtension = file.name
     .slice(file.name.lastIndexOf("."))
@@ -176,30 +231,62 @@ export async function uploadMultipleSiteData(token: string, file: File) {
 
   try {
     if (fileExtension === ".csv") {
-      const [headerLine, ...dataLines] = fileText.trim().split("\n");
-      const headers = headerLine.split(",").map((h) => h.trim());
-      rows = dataLines
-        .filter((line) => line.trim() !== "")
-        .map((line) => {
-          const values = line.split(",").map((v) => v.trim());
-          return Object.fromEntries(
-            headers.map((h, i) => [h, values[i] ?? ""]),
-          );
-        });
+      const firstDataLine = fileText
+        .replace(/^\uFEFF/,"")
+        .split("\n")
+        .map((line) => line.replace(/\r$/, ""). trim())
+        .find((line) => line !== "" && !line.startsWith("#") && line.split(";").join("").trim() !== "");
+      const delimiterUsed = firstDataLine?.includes(";") ? ";" : ",";
+      rows = parseDelimitedText(fileText, delimiterUsed);
+
     } else if (fileExtension === ".tsv") {
-      const [headerLine, ...dataLines] = fileText.trim().split("\n");
-      const headers = headerLine.split("\t").map((h) => h.trim());
-      rows = dataLines
-        .filter((line) => line.trim() !== "")
-        .map((line) => {
-          const values = line.split("\t").map((v) => v.trim());
-          return Object.fromEntries(
-            headers.map((h, i) => [h, values[i] ?? ""]),
-          );
-        });
+      rows = parseDelimitedText(fileText, "\t");
+
     } else if (fileExtension === ".json") {
-      const parsed = JSON.parse(fileText);
-      rows = Array.isArray(parsed) ? parsed : [parsed];
+      const parsed = JSON.parse(fileText.replace(/^\uFEFF/,""));
+      const dataArray = Array.isArray(parsed) ? parsed : [parsed];
+      const hasExcelArtifacts = dataArray.some((obj) => Object.keys(obj).some((index) => index === "__EMPTY" || index.startsWith("__EMPTY")));
+      
+      if (hasExcelArtifacts) {
+        const headerRowIndex = dataArray.findIndex((obj) => Object.values(obj).some(
+          (val) => typeof val === "string" && (val.trim() === "*Sample_name" || val.trim() === "Sample_name")
+        ))
+        if (headerRowIndex === -1) {
+          return {
+            statusCode: 400,
+            body: { error: "Could not find header row in JSON file."}
+          };
+        }
+        const headerRow = dataArray[headerRowIndex]
+        const keyMap: Record<string, string> = {};
+        for (const [index, val] of Object.entries(headerRow)) {
+          if (typeof val === "string" && !val.startsWith("#")) {
+            keyMap[index] = val.trim();
+          }
+        }
+        rows = dataArray
+          .slice(headerRowIndex +1)
+          .map((obj) => {
+            const remapped: Record<string, string> = {};
+            for (const [index, val] of Object.entries(obj)) {
+              const realName = keyMap[index];
+              if (realName) {
+                remapped[realName] = val == null ? "" : String(val);
+              }
+            }
+            return remapped;
+          })
+          .filter((row) => Object.keys(row).length > 0);
+
+      } else {
+        rows = dataArray.map((obj: Record<string, unknown>) => {
+          const stringiedObject: Record<string, string> = {};
+          for (const [index, val] of Object.entries(obj)) {
+            stringiedObject[index] = val == null ? "" : String(val);
+          }
+          return stringiedObject;
+        });
+      }
     }
 
     if (rows.length === 0) {
@@ -221,47 +308,61 @@ export async function uploadMultipleSiteData(token: string, file: File) {
     const siteDataToInsert = rows.map((row) => {
       const dangerZone =
         row.dangerZone ||
-        determineDangerZone(row.predictedSir || "", row.amrResGenes || "");
+        determineDangerZone(row['Predicted_SIR profile'] || "", row['AMR_Resistance_genes'] || "");
+
+      const parseDate = (val: string) => {
+        if (!val) return null;
+        const parts = val.split("/");
+        if (parts.length === 3) {
+          const [d, m, y] = parts;
+          return new Date(`${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`);
+        }
+        return new Date(val);
+      };
+
+      const parseNullableFields = (val: string) => {
+        const tempVal = parseFloat((val ?? "").replace(",","."));
+        return isNaN(tempVal) ? null : tempVal;
+      }
 
       return {
-        sampleName: row.sampleName,
-        isolationSource: row.isolationSource,
-        collectionDate: new Date(row.collectionDate),
-        geoLocName: row.geoLocName,
-        latitude: parseFloat(row.latitude),
-        longitude: parseFloat(row.longitude),
-        amrResGenes: row.amrResGenes,
-        predictedSir: row.predictedSir,
-        sampleAnalysisType: row.sampleAnalysisType,
+        sampleName: row['*Sample_name'] || row['Sample_name'] || "Missing",
+        isolationSource: row['Isolation source'] || "Missing",
+        collectionDate: parseDate(row['Collection date']),
+        geoLocName: row['*geo_loc_name'] || row['geo_loc_name'] || "Missing",
+        latitude: parseNullableFields(row['latitude']) || null,
+        longitude: parseNullableFields(row['longitude']) || null,
+        amrResGenes: row['AMR_Resistance_genes'] || "Not collected",
+        predictedSir: row['Predicted_SIR profile'] || "Not collected",
+        sampleAnalysisType: row['*Sample_Analysis_Type'] || row['Sample_Analysis_Type'] || "Not collected",
         dangerZone: dangerZone as string,
         adminId: authorize.user!.userId,
 
-        ...(row.isolateId && { isolateId: row.isolateId }),
-        ...(row.orgamism && { organism: row.orgamism }),
-        ...(row.organism && { organism: row.organism }),
-        ...(row.sampleId && { sampleId: row.sampleId }),
-        ...(row.collectedBy && { collectedBy: row.collectedBy }),
-        ...(row.sequenceName && { sequenceName: row.sequenceName }),
-        ...(row.elementType && { elementType: row.elementType }),
-        ...(row.class && { class: row.class }),
-        ...(row.subclass && { subclass: row.subclass }),
-        ...(row.accession && { accession: row.accession }),
-        ...(row.virtulenceGenes && { virtulenceGenes: row.virtulenceGenes }),
-        ...(row.plasmidReplicons && { plasmidReplicons: row.plasmidReplicons }),
-        ...(row.targetLength && { targetLength: parseFloat(row.targetLength) }),
-        ...(row.referenceLength && {
-          referenceLength: parseFloat(row.referenceLength),
+        ...((row['Isolate ID'] || row['isolateId']) && { isolateId: row['Isolate ID'] || row['isolateId'] }),
+        ...((row['Organism'] || row['organism'] || row['organism']) && { organism: row['Organism'] || row['organism'] || row['organism'] }),
+        ...((row['Sample ID'] || row['sampleId']) && { sampleId: row['Sample ID'] || row['sampleId'] }),
+        ...((row['Collected by'] || row['collectedBy']) && { collectedBy: row['Collected by'] || row['collectedBy'] }),
+        ...((row['Sequence Name'] || row['sequenceName']) && { sequenceName: row['Sequence Name'] || row['sequenceName'] }),
+        ...((row['Element type'] || row['elementType']) && { elementType: row['Element type'] || row['elementType'] }),
+        ...((row['Class'] || row['class']) && { class: row['Class'] || row['class'] }),
+        ...((row['Subclass'] || row['subclass']) && { subclass: row['Subclass'] || row['subclass'] }),
+        ...((row['Accession of closest sequence'] || row['accession']) && { accession: row['Accession of closest sequence'] || row['accession'] }),
+        ...((row['Virulence_genes'] || row['virtulenceGenes']) && { virtulenceGenes: row['Virulence_genes'] || row['virtulenceGenes'] }),
+        ...((row['Plasmid_replicons'] || row['plasmidReplicons']) && { plasmidReplicons: row['Plasmid_replicons'] || row['plasmidReplicons'] }),
+        ...((row['Target length'] || row['targetLength']) && { targetLength: parseNullableFields(row['Target length'] || row['targetLength']) ?? undefined }),
+        ...((row['Reference sequence length'] || row['referenceLength']) && {
+          referenceLength: parseNullableFields(row['Reference sequence length'] || row['referenceLength']) ?? undefined,
         }),
-        ...(row.alignmentLength && {
-          alignmentLength: parseFloat(row.alignmentLength),
+        ...((row['Alignment length'] || row['alignmentLength']) && {
+          alignmentLength: parseNullableFields(row['Alignment length'] || row['alignmentLength']) ?? undefined,
         }),
-        ...(row.coverage && { coverage: parseFloat(row.coverage) }),
-        ...(row.identity && { identity: parseFloat(row.identity) }),
-        ...(row.temperature && { temperature: parseFloat(row.temperature) }),
-        ...(row.ph && { ph: parseFloat(row.ph) }),
-        ...(row.tds && { tds: parseFloat(row.tds) }),
-        ...(row.ec && { ec: parseFloat(row.ec) }),
-        ...(row.dissolvedO2 && { dissolvedO2: parseFloat(row.dissolvedO2) }),
+        ...((row['% Coverage of reference sequence'] || row['coverage']) && { coverage: parseNullableFields(row['% Coverage of reference sequence'] || row['coverage']) ?? undefined }),
+        ...((row['% Identity to reference sequence'] || row['identity']) && { identity: parseNullableFields(row['% Identity to reference sequence'] || row['identity']) ?? undefined }),
+        ...((row['Temp of water'] || row['temperature']) && { temperature: parseNullableFields(row['Temp of water'] || row['temperature']) ?? undefined }),
+        ...((row['pH'] || row['ph']) && { ph: parseNullableFields(row['pH'] || row['ph']) ?? undefined }),
+        ...((row['TDS (mg/L)'] || row['tds']) && { tds: parseNullableFields(row['TDS (mg/L)'] || row['tds']) ?? undefined }),
+        ...((row['ec'] || row['EC']) && { ec: parseNullableFields(row['ec'] || row['EC']) ?? undefined }),
+        ...((row['Dissolved Oxygen (mg/L)'] || row['dissolvedO2']) && { dissolvedO2: parseNullableFields(row['Dissolved Oxygen (mg/L)'] || row['dissolvedO2']) ?? undefined }),
       };
     });
 

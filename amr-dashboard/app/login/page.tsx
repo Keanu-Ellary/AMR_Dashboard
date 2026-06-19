@@ -16,10 +16,13 @@ export default function LoginPage() {
         return;
       }
       const response = await login(email, password);
+      const loginData = await response.json();
       if (response && response.status === 200) {
         toast.success("Login successful!");
         await new Promise((resolve) => setTimeout(resolve, 1000));
         window.location.href = "/home";
+      } else if (response && response.status === 403 && loginData?.mustChangePassword){
+        window.location.href ="/reset-password";
       } else { 
         toast.error("Login failed. Please try again.");
       } 
@@ -93,8 +96,8 @@ export default function LoginPage() {
                 <span>✖</span> Go Back
               </button>
               
-              <a href="/forgot-password" className="text-sm text-gray-500 underline hover:text-gray-700 mt-2">
-                Forgot Password
+              <a href="/reset-password" className="text-sm text-gray-500 underline hover:text-gray-700 mt-2">
+                Reset Password
               </a>
             </div>
           </form>

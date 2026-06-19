@@ -52,7 +52,7 @@ function DashboardHome() {
 
   const hasActiveFilters = useMemo(() => {
     return (
-      (filters.contaminationLevels && filters.contaminationLevels.length > 0) ||
+      (filters.contaminationLevels && filters.contaminationLevels.length > 0 && filters.contaminationLevels.length < 4) ||
       (filters.sites && filters.sites.length > 0) ||
       selectedWqiBrackets.length > 0 ||
       !!filters.startDate ||
@@ -106,7 +106,7 @@ function DashboardHome() {
       return uniqueSitesFiltered;
     }
     return uniqueSitesFiltered.filter((s) => 
-      filters.contaminationLevels.includes(getDangerZoneLabel(s.dangerZone as any))
+      filters.contaminationLevels?.includes(getDangerZoneLabel(s.dangerZone as any))
     );
   }, [uniqueSitesFiltered, filters.contaminationLevels]);
 
@@ -292,52 +292,6 @@ function DashboardHome() {
             onToggleSite={toggleSite}
             onSelectSite={setSelectedSite}
           />
-
-          <div>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3 block">Risk Distribution Facets</span>
-            <div className="grid grid-cols-2 gap-3">
-              <button 
-                onClick={(e) => toggleContaminationLevel("low", e.ctrlKey || e.metaKey)}
-                className={`flex flex-col gap-1 p-3 rounded-xl border transition-all text-left bg-white ${
-                  filters.contaminationLevels?.includes("low") 
-                  ? "border-emerald-500 ring-1 ring-emerald-500 shadow-sm" 
-                  : "border-slate-200 hover:border-emerald-300"
-                }`}
-              >
-                <span className="text-[9px] font-bold text-emerald-600 uppercase">Low Risk</span>
-                <span className="text-xl font-black text-indigo-950">{totalLowRiskSites}</span>
-              </button>
-
-              <button 
-                onClick={(e) => toggleContaminationLevel("moderate", e.ctrlKey || e.metaKey)}
-                className={`flex flex-col gap-1 p-3 rounded-xl border transition-all text-left bg-white ${
-                  filters.contaminationLevels?.includes("moderate") 
-                  ? "border-yellow-400 ring-1 ring-yellow-400 shadow-sm" 
-                  : "border-slate-200 hover:border-yellow-300"
-                }`}
-              >
-                <span className="text-[9px] font-bold text-yellow-600 uppercase">Moderate</span>
-                <span className="text-xl font-black text-indigo-950">{totalModerateRiskSites}</span>
-              </button>
-
-              <button 
-                onClick={(e) => toggleContaminationLevel("high", e.ctrlKey || e.metaKey)}
-                className={`flex flex-col gap-1 p-3 rounded-xl border transition-all text-left bg-white ${
-                  filters.contaminationLevels?.includes("high") 
-                  ? "border-red-500 ring-1 ring-red-500 shadow-sm" 
-                  : "border-slate-200 hover:border-red-300"
-                }`}
-              >
-                <span className="text-[9px] font-bold text-red-600 uppercase">High Risk</span>
-                <span className="text-xl font-black text-indigo-950">{totalHighRiskSites}</span>
-              </button>
-
-              <div className="flex flex-col gap-1 p-3 rounded-xl border border-slate-200 bg-slate-50/50">
-                <span className="text-[9px] font-bold text-slate-500 uppercase">Filtered Total</span>
-                <span className="text-xl font-black text-indigo-950">{filteredPoints.length}</span>
-              </div>
-            </div>
-          </div>
 
           <div className="flex flex-col gap-6">
             <OverviewCharts

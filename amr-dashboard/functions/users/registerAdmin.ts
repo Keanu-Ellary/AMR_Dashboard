@@ -1,12 +1,13 @@
 import { adminNeeded } from "@/lib/middleware/authMiddleware";
 import { prisma } from "../../lib/db";
 import bcrypt from "bcrypt";
+import crypto from "crypto";
+import { sendEmail } from "../../lib/email";
 
 export async function registerAdmin(token: string, data: {
     name: string;
     surname: string;
     email: string;
-    password: string;
 }) {
     const authorize = adminNeeded(token);
     
@@ -19,7 +20,8 @@ export async function registerAdmin(token: string, data: {
     }
 
     try {
-        const hashed = await bcrypt.hash(data.password, 10);
+        const tempPassword = crypto.randomBytes(8).toString("hex");
+        const hashed = await bcrypt.hash(tempPassword, 10);
 
         const newUser = await prisma.adminUser.create({
             data: {
@@ -28,8 +30,18 @@ export async function registerAdmin(token: string, data: {
                 email: data.email,
                 password: hashed,
                 isAdmin: true,
+                mustChangePassword: true
             },
         });
+
+        await sendEmail(
+            newUser.email,
+            "Welcome to AMR Dashboard",
+            `<p>Your admin account has been created.</p>
+            <p>Email: ${newUser.email}</p>
+            <p>Temporary Password: ${tempPassword}</p>
+            <p>Please log in and change your password immediately.<p>`
+        )
 
         return {
             statusCode: 201,

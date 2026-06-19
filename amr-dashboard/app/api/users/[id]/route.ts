@@ -1,4 +1,4 @@
-import { deleteUser } from "@/functions/users/deleteUser";
+import { deleteAdmin } from "@/functions/users/deleteUser";
 import { getUserById } from "@/functions/users/getUserById";
 import { updateUser } from "@/functions/users/updateUser";
 
@@ -85,7 +85,7 @@ export async function DELETE(
         );
     }
 
-    const res = await deleteUser(userId, token);
+    const res = await deleteAdmin(userId, token);
 
     return Response.json(res.body, {
         status: res.statusCode

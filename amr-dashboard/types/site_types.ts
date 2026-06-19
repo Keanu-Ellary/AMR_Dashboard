@@ -54,7 +54,7 @@ export interface SiteData {
 
   // optional
   isolateId?: string;
-  orgamism?: string; // intentionally spelled this way based on previous code
+  organism?: string; // intentionally spelled this way based on previous code
   sampleId?: string;
   collectedBy?: string;
   sequenceName?: string;

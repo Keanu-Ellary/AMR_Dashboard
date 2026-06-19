@@ -32,7 +32,7 @@ interface ChangeLogEntry {
   previousData: string | null;
   newData: string | null;
   undone: boolean;
-  createdAt: string;
+  changedAt: string;
   admin?: AdminInfo;
 }
 
@@ -164,7 +164,7 @@ function DiffView({ entry }: { entry: ChangeLogEntry }) {
               <tbody className="divide-y divide-slate-100">
                 {list.map((item, idx) => {
                   const sampleName = String(item.sampleName || "—");
-                  const organism = String(item.organism || item.orgamism || "—");
+                  const organism = String(item.organism || item.organism || "—");
                   const geoLocName = String(item.geoLocName || "—");
                   const collectionDate = item.collectionDate ? new Date(String(item.collectionDate)).toLocaleDateString("en-ZA", { year: "numeric", month: "short", day: "numeric" }) : "—";
                   const amrResGenes = String(item.amrResGenes || "—");
@@ -485,7 +485,7 @@ export default function ChangeLogPage() {
                           </span>
                         </div>
                         <div className="flex items-center gap-3 mt-0.5">
-                          <span className="text-[10px] font-bold text-slate-400">{formatAbsoluteDate(entry.createdAt)}</span>
+                          <span className="text-[10px] font-bold text-slate-400">{formatAbsoluteDate(entry.changedAt)}</span>
                           {entry.admin?.name && (
                             <span className="text-[10px] font-bold text-indigo-600/70 uppercase">By {entry.admin.name}</span>
                           )}

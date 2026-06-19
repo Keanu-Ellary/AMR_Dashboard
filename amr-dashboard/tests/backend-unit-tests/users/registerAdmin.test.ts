@@ -1,10 +1,14 @@
 import { registerAdmin } from "@/functions/users/registerAdmin";
 import { mockPrisma } from "../helpers/mockPrisma";
 import { adminNeeded } from "@/lib/middleware/authMiddleware";
-import bcrypt from "bcrypt";
+import { sendEmail } from "@/lib/email";
 
 jest.mock("bcrypt", () => ({
     hash: jest.fn().mockResolvedValue("hashedPassword"),
+}));
+
+jest.mock("../../../lib/email", () =>  ({
+    sendEmail: jest.fn().mockResolvedValue(true),
 }));
 
 describe("registerAdmin", () => {
@@ -28,11 +32,11 @@ describe("registerAdmin", () => {
             name: "Admin",
             surname: "User",
             email: "adminU@gmail.com",
-            password: "plainPassword",
         });
 
         expect(res.statusCode).toBe(201);
-        expect(bcrypt.hash).toHaveBeenCalledWith("plainPassword", 10);
+        expect(res.body).toHaveProperty("id", 1);
+        expect(sendEmail).toHaveBeenCalledTimes(1);
     });
 
     it("should fail if not admin", async () => {
@@ -46,7 +50,6 @@ describe("registerAdmin", () => {
             name: "Admin",
             surname: "User",
             email: "adminU@gmail.com",
-            password: "plainPassword",
         });
 
         expect(res.statusCode).toBe(403);

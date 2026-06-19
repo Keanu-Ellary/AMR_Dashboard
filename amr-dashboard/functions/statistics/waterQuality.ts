@@ -113,13 +113,16 @@ export async function waterQuality(siteId?: number) {
     for (let j = 0; j < sites.length - 1; j++) {
       const curr = sites[j];
       const next = sites[j + 1];
+      let dist = 0;
 
-      const dist = getDistance(
-        curr.latitude,
-        curr.longitude,
-        next.latitude,
-        next.longitude,
+      if (curr.latitude !== null && curr.longitude !== null && next.latitude !== null && next.longitude !== null) {
+        dist = getDistance(
+          curr.latitude,
+          curr.longitude,
+          next.latitude,
+          next.longitude,
       );
+      }
 
       totalDistance += dist;
 
