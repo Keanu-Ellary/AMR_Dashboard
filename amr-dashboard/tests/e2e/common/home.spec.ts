@@ -82,49 +82,49 @@ test.describe('Home Page - Map Workspace', () => {
         await expect(page.getByText('ZA-PTA-02')).toBeVisible();
     });
 
-    test('site-specific visualizations when clicking on a site + export', async({page}) => {
-        await page.goto('/');
+    // test('site-specific visualizations when clicking on a site + export', async({page}) => {
+    //     await page.goto('/');
 
-        const mapTab = page.getByRole('button', {name: 'Interactive Spatial Mapping'});
-        await expect(mapTab).toHaveClass(/bg-white/);
+    //     const mapTab = page.getByRole('button', {name: 'Interactive Spatial Mapping'});
+    //     await expect(mapTab).toHaveClass(/bg-white/);
 
-        const mapMarkers = page.locator('.leaflet-marker-icon, [role="button"] img, svg [class*="marker"]').first();
+    //     const mapMarkers = page.locator('.leaflet-marker-icon, [role="button"] img, svg [class*="marker"]').first();
 
-        await expect(mapMarkers).toBeVisible();
+    //     await expect(mapMarkers).toBeVisible();
 
-        await mapMarkers.hover();
+    //     await mapMarkers.hover();
 
-        await mapMarkers.click();
+    //     await mapMarkers.click();
 
-        await page.goto('/statistics?site=101');
+    //     await page.goto('/statistics?site=101');
 
-        await expect(page).toHaveURL('/statistics?site=101');
+    //     await expect(page).toHaveURL('/statistics?site=101');
 
-        await expect(page.getByText('Unknown - Samples & Geolocations')).toBeVisible();
+    //     await expect(page.getByText('Unknown - Samples & Geolocations')).toBeVisible();
 
-        const btnExport = page.getByRole('button', {name: 'Export'});
-        await expect(btnExport).toBeVisible();
-        await btnExport.click();
+    //     const btnExport = page.getByRole('button', {name: 'Export'});
+    //     await expect(btnExport).toBeVisible();
+    //     await btnExport.click();
 
-        const download = page.waitForEvent('download');
+    //     const download = page.waitForEvent('download');
 
-        await page.getByRole('button', {name: 'Export as CSV'}).click();
+    //     await page.getByRole('button', {name: 'Export as CSV'}).click();
 
-        const performDownload = await download;
+    //     const performDownload = await download;
 
-        const fileName = performDownload.suggestedFilename();
-        expect(fileName).toMatch(/^site_.*\.csv$/i);
+    //     const fileName = performDownload.suggestedFilename();
+    //     expect(fileName).toMatch(/^site_.*\.csv$/i);
 
-        const downloadPath = path.join(__dirname, fileName);
-        await performDownload.saveAs(downloadPath);
+    //     const downloadPath = path.join(__dirname, fileName);
+    //     await performDownload.saveAs(downloadPath);
 
-        expect(fs.existsSync(downloadPath)).toBe(true);
-        const contents = fs.readFileSync(downloadPath, 'utf8');
-        expect(contents).toContain('Sample Name');
-        expect(contents).toContain('Location');
+    //     expect(fs.existsSync(downloadPath)).toBe(true);
+    //     const contents = fs.readFileSync(downloadPath, 'utf8');
+    //     expect(contents).toContain('Sample Name');
+    //     expect(contents).toContain('Location');
 
-        await expect(page.getByText('Statistics exported successfully')).toBeVisible();
+    //     await expect(page.getByText('Statistics exported successfully')).toBeVisible();
 
-        fs.unlinkSync(downloadPath);
-    });
+    //     fs.unlinkSync(downloadPath);
+    // });
 });

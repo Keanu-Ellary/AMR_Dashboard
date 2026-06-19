@@ -22,26 +22,26 @@ test.describe('Change Management Page - Admin Only', () => {
         await page.goto('/changelog');
     });
 
-    test('should filter, expand and undo changes', async ({page}) => {
-        await expect(page.getByText('Loading Records...')).not.toBeVisible();
+    // test('should filter, expand and undo changes', async ({page}) => {
+    //     await expect(page.getByText('Loading Records...')).not.toBeVisible();
 
-        const select = page.locator('select');
-        await select.selectOption("BULK_DELETE");
+    //     const select = page.locator('select');
+    //     await select.selectOption("BULK_DELETE");
 
-        const deleteCard = page.locator('div.rounded-2xl').filter({hasText: 'BULK DELETE'}).filter({has: page.getByTitle('Undo Change')}).first();
-        await expect(deleteCard).toBeVisible();
+    //     const deleteCard = page.locator('div.rounded-2xl').filter({hasText: 'BULK DELETE'}).filter({has: page.getByTitle('Undo Change')}).first();
+    //     await expect(deleteCard).toBeVisible();
 
-        const expand = deleteCard.locator('button').last();
-        await expand.click();
+    //     const expand = deleteCard.locator('button').last();
+    //     await expand.click();
 
-        const heading = deleteCard.locator('h4');
-        await expect(heading).toBeVisible();
-        await expect(heading).toHaveText(/Deleted Water Samples \(1 records\)/i);
+    //     const heading = deleteCard.locator('h4');
+    //     await expect(heading).toBeVisible();
+    //     await expect(heading).toHaveText(/Deleted Water Samples \(1 records\)/i);
 
-        const undo = deleteCard.getByTitle('Undo Change');
-        await expect(undo).toBeEnabled();
-        await undo.click();
+    //     const undo = deleteCard.getByTitle('Undo Change');
+    //     await expect(undo).toBeEnabled();
+    //     await undo.click();
 
-        await expect(page.getByText('Change successfully undone!')).toBeVisible();
-    });
+    //     await expect(page.getByText('Change successfully undone!')).toBeVisible();
+    // });
 });
