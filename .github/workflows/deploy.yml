@@ -76,10 +76,11 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{secrets.EC2_HOST}} >> ~/.ssh/known_hosts
 
-      - name: Copy compose file
+      - name: Copy compose file and migrations
         run: |
           ssh -i ~/.ssh/id_rsa ubuntu@${{secrets.EC2_HOST}} "mkdir -p ~/app"
           rsync -az -e "ssh -i ~/.ssh/id_rsa" ./amr-dashboard/docker-compose.yml ubuntu@${{secrets.EC2_HOST}}:~/app/
+          rsync -az -e "ssh -i ~/.ssh/id_rsa" ./amr-dashboard/prisma ubuntu@${{secrets.EC2_HOST}}:~/app/
 
       - name: SSH into instance and pull from registry
         run: |
@@ -92,6 +93,10 @@ jobs:
 
             docker compose down || true
             docker compose up -d --remove-orphans
+
+            echo "Running Prisma Migrations"
+
+            docker compose exec -T application npx prisma migrate deploy
 
             docker image prune -a -f
           EOF
