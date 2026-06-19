@@ -9,7 +9,7 @@ RUN pip install --upgrade pip && \
 
 # Copy function code and model
 COPY lambda_function.py ${LAMBDA_TASK_ROOT}
-COPY algae_detector.onnx ${LAMBDA_TASK_ROOT}
+COPY water_classifier.onnx ${LAMBDA_TASK_ROOT}
 
 # Set the CMD to the handler
 CMD [ "lambda_function.lambda_handler" ]

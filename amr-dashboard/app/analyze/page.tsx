@@ -8,9 +8,10 @@ export default function AnalyzePage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [result, setResult] = useState<{
-    detected: boolean;
-    probability: number;
-    boxes: number[][];
+    algaeDetected: boolean;
+    pollutionDetected: boolean;
+    clean: boolean;
+    probabilities: { algae: number; clean: number; polluted: number };
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -56,25 +57,12 @@ export default function AnalyzePage() {
             throw new Error(data.error || "Failed to process image");
           }
 
-          const detections = data.data.results || [];
-
-          if (detections.length > 0) {
-            // Find the highest confidence score among all bounding boxes
-            let maxConf = 0;
-            for (const detection of detections) {
-              if (detection[4] > maxConf) {
-                maxConf = detection[4];
-              }
-            }
-            setResult({
-              detected: true,
-              probability: Math.round(maxConf * 100),
-              boxes: detections,
-            });
-          } else {
-            // No boxes returned means no algae detected over the threshold
-            setResult({ detected: false, probability: 0, boxes: [] });
-          }
+          setResult({
+            algaeDetected: data.data.algaeDetected || false,
+            pollutionDetected: data.data.pollutionDetected || false,
+            clean: data.data.clean || false,
+            probabilities: data.data.probabilities || { algae: 0, clean: 0, polluted: 0 },
+          });
         } catch (err: any) {
           console.error(err);
           setError(err.message || "An error occurred during processing");
@@ -130,25 +118,7 @@ export default function AnalyzePage() {
                   alt="Preview"
                   className="max-h-[350px] w-auto block"
                 />
-                {result?.boxes?.map((box, i) => {
-                  const [xmin, ymin, xmax, ymax] = box;
-
-                  // The AI backend resizes the image to 800x800 before inference.
-                  // We map the 800x800 coordinates to percentages so they overlay
-                  // correctly on the original aspect ratio!
-                  const left = `${(xmin / 800) * 100}%`;
-                  const top = `${(ymin / 800) * 100}%`;
-                  const width = `${((xmax - xmin) / 800) * 100}%`;
-                  const height = `${((ymax - ymin) / 800) * 100}%`;
-
-                  return (
-                    <div
-                      key={i}
-                      className="absolute border-2 border-red-500 bg-red-500/20"
-                      style={{ left, top, width, height }}
-                    />
-                  );
-                })}
+                {/* No boxes to render for classification model */}
               </div>
             </div>
           )}
@@ -197,29 +167,47 @@ export default function AnalyzePage() {
             <div className="flex-1 flex flex-col items-center justify-center w-full animate-in fade-in zoom-in duration-300">
               <div
                 className={`text-3xl font-bold mb-4 px-6 py-4 rounded-xl shadow-sm ${
-                  result.detected
+                  result.algaeDetected || result.pollutionDetected
                     ? "bg-red-100 text-red-600 border border-red-200"
                     : "bg-green-100 text-green-600 border border-green-200"
                 }`}
               >
-                {result.detected ? "ALGAE DETECTED" : "NOT DETECTED"}
+                {result.algaeDetected && result.pollutionDetected
+                  ? "ALGAE & POLLUTION DETECTED"
+                  : result.algaeDetected
+                    ? "ALGAE DETECTED"
+                    : result.pollutionDetected
+                      ? "POLLUTION DETECTED"
+                      : "CLEAN"}
               </div>
 
-              {result.detected && (
-                <div className="text-xl mt-4 bg-gray-50 px-6 py-3 rounded-lg border border-gray-100">
-                  <span className="text-gray-600 font-medium">
-                    Confidence:{" "}
-                  </span>
-                  <span className="font-bold text-red-500">
-                    {result.probability}%
-                  </span>
+              {(result.algaeDetected || result.pollutionDetected || result.clean) && (
+                <div className="flex flex-col gap-2 mt-4 w-full px-4">
+                  <div className="bg-gray-50 px-6 py-3 rounded-lg border border-gray-100 flex justify-between">
+                    <span className="text-gray-600 font-medium">Algae:</span>
+                    <span className={`font-bold ${result.algaeDetected ? "text-red-500" : "text-gray-700"}`}>
+                      {Math.round(result.probabilities.algae * 100)}%
+                    </span>
+                  </div>
+                  <div className="bg-gray-50 px-6 py-3 rounded-lg border border-gray-100 flex justify-between">
+                    <span className="text-gray-600 font-medium">Pollution:</span>
+                    <span className={`font-bold ${result.pollutionDetected ? "text-red-500" : "text-gray-700"}`}>
+                      {Math.round(result.probabilities.polluted * 100)}%
+                    </span>
+                  </div>
+                  <div className="bg-gray-50 px-6 py-3 rounded-lg border border-gray-100 flex justify-between">
+                    <span className="text-gray-600 font-medium">Clean:</span>
+                    <span className={`font-bold ${result.clean ? "text-green-500" : "text-gray-700"}`}>
+                      {Math.round(result.probabilities.clean * 100)}%
+                    </span>
+                  </div>
                 </div>
               )}
 
               <p className="mt-8 text-sm text-gray-500 text-center px-4 max-w-sm border-t border-gray-100 pt-6">
-                {result.detected
-                  ? "The AI model has identified visual elements highly consistent with algae blooms in the provided image."
-                  : "The AI model did not find any significant evidence of algae blooms in the provided image."}
+                {result.algaeDetected || result.pollutionDetected
+                  ? "The AI model has identified visual elements highly consistent with algae blooms or pollution in the provided image."
+                  : "The AI model did not find any significant evidence of algae blooms or pollution in the provided image."}
               </p>
             </div>
           )}

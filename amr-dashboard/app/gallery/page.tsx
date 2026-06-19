@@ -102,6 +102,12 @@ function GalleryContent() {
                         Algae Detected
                       </span>
                     )}
+                    {batch.pollutionDetected && (
+                      <span className="flex items-center gap-1 bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-bold border border-yellow-300">
+                        <AlertTriangle size={14} />
+                        Pollution Detected
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div className="p-6">

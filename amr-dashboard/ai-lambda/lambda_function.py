@@ -6,14 +6,14 @@ import onnxruntime as ort
 from PIL import Image
 
 # Initialize the ONNX session outside the handler for performance (warm start)
-MODEL_PATH = "algae_detector.onnx"
+MODEL_PATH = "water_classifier.onnx"
 session = ort.InferenceSession(MODEL_PATH)
 
 def preprocess_image(image_bytes):
     # Open image
     image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     # Resize to typical generic input shape, e.g., 224x224
-    image = image.resize((800, 800), Image.Resampling.BILINEAR)
+    image = image.resize((224, 224), Image.Resampling.BILINEAR)
     # Convert to numpy array and normalize
     img_data = np.array(image).astype('float32') / 255.0
     # Change data layout from HWC to CHW
@@ -62,18 +62,40 @@ def lambda_handler(event, context):
         input_name = session.get_inputs()[0].name
         outputs = session.run(None, {input_name: input_data})
 
-        # Flatten extra dimensions to get a 2D array of boxes (num_boxes, 6)
-        preds = np.array(outputs[0]).reshape(-1, 6)
+        # Flatten extra dimensions to get a 1D array of probabilities/logits for [Algae, Clean, Polluted]
+        preds = np.array(outputs[0]).flatten()
 
-        # Filter boxes where confidence (index 4) is greater than 20%
-        filtered_preds = preds[preds[:, 4] > 0.20]
+        algae_prob = float(preds[0])
+        clean_prob = float(preds[1])
+        polluted_prob = float(preds[2])
 
-        # Convert output to list for JSON serialization
-        results = filtered_preds.tolist()
+        clean = False
+        algae_detected = False
+        pollution_detected = False
+
+        # "If Clean is the top class, the photo is clean."
+        top_class_idx = np.argmax(preds)
+        if top_class_idx == 1:
+            clean = True
+        else:
+            # "If Algae or Pollution are above 0.5 in value, they are present in the photo and should be outputted as such."
+            if algae_prob > 0.5:
+                algae_detected = True
+            if polluted_prob > 0.5:
+                pollution_detected = True
 
         return {
             'statusCode': 200,
-            'body': json.dumps({'results': results})
+            'body': json.dumps({
+                'algaeDetected': algae_detected,
+                'pollutionDetected': pollution_detected,
+                'clean': clean,
+                'probabilities': {
+                    'algae': algae_prob,
+                    'clean': clean_prob,
+                    'polluted': polluted_prob
+                }
+            })
         }
 
     except Exception as e:
