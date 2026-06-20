@@ -13,9 +13,10 @@ test.describe("Algae AI-Detection Page", () => {
         await page.route('**/api/algae', async (route) => {
             const json = {
                 data: {
-                    results: [
-                        [100, 100, 300, 400, 0.92]
-                    ]
+                    algaeDetected: true,
+                    pollutionDetected: false,
+                    clean: false,
+                    probabilities: {algae: 0.92, clean: 0.05, polluted: 0.03 }
                 }
             };
             await route.fulfill({json});
