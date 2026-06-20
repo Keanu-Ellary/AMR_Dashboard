@@ -293,7 +293,7 @@ export default function Site({
       );
     });
 
-    if (selectedSite) {
+    if (selectedSite && selectedSite.latitude && selectedSite.longitude) {
       map.flyTo([selectedSite.latitude, selectedSite.longitude], 13, { animate: true, duration: 0.85 });
     }
 
