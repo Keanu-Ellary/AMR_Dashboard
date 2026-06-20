@@ -167,8 +167,11 @@ describe("External Services Integration Tests (MinIO & AI Lambda)", () => {
       const data = await res.json();
 
       expect(data.success).toBe(true);
-      expect(data.data.results).toBeDefined();
-      expect(Array.isArray(data.data.results)).toBe(true);
+      expect(data.data.clean).toBeDefined();
+      expect(data.data.algaeDetected).toBeDefined();
+      expect(data.data.pollutionDetected).toBeDefined();
+      expect(data.data.probabilities).toBeDefined();
+      expect(data.data.probabilities.clean).toBeDefined();
     });
   });
 });
