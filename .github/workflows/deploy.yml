@@ -10,7 +10,7 @@ permissions:
   packages: write
 
 jobs:
-  production-check:
+  dependency-check:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -32,7 +32,7 @@ jobs:
         working-directory: ./amr-dashboard
 
   build-and-push:
-    needs: production-check
+    needs: dependency-check
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
