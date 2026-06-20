@@ -1,6 +1,7 @@
 import {prisma} from "../../lib/db"
 import { adminNeeded } from "../../lib/middleware/authMiddleware";
-import { minioClient, BUCKET } from "../../lib/minio";
+import { s3Client, BUCKET, getImageUrl } from "@/lib/s3Client";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 
 export async function addPhotosToSite(
     token: string,
@@ -46,7 +47,15 @@ export async function addPhotosToSite(
 
         for (const baseString of imagesBase64)
         { 
+            const match = baseString.match(/^data:image\/(\w+);base64,/);
+            const imageExtension = match ? match[1] : "jpg";
+            const contentType = match ? `image/${match[1]}` : "image/jpeg";
             const base64Data = baseString.replace(/^data:image\/\w+;base64,/, '');
+            const buffer = Buffer.from(base64Data, "base64");
+            const fileName = `site-${siteId}-${Date.now()}-${Math.floor(Math.random() * 1000)}.${imageExtension}`;
+
+            console.log("base64 length:", base64Data.length);
+            console.log("base64 start:", base64Data.substring(0, 50));
 
             if (runAiScan) {
                 try {
@@ -77,20 +86,14 @@ export async function addPhotosToSite(
                 }
             }
 
-            const buffer = Buffer.from(base64Data, "base64");
-            const fileName = `site-${siteId}-${Date.now()}-${Math.floor(Math.random() * 1000)}.jpg`
+            await s3Client.send(new PutObjectCommand({
+                Bucket: BUCKET,
+                Key: fileName,
+                Body: buffer,
+                ContentType: contentType,
+            }));
 
-            await minioClient.putObject(
-                BUCKET,
-                fileName,
-                buffer,
-                buffer.length,
-                {
-                    "Content-Type": "image/jpeg",
-                }
-            );
-
-            const url = `http://127.0.0.1:9000/${BUCKET}/${fileName}`;
+            const url = getImageUrl(fileName);
 
             imagesToUpload.push({url});
         }

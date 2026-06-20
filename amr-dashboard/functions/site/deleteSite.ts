@@ -1,6 +1,7 @@
 import {prisma} from "../../lib/db"
 import { adminNeeded } from "../../lib/middleware/authMiddleware";
-import { minioClient, BUCKET } from "../../lib/minio";
+import { s3Client, BUCKET } from "../../lib/s3Client";
+import { DeleteObjectsCommand } from "@aws-sdk/client-s3";
 import { logChange } from "../changelog/changeLog";
 
 export async function deleteSite(token: string, siteId: number) {
@@ -35,7 +36,13 @@ export async function deleteSite(token: string, siteId: number) {
 
         if (objectNames.length > 0)
         {
-            await minioClient.removeObjects(BUCKET, objectNames);
+            await s3Client.send(new DeleteObjectsCommand({
+                Bucket: BUCKET,
+                Delete: {
+                    Objects: objectNames.map((key) => ({ Key: key })),
+                    Quiet: true,
+                }
+            }));
         }
 
         await prisma.siteData.delete({

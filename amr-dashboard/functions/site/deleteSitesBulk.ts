@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { prisma } from "../../lib/db";
 import { adminNeeded } from "../../lib/middleware/authMiddleware";
-import { minioClient, BUCKET } from "../../lib/minio";
+import { s3Client, BUCKET } from "../../lib/s3Client";
+import { DeleteObjectsCommand } from "@aws-sdk/client-s3";
 import { logChange } from "../changelog/changeLog";
 import { parseLocationName } from "../../utils/siteUtils";
 
@@ -73,10 +74,16 @@ export async function deleteSitesBulk(token: string, filters: BulkDeleteFilters)
       });
     });
 
-    // Delete images from MinIO bucket
+    // Delete images from S3/MINIO bucket
     if (minioObjectNames.length > 0) {
       try {
-        await minioClient.removeObjects(BUCKET, minioObjectNames);
+        await s3Client.send(new DeleteObjectsCommand({
+          Bucket: BUCKET,
+          Delete: {
+            Objects: minioObjectNames.map((key) => ({ Key: key })),
+            Quiet: true,
+          }
+        }));
       } catch (err) {
         console.error("MinIO image removal failed:", err);
       }
