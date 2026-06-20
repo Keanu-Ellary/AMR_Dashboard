@@ -1,16 +1,21 @@
 import { adminNeeded } from "@/lib/middleware/authMiddleware";
-import { minioClient } from "@/lib/minio";
+import { s3Client } from "@/lib/s3Client";
 import { mockPrisma } from "../helpers/mockPrisma";
 import { uploadSiteData } from "@/functions/site/uploadSiteData";
 
-jest.mock("@/lib/minio", () => ({
-    minioClient: {
-        putObject: jest.fn(),
+jest.mock("@/lib/s3Client", () => ({
+    s3Client: {
+        send: jest.fn(),
     },
     BUCKET: "test-bucket",
+    getImageUrl: (fileName: string) => `http://127.0.0.1:9000/test-bucket/${fileName}`,
 }));
 
 describe("uploadSiteData", () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+    
     it("should upload site with image", async () => {
         (adminNeeded as jest.Mock).mockReturnValue({
             authorized: true,
@@ -20,7 +25,7 @@ describe("uploadSiteData", () => {
             },
         });
 
-        (minioClient.putObject as jest.Mock).mockResolvedValue(undefined);
+        (s3Client.send as jest.Mock).mockResolvedValue({});
 
         mockPrisma.siteData.create.mockResolvedValue({
             id: 1,
@@ -43,7 +48,7 @@ describe("uploadSiteData", () => {
 
         expect(res.statusCode).toBe(201);
 
-        expect(minioClient.putObject).toHaveBeenCalled();
+        expect(s3Client.send).toHaveBeenCalled();
 
         expect(mockPrisma.siteData.create).toHaveBeenCalledWith(
             expect.objectContaining({
@@ -99,7 +104,7 @@ describe("uploadSiteData", () => {
 
         expect(res.statusCode).toBe(201);
 
-        expect(minioClient.putObject).not.toHaveBeenCalled();
+        expect(s3Client.send).not.toHaveBeenCalled();
 
         expect(mockPrisma.siteData.create).toHaveBeenCalledWith(
             expect.objectContaining({

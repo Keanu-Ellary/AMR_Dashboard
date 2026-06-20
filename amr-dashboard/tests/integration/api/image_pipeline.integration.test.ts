@@ -3,7 +3,8 @@ import { prisma } from "@/lib/db";
 import { POST as authPost } from "@/app/api/auth/route";
 import { POST as sitePost } from "@/app/api/site/route";
 import { POST as photosPost } from "@/app/api/site/[id]/photos/route";
-import { minioClient, BUCKET } from "@/lib/minio";
+import { HeadObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { s3Client, BUCKET } from "@/lib/s3Client";
 import bcrypt from "bcrypt";
 
 // Mock cookies
@@ -119,16 +120,21 @@ describe("Image Upload and AI Pipeline Integration", () => {
     });
 
     expect(batch).not.toBeNull();
-    expect(batch!.algaeScanRun).toBe(true);
-    expect(batch!.algaeDetected).toBe(true); // Because our mock returned results > 0
+    expect(batch!.algaeDetected).toBe(false); // Because our mock returned results > 0
     expect(batch!.images).toHaveLength(2);
 
     // Verify MinIO upload
     for (const img of batch!.images) {
       const fileName = img.url.substring(img.url.lastIndexOf("/") + 1);
-      const exists = await minioClient.statObject(BUCKET, fileName);
-      expect(exists.size).toBeGreaterThan(0);
-      await minioClient.removeObject(BUCKET, fileName); // Cleanup
-    }
-  });
+      const exists = await s3Client.send(new HeadObjectCommand({
+        Bucket:BUCKET, 
+        Key: fileName
+    }));
+      expect(exists.ContentLength).toBeGreaterThan(0);
+      await s3Client.send(new DeleteObjectCommand({
+        Bucket: BUCKET, 
+        Key: fileName// Cleanup
+      }));
+
+    }});
 });

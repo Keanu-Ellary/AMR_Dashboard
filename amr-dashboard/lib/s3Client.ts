@@ -23,7 +23,10 @@ export const s3Client = new S3Client(
 
 )
 
-export const BUCKET = process.env.S3_BUCKET;
+export const BUCKET = 
+    isTestMode
+    ? process.env.MINIO_BUCKET
+    : process.env.S3_BUCKET;
 
 export const getImageUrl = (fileName: string) =>
     isTestMode

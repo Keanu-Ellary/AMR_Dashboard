@@ -1,16 +1,21 @@
 import { deleteSite } from "@/functions/site/deleteSite";
 import { mockPrisma } from "../helpers/mockPrisma";
 import { adminNeeded } from "@/lib/middleware/authMiddleware";
-import { minioClient } from "@/lib/minio";
+import { s3Client } from "@/lib/s3Client";
 
-jest.mock("@/lib/minio", () => ({
-    minioClient: {
-        removeObjects: jest.fn(),
+jest.mock("@/lib/s3Client", () => ({
+    s3Client: {
+        send: jest.fn(),
     },
     BUCKET: "test-bucket",
+    getImageUrl: (fileName: string) => `http://127.0.0.1:9000/test-bucket/${fileName}`,
 }));
 
 describe("deleteSite", () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
     it("should successfully delete", async () => {
         (adminNeeded as jest.Mock).mockReturnValue({
             authorized: true,
@@ -34,9 +39,16 @@ describe("deleteSite", () => {
 
         expect(res.statusCode).toBe(200);
 
-        expect(minioClient.removeObjects).toHaveBeenCalledWith(
-            "test-bucket",
-            ["file1.jpg", "file2.jpg"],
+        expect(s3Client.send).toHaveBeenCalledWith(
+            expect.objectContaining({
+                input: {
+                    Bucket: "test-bucket",
+                    Delete: {
+                        Objects: [{ Key: "file1.jpg"}, { Key: "file2.jpg"}],
+                        Quiet: true,
+                    }
+                }
+            })
         );
 
         expect(mockPrisma.siteData.delete).toHaveBeenCalledWith({
@@ -63,7 +75,7 @@ describe("deleteSite", () => {
         const res = await deleteSite("validToken", 1);
 
         expect(res.statusCode).toBe(200);
-        expect(minioClient.removeObjects).not.toHaveBeenCalled();
+        expect(s3Client.send).not.toHaveBeenCalled();
     });
 
     it("should return 404 if site not found", async () => {
