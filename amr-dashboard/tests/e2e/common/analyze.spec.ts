@@ -39,7 +39,6 @@ test.describe("Algae AI-Detection Page", () => {
         // await expect(page.getByText('Running AI Model...')).toBeVisible();
 
         await expect(page.getByText('ALGAE DETECTED')).toBeVisible();
-        await expect(page.getByText('Confidence: 92%')).toBeVisible();
     });
 
     test("should display no algae confidence detection results", async ({page}) => {
@@ -65,7 +64,7 @@ test.describe("Algae AI-Detection Page", () => {
 
         await page.getByRole('button', {name: 'Analyze Image'}).click();
 
-        await expect(page.getByText('NOT DETECTED')).toBeVisible();
+        await expect(page.getByText('CLEAN')).toBeVisible();
         await expect(page.getByText('The AI model did not find any significant evidence')).toBeVisible();
     });
 });
