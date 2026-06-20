@@ -39,10 +39,10 @@ beforeAll(async () => {
   }
 
   try {
-    const { minioClient, BUCKET } = require("@/lib/minio");
-    const exists = await minioClient.bucketExists(BUCKET);
+    const { s3Client, BUCKET } = require("@/lib/s3Client");
+    const exists = await s3Client.bucketExists(BUCKET);
     if (!exists) {
-      await minioClient.makeBucket(BUCKET);
+      await s3Client.makeBucket(BUCKET);
     }
   } catch (error) {
     console.error("Failed to ensure MinIO bucket exists:", error);

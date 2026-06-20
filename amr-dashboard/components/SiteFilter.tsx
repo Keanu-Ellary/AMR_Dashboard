@@ -55,9 +55,15 @@ export default function SiteFilter({
   const handleToggle = (name: string, e: React.MouseEvent) => {
     e.stopPropagation();
     onToggleSite(name, true);
+    const site = sites.find((s) => parseLocationName(s.geoLocName) === name);
+    if (site) {
+      onSelectSite(site);
+      setIsOpen(false);
+    }
   };
 
   const handleSelectSite = (name: string) => {
+    onToggleSite(name, true);
     const site = sites.find((s) => parseLocationName(s.geoLocName) === name);
     if (site) {
       onSelectSite(site);

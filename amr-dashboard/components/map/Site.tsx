@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import L from "leaflet";
@@ -102,17 +103,24 @@ function sitePopupHTML(point: SiteData): string {
     imageUrl = `/api/image?url=${encodeURIComponent(point.images[lastImage].url)}`;
   }
 
-  // Check if the latest batch has algae detected
-  const algaeWarning = point.imageBatches && point.imageBatches.length > 0 && point.imageBatches[0].algaeDetected 
-    ? `<div style="background: #fee2e2; color: #b91c1c; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; margin-bottom: 6px; display: flex; align-items: center; gap: 4px;">⚠️ Algae Detected in latest photos</div>`
-    : "";
+  // Check if the latest batch has algae or pollution detected
+  let detectionWarnings = "";
+  if (point.imageBatches && point.imageBatches.length > 0) {
+    const latestBatch = point.imageBatches[0];
+    if (latestBatch.algaeDetected) {
+      detectionWarnings += `<div style="background: #fee2e2; color: #b91c1c; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; margin-bottom: 6px; display: flex; align-items: center; gap: 4px;">⚠️ Algae Detected in latest photos</div>`;
+    }
+    if ((latestBatch as any).pollutionDetected) {
+      detectionWarnings += `<div style="background: #fef08a; color: #854d0e; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; margin-bottom: 6px; display: flex; align-items: center; gap: 4px;">⚠️ Pollution Detected in latest photos</div>`;
+    }
+  }
 
   return `
     <div style="${TOOLTIP_STYLES.wrapper}">
 
       <img src="${imageUrl}" alt="${point.sampleName}" style="${TOOLTIP_STYLES.siteImage}" />
       <div style="${TOOLTIP_STYLES.name}">${point.sampleName}</div>
-      ${algaeWarning}
+      ${detectionWarnings}
       <div style="${TOOLTIP_STYLES.badge}">
         <span style="${TOOLTIP_STYLES.riskBadge(riskColor.glow, riskColor.fill)}">${riskColor.label}</span>
       </div>
@@ -286,7 +294,7 @@ export default function Site({
       );
     });
 
-    if (selectedSite) {
+    if (selectedSite && selectedSite.latitude && selectedSite.longitude) {
       map.flyTo([selectedSite.latitude, selectedSite.longitude], 13, { animate: true, duration: 0.85 });
     }
 

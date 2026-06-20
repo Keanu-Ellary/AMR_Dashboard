@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
-import { minioClient, BUCKET } from "@/lib/minio";
+import { s3Client, BUCKET } from "@/lib/s3Client";
+import { PutObjectCommand, HeadObjectCommand, DeleteObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { POST as authPost } from "@/app/api/auth/route";
 import { POST as sitePost } from "@/app/api/site/route";
 import { POST as algaePost } from "@/app/api/algae/route";
@@ -65,32 +66,33 @@ describe("External Services Integration Tests (MinIO & AI Lambda)", () => {
       const buffer = Buffer.from(fileContent, "utf-8");
 
       // Upload directly to MinIO
-      await minioClient.putObject(
-        BUCKET,
-        testObjectName,
-        buffer,
-        buffer.length,
-        {
-          "Content-Type": "text/plain",
-        },
+      await s3Client.send( new PutObjectCommand({
+        Bucket: BUCKET,
+        Key: testObjectName,
+        Body: buffer,
+        ContentType: "text/plain",
+      })
       );
 
       // Retrieve and verify
-      const stream = await minioClient.getObject(BUCKET, testObjectName);
-      let retrievedContent = "";
+      const exists = await s3Client.send(new HeadObjectCommand({
+              Bucket:BUCKET, 
+              Key: testObjectName
+      }))
+     expect(exists.ContentLength).toBeGreaterThan(0);
 
-      await new Promise<void>((resolve, reject) => {
-        stream.on("data", (chunk) => {
-          retrievedContent += chunk.toString();
-        });
-        stream.on("end", () => resolve());
-        stream.on("error", (err) => reject(err));
-      });
-
-      expect(retrievedContent).toBe(fileContent);
+    const getRes = await s3Client.send(new GetObjectCommand({
+              Bucket:BUCKET, 
+              Key: testObjectName
+      }))
+     const retrievedContent = await getRes.Body?.transformToString();
+     expect(retrievedContent).toBe(fileContent);
 
       // Clean up uploaded file
-      await minioClient.removeObject(BUCKET, testObjectName);
+      await s3Client.send(new DeleteObjectCommand({
+        Bucket: BUCKET, 
+        Key: testObjectName// Cleanup
+      }));
     });
 
     it("should upload image via /api/site and save it to MinIO", async () => {
@@ -136,11 +138,17 @@ describe("External Services Integration Tests (MinIO & AI Lambda)", () => {
       const fileName = imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
 
       // Verify file exists in MinIO bucket
-      const exists = await minioClient.statObject(BUCKET, fileName);
-      expect(exists.size).toBeGreaterThan(0);
+      const exists = await s3Client.send(new HeadObjectCommand({
+              Bucket:BUCKET, 
+              Key: fileName
+      }))
+     expect(exists.ContentLength).toBeGreaterThan(0);
 
       // Clean up MinIO file
-      await minioClient.removeObject(BUCKET, fileName);
+      await s3Client.send(new DeleteObjectCommand({
+        Bucket: BUCKET, 
+        Key: fileName// Cleanup
+      }));
     });
   });
 

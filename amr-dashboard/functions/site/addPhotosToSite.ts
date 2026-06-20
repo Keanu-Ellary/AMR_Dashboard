@@ -1,13 +1,14 @@
 import {prisma} from "../../lib/db"
 import { adminNeeded } from "../../lib/middleware/authMiddleware";
-import { minioClient, BUCKET } from "../../lib/minio";
+import { s3Client, BUCKET, getImageUrl } from "@/lib/s3Client";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 
 export async function addPhotosToSite(
     token: string,
     siteId: number,
     imagesBase64: string[],
     dateTaken?: string,
-    checkAlgae?: boolean
+    runAiScan?: boolean
 ) {
     const authorize = adminNeeded(token);
     
@@ -42,14 +43,23 @@ export async function addPhotosToSite(
 
         const imagesToUpload = [];
         let algaeDetected = false;
+        let pollutionDetected = false;
 
         for (const baseString of imagesBase64)
         { 
+            const match = baseString.match(/^data:image\/(\w+);base64,/);
+            const imageExtension = match ? match[1] : "jpg";
+            const contentType = match ? `image/${match[1]}` : "image/jpeg";
             const base64Data = baseString.replace(/^data:image\/\w+;base64,/, '');
+            const buffer = Buffer.from(base64Data, "base64");
+            const fileName = `site-${siteId}-${Date.now()}-${Math.floor(Math.random() * 1000)}.${imageExtension}`;
 
-            if (checkAlgae) {
+            console.log("base64 length:", base64Data.length);
+            console.log("base64 start:", base64Data.substring(0, 50));
+
+            if (runAiScan) {
                 try {
-                    const lambdaUrl = process.env.ALGAE_DETECTOR_LAMBDA_URL;
+                    const lambdaUrl = process.env.AI_CLASSIFIER_LAMBDA_URL || process.env.ALGAE_DETECTOR_LAMBDA_URL;
                     if (lambdaUrl) {
                         const lambdaResponse = await fetch(lambdaUrl, {
                             method: "POST",
@@ -63,8 +73,11 @@ export async function addPhotosToSite(
                             if (result.body && typeof result.body === "string") {
                                 parsedData = JSON.parse(result.body);
                             }
-                            if (parsedData.results && Array.isArray(parsedData.results) && parsedData.results.length > 0) {
+                            if (parsedData.algaeDetected) {
                                 algaeDetected = true;
+                            }
+                            if (parsedData.pollutionDetected) {
+                                pollutionDetected = true;
                             }
                         }
                     }
@@ -73,20 +86,14 @@ export async function addPhotosToSite(
                 }
             }
 
-            const buffer = Buffer.from(base64Data, "base64");
-            const fileName = `site-${siteId}-${Date.now()}-${Math.floor(Math.random() * 1000)}.jpg`
+            await s3Client.send(new PutObjectCommand({
+                Bucket: BUCKET,
+                Key: fileName,
+                Body: buffer,
+                ContentType: contentType,
+            }));
 
-            await minioClient.putObject(
-                BUCKET,
-                fileName,
-                buffer,
-                buffer.length,
-                {
-                    "Content-Type": "image/jpeg",
-                }
-            );
-
-            const url = `http://127.0.0.1:9000/${BUCKET}/${fileName}`;
+            const url = getImageUrl(fileName);
 
             imagesToUpload.push({url});
         }
@@ -96,7 +103,8 @@ export async function addPhotosToSite(
                 siteId,
                 dateTaken: dateTaken ? new Date(dateTaken) : new Date(),
                 algaeDetected,
-                algaeScanRun: checkAlgae ?? false,
+                pollutionDetected,
+                aiScanRun: runAiScan ?? false,
             }
         });
 

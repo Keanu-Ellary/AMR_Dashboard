@@ -89,8 +89,9 @@ model SiteImageBatch {
   siteId        Int
   site          SiteData    @relation(fields: [siteId], references: [id], onDelete: Cascade)
   dateTaken     DateTime
-  algaeDetected Boolean     @default(false)
-  algaeScanRun  Boolean     @default(false)
+  algaeDetected     Boolean     @default(false)
+  pollutionDetected Boolean     @default(false)
+  aiScanRun         Boolean     @default(false)
   createdAt     DateTime    @default(now())
   images        SiteImage[]
 }
