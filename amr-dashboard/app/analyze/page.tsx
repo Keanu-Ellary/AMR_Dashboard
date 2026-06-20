@@ -61,7 +61,11 @@ export default function AnalyzePage() {
             algaeDetected: data.data.algaeDetected || false,
             pollutionDetected: data.data.pollutionDetected || false,
             clean: data.data.clean || false,
-            probabilities: data.data.probabilities || { algae: 0, clean: 0, polluted: 0 },
+            probabilities: data.data.probabilities || {
+              algae: 0,
+              clean: 0,
+              polluted: 0,
+            },
           });
         } catch (err: any) {
           console.error(err);
@@ -85,7 +89,7 @@ export default function AnalyzePage() {
   return (
     <div className="container mx-auto p-8 max-w-6xl text-gray-900 bg-white rounded-xl shadow-md border border-gray-100 my-8">
       <h1 className="text-3xl font-bold mb-8 text-gray-900">
-        Algae Detection Analysis
+        AI Image Scanner
       </h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -151,8 +155,8 @@ export default function AnalyzePage() {
 
           {!result && !isProcessing && (
             <div className="flex-1 flex items-center justify-center text-gray-500 italic text-center px-4">
-              Select an image from your computer and click &quot;Analyze Image&quot; to
-              see the AI predictions here.
+              Select an image from your computer and click &quot;Analyze
+              Image&quot; to see the AI predictions here.
             </div>
           )}
 
@@ -181,23 +185,33 @@ export default function AnalyzePage() {
                       : "CLEAN"}
               </div>
 
-              {(result.algaeDetected || result.pollutionDetected || result.clean) && (
+              {(result.algaeDetected ||
+                result.pollutionDetected ||
+                result.clean) && (
                 <div className="flex flex-col gap-2 mt-4 w-full px-4">
                   <div className="bg-gray-50 px-6 py-3 rounded-lg border border-gray-100 flex justify-between">
                     <span className="text-gray-600 font-medium">Algae:</span>
-                    <span className={`font-bold ${result.algaeDetected ? "text-red-500" : "text-gray-700"}`}>
+                    <span
+                      className={`font-bold ${result.algaeDetected ? "text-red-500" : "text-gray-700"}`}
+                    >
                       {Math.round(result.probabilities.algae * 100)}%
                     </span>
                   </div>
                   <div className="bg-gray-50 px-6 py-3 rounded-lg border border-gray-100 flex justify-between">
-                    <span className="text-gray-600 font-medium">Pollution:</span>
-                    <span className={`font-bold ${result.pollutionDetected ? "text-red-500" : "text-gray-700"}`}>
+                    <span className="text-gray-600 font-medium">
+                      Pollution:
+                    </span>
+                    <span
+                      className={`font-bold ${result.pollutionDetected ? "text-red-500" : "text-gray-700"}`}
+                    >
                       {Math.round(result.probabilities.polluted * 100)}%
                     </span>
                   </div>
                   <div className="bg-gray-50 px-6 py-3 rounded-lg border border-gray-100 flex justify-between">
                     <span className="text-gray-600 font-medium">Clean:</span>
-                    <span className={`font-bold ${result.clean ? "text-green-500" : "text-gray-700"}`}>
+                    <span
+                      className={`font-bold ${result.clean ? "text-green-500" : "text-gray-700"}`}
+                    >
                       {Math.round(result.probabilities.clean * 100)}%
                     </span>
                   </div>
