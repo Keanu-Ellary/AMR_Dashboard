@@ -1,16 +1,21 @@
 import { addPhotosToSite } from "@/functions/site/addPhotosToSite";
 import { adminNeeded } from "@/lib/middleware/authMiddleware";
-import { minioClient } from "@/lib/minio";
+import { s3Client } from "@/lib/s3Client";
 import { mockPrisma } from "../helpers/mockPrisma";
 
-jest.mock("@/lib/minio", () => ({
-    minioClient: {
-        putObject: jest.fn(),
+jest.mock("@/lib/s3Client", () => ({
+    s3Client: {
+        send: jest.fn(),
     },
     BUCKET: "test-bucket",
+    getImageUrl: (fileName: string) => `http://127.0.0.1:9000/test-bucket/${fileName}`,
 }));
 
 describe("addPhotosToSite", () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
     it("should add photos to site", async () => {
         (adminNeeded as jest.Mock).mockReturnValue({
             authorized: true,
@@ -28,7 +33,7 @@ describe("addPhotosToSite", () => {
             id: 123,
         });
 
-        (minioClient.putObject as jest.Mock).mockResolvedValue(undefined);
+        (s3Client.send as jest.Mock).mockResolvedValue({});
 
         mockPrisma.siteData.createMany.mockResolvedValue({count: 2});
 
@@ -39,7 +44,7 @@ describe("addPhotosToSite", () => {
 
         const res = await addPhotosToSite("validToken", 1, base64Images);
 
-        expect(minioClient.putObject).toHaveBeenCalledTimes(2);
+        expect(s3Client.send).toHaveBeenCalledTimes(2);
 
         expect(mockPrisma.siteImage.createMany).toHaveBeenCalledWith({
             data: expect.arrayContaining([
@@ -115,7 +120,7 @@ describe("addPhotosToSite", () => {
             id: 1
         });
 
-        (minioClient.putObject as jest.Mock).mockRejectedValue(
+        (s3Client.send as jest.Mock).mockRejectedValue(
             new Error("Upload failed")
         );
 

@@ -1,7 +1,8 @@
 import { data } from "autoprefixer";
 import { prisma } from "../../lib/db";
 import { adminNeeded } from "../../lib/middleware/authMiddleware";
-import { minioClient, BUCKET } from "../../lib/minio";
+import { s3Client, BUCKET, getImageUrl } from "../../lib/s3Client";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { logChange } from "../changelog/changeLog";
 
 function checkSIR(predictedSir: string) {
@@ -126,14 +127,22 @@ export async function uploadSiteData(
     let imageURL: string | null = null;
 
     if (imageBase64) {
-      const buffer = Buffer.from(imageBase64, "base64");
-      const fileName = `site-${Date.now()}.jpg`;
+      const match = imageBase64.match(/^data:image\/(\w+);base64,/);
+      const imageExtension = match ? match[1] : "jpg";
+      const contentType = match ? `image/${match[1]}` : "image/jpeg";
+      const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
 
-      await minioClient.putObject(BUCKET, fileName, buffer, buffer.length, {
-        "Content-Type": "image/jpeg",
-      });
+      const buffer = Buffer.from(base64Data, "base64");
+      const fileName = `site-${Date.now()}-${Math.floor(Math.random() * 1000)}.${imageExtension}`;
 
-      imageURL = `http://127.0.0.1:9000/${BUCKET}/${fileName}`;
+      await s3Client.send(new PutObjectCommand({
+                Bucket: BUCKET,
+                Key: fileName,
+                Body: buffer,
+                ContentType: contentType,
+            }));
+
+      imageURL = getImageUrl(fileName);
     }
 
     const newSite = await prisma.siteData.create({

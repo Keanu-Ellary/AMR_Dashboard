@@ -7,13 +7,14 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "jest",
-    "test:backend-unit": "jest --config jest.config.js --selectProjects backend-tests --runInBand",
+    "test": "cross-env USE_MINIO=true jest",
+    "test:backend-unit": "cross-env USE_MINIO=true jest --config jest.config.js --selectProjects backend-tests --runInBand",
     "test:frontend-unit": "jest --config jest.config.js --selectProjects frontend-tests --runInBand",
-    "test:integration": "jest --config jest.config.js --selectProjects backend-integration --runInBand",
-    "test:e2e": "npx playwright test"
+    "test:integration": "cross-env USE_MINIO=true jest --config jest.config.js --selectProjects backend-integration --runInBand",
+    "test:e2e": "cross-env USE_MINIO=true npx playwright test"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1073.0",
     "@prisma/client": "^6.19.3",
     "autoprefixer": "^10.4.27",
     "bcrypt": "^6.0.0",
@@ -53,6 +54,7 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19",
     "autoprefixer": "^10.4.27",
+    "cross-env": "^10.1.0",
     "dotenv": "^17.4.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
