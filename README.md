@@ -14,7 +14,7 @@ This project is a comprehensive dashboard of Anti-Microbial Resistance (AMR) dat
 
 ## Badges
 
-![Release](https://img.shields.io/github/v/release/Keanu-Ellary/AMR_Dashboard?style=for-the-badge)
+![GitHub Tag](https://img.shields.io/github/v/tag/Keanu-Ellary/AMR_Dashboard?&style=for-the-badge)
 ![Unit Tests](https://img.shields.io/github/actions/workflow/status/Keanu-Ellary/AMR_Dashboard/main.yml?label=Unit%20Tests%20%20Frontend%20and%20Backend&style=for-the-badge)
 ![Integration & E2E Tests](https://img.shields.io/github/actions/workflow/status/Keanu-Ellary/AMR_Dashboard/integration-and-e2e.yml?label=Integration%20and%20E2E%20Tests&style=for-the-badge)
 ![Build & Deploy](https://img.shields.io/github/actions/workflow/status/Keanu-Ellary/AMR_Dashboard/deploy.yml?label=Build%20and%20Deploy&style=for-the-badge)
