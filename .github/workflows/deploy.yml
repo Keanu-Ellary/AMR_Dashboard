@@ -28,7 +28,7 @@ jobs:
         working-directory: ./amr-dashboard
 
   build-and-push:
-    needs: dependency-check
+    needs: production-check
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
