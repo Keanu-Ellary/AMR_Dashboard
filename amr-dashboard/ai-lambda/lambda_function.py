@@ -5,7 +5,6 @@ import numpy as np
 import onnxruntime as ort
 from PIL import Image
 
-# Initialize the ONNX session outside the handler for performance (warm start)
 MODEL_PATH = "water_classifier.onnx"
 session = ort.InferenceSession(MODEL_PATH)
 
@@ -64,7 +63,7 @@ def lambda_handler(event, context):
 
         # Flatten extra dimensions to get a 1D array of logits for [Algae, Clean, Polluted]
         preds = np.array(outputs[0]).flatten()
-        
+
         # Apply sigmoid function to convert logits to probabilities
         preds = 1 / (1 + np.exp(-preds))
 
