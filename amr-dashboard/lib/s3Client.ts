@@ -5,10 +5,10 @@ const isTestMode = process.env.NODE_ENV ==="test" || process.env.USE_MINIO==="tr
 export const s3Client = new S3Client(
     !isTestMode
         ? {
-            region: process.env.AWS_REGION,
+            region: process.env.AWS_S3_REGION,
             credentials: {
-                accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-                secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+                accessKeyId: process.env.AWS_S3_ACCESS_KEY_ID!,
+                secretAccessKey: process.env.AWS_S3_SECRET_ACCESS_KEY!,
             }
         }
         : {
@@ -31,4 +31,4 @@ export const BUCKET =
 export const getImageUrl = (fileName: string) =>
     isTestMode
     ? `http://127.0.0.1:9000/${BUCKET}/${fileName}`
-    : `https://${BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`;
+    : `https://${BUCKET}.s3.${process.env.AWS_S3_REGION}.amazonaws.com/${fileName}`;
