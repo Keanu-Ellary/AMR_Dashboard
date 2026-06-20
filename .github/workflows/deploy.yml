@@ -55,8 +55,6 @@ jobs:
           file: ./amr-dashboard/Dockerfile
           push: true
           tags: ghcr.io/keanu-ellary/amr_dashboard/next-app:latest
-          build-args: |
-            DATABASE_URL=postgresql://dummy:dummy@localhost:5432/dummy
 
       - name: Build and push AI Lambda
         uses: docker/build-push-action@v5
@@ -94,8 +92,8 @@ jobs:
 
             docker compose pull
 
-            docker compose down || true
-            docker compose up -d --remove-orphans
+            docker compose down --volumes --remove-orphans || true
+            docker compose up -d --force-recreate
 
             docker image prune -a -f
           EOF
