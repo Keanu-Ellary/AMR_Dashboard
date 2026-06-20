@@ -94,9 +94,5 @@ jobs:
             docker compose down || true
             docker compose up -d --remove-orphans
 
-            echo "Running Prisma Migrations"
-
-            docker compose exec -T application npx prisma migrate deploy
-
             docker image prune -a -f
           EOF
