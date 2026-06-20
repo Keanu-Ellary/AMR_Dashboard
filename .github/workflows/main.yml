@@ -2,9 +2,9 @@ name: Continuous Integration - Backend and Frontend Unit Tests
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
   pull_request:
-    branches: [main]
+    branches: [main, dev]
 
 jobs:
   test-and-lint:

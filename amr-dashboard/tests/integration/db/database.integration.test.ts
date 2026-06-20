@@ -123,7 +123,6 @@ describe("Database Integration Tests", () => {
           siteId: site.id,
           dateTaken: new Date(),
           algaeDetected: false,
-          algaeScanRun: false,
         },
       });
 

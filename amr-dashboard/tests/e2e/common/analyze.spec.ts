@@ -13,9 +13,10 @@ test.describe("Algae AI-Detection Page", () => {
         await page.route('**/api/algae', async (route) => {
             const json = {
                 data: {
-                    results: [
-                        [100, 100, 300, 400, 0.92]
-                    ]
+                    algaeDetected: true,
+                    pollutionDetected: false,
+                    clean: false,
+                    probabilities: {algae: 0.92, clean: 0.05, polluted: 0.03 }
                 }
             };
             await route.fulfill({json});
@@ -39,7 +40,6 @@ test.describe("Algae AI-Detection Page", () => {
         // await expect(page.getByText('Running AI Model...')).toBeVisible();
 
         await expect(page.getByText('ALGAE DETECTED')).toBeVisible();
-        await expect(page.getByText('Confidence: 92%')).toBeVisible();
     });
 
     test("should display no algae confidence detection results", async ({page}) => {
@@ -65,7 +65,7 @@ test.describe("Algae AI-Detection Page", () => {
 
         await page.getByRole('button', {name: 'Analyze Image'}).click();
 
-        await expect(page.getByText('NOT DETECTED')).toBeVisible();
+        await expect(page.getByText('CLEAN')).toBeVisible();
         await expect(page.getByText('The AI model did not find any significant evidence')).toBeVisible();
     });
 });
