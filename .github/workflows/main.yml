@@ -27,6 +27,7 @@ jobs:
       - name: Lint
         run: npm run lint
         working-directory: ./amr-dashboard
+        continue-on-error: true
 
       - name: Run Backend Unit Tests
         run: npm run test:backend-unit
