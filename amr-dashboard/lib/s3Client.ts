@@ -13,7 +13,7 @@ export const s3Client = new S3Client(
         }
         : {
             region: "us-east-1",
-            endpoint: "http://127.0.0.1:9000",
+            endpoint: process.env.MINIO_ENDPOINT,
             forcePathStyle: true,
             credentials: {
                 accessKeyId: process.env.MINIO_ACCESS_KEY!,
@@ -30,5 +30,5 @@ export const BUCKET =
 
 export const getImageUrl = (fileName: string) =>
     isTestMode
-    ? `http://127.0.0.1:9000/${BUCKET}/${fileName}`
+    ? `http://${process.env.MINIO_ENDPOINT}/${BUCKET}/${fileName}`
     : `https://${BUCKET}.s3.${process.env.AWS_S3_REGION}.amazonaws.com/${fileName}`;
