@@ -16,6 +16,9 @@ COPY . .
 
 RUN npx prisma generate
 
+ARG DATABASE_URL
+ENV DATABASE_URL=$DATABASE_URL
+
 # Build the application (adjust if you are not using a build step)
 RUN npm run build
 
