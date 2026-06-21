@@ -158,71 +158,71 @@ function StatisticsContent() {
   };
 
   useEffect(() => {
+    const fetchDataSafely = async (url: string) => {
+      try {
+        const res = await fetch(url);
+        if (!res.ok) {
+          return null;
+        }
+        return await res.json();
+      }catch{
+        return null;
+      }
+    }
     const fetchData = async () => {
       try {
         const [averageRes, trendRes, anomalyRes, wqiRes, allSitesRes] =
           await Promise.all([
-            fetch(`/api/statistics/averageMetrics`),
-            fetch(`/api/statistics/trendOverTime`),
-            fetch(`/api/statistics/anomalyPerSite`),
-            fetch(`/api/statistics/waterQualityIndex`),
-            fetch(`/api/site`),
+            fetchDataSafely(`/api/statistics/averageMetrics`),
+            fetchDataSafely(`/api/statistics/trendOverTime`),
+            fetchDataSafely(`/api/statistics/anomalyPerSite`),
+            fetchDataSafely(`/api/statistics/waterQualityIndex`),
+            fetchDataSafely(`/api/site`),
           ]);
 
-        if (allSitesRes.ok) {
-          const allSitesData = await allSitesRes.json();
-          setAllSites(allSitesData.sites || []);
+        if (allSitesRes) {
+          setAllSites(allSitesRes.sites || []);
         }
 
-        if (averageRes.ok) {
-          const avgData = await averageRes.json();
-          setAverageMetrics(avgData);
+        if (averageRes) {
+          setAverageMetrics(averageRes);
         }
 
-        if (trendRes.ok) {
-          const trendDataRes = await trendRes.json();
-          setTrendData(trendDataRes);
+        if (trendRes) {
+          setTrendData(trendRes);
         }
 
-        if (anomalyRes.ok) {
-          const anomalyDataRes = await anomalyRes.json();
-          setAnomalies(anomalyDataRes.anomalies || []);
+        if (anomalyRes) {
+          setAnomalies(anomalyRes.anomalies || []);
         }
 
-        if (wqiRes.ok) {
-          const wqiDataRes = await wqiRes.json();
-          setWqiData(wqiDataRes);
+        if (wqiRes) {
+          setWqiData(wqiRes);
         }
 
         // If site ID provided, fetch site-specific data
         if (siteId) {
           const [siteRes, waterQualityRes, timeInUnsafeRes, siteAnomalyRes] =
             await Promise.all([
-              fetch(`/api/site/${siteId}`),
-              fetch(`/api/statistics/waterQuality?siteId=${siteId}`),
-              fetch(`/api/statistics/timeInUnsafe?siteId=${siteId}`),
-              fetch(`/api/statistics/anomalyForSite?siteId=${siteId}`),
+              fetchDataSafely(`/api/site/${siteId}`),
+              fetchDataSafely(`/api/statistics/waterQuality?siteId=${siteId}`),
+              fetchDataSafely(`/api/statistics/timeInUnsafe?siteId=${siteId}`),
+              fetchDataSafely(`/api/statistics/anomalyForSite?siteId=${siteId}`),
             ]);
 
-          if (!siteRes.ok) {
-            throw new Error("Failed to fetch site data");
+          if (siteRes) {
+            setSiteData(siteRes.site);
           }
 
-          const siteDataRes = await siteRes.json();
-          setSiteData(siteDataRes.site);
-
-          if (waterQualityRes.ok) {
-            const waterRes = await waterQualityRes.json();
-            setWaterQualityPercent(waterRes.results?.[0]?.WQI || 0);
+          if (waterQualityRes) {
+            setWaterQualityPercent(waterQualityRes.results?.[0]?.WQI || 0);
           }
-          if (timeInUnsafeRes.ok) {
-            const timeRes = await timeInUnsafeRes.json();
-            setTimeInUnsafe(timeRes.totalRedTime || 0);
+          if (timeInUnsafeRes) {
+            setTimeInUnsafe(timeInUnsafeRes.totalRedTime || 0);
           }
 
-          if (siteAnomalyRes.ok) {
-            const siteAnomalyDataRes = await siteAnomalyRes.json();
-            setSiteAnomalies(siteAnomalyDataRes);
+          if (siteAnomalyRes) {
+            setSiteAnomalies(siteAnomalyRes);
           }
         }
       } catch (err) {
