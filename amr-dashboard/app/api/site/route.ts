@@ -5,69 +5,78 @@ import { getSiteByZone } from "@/functions/site/getSiteByZone";
 import { uploadSiteData } from "@/functions/site/uploadSiteData";
 
 export async function GET(req: Request) {
-    const {searchParams} = new URL(req.url);
 
-    // dates
-    const startDate = searchParams.get("startDate");
-    const endDate = searchParams.get("endDate");
+    try{
+        const {searchParams} = new URL(req.url);
 
-    // location
-    const minLat = searchParams.get("minLat");
-    const maxLat = searchParams.get("maxLat");
-    const minLong = searchParams.get("minLong");
-    const maxLong = searchParams.get("maxLong");
+        // dates
+        const startDate = searchParams.get("startDate");
+        const endDate = searchParams.get("endDate");
 
-    // zone
-    const zone = searchParams.get("zone");
+        // location
+        const minLat = searchParams.get("minLat");
+        const maxLat = searchParams.get("maxLat");
+        const minLong = searchParams.get("minLong");
+        const maxLong = searchParams.get("maxLong");
 
-    if (startDate && endDate)
-    {
-        const res = await getSiteByDate({
-            startDate: new Date(startDate),
-            endDate: new Date(endDate)
-        });
+        // zone
+        const zone = searchParams.get("zone");
 
-        return Response.json(res.body, {
-            status: res.statusCode
-        });
-    }
-
-    if (minLat && maxLat && minLong && maxLong)
-    {
-        const res = await getSiteByLocation({
-            minLat: parseFloat(minLat),
-            maxLat: parseFloat(maxLat),
-            minLong: parseFloat(minLong),
-            maxLong: parseFloat(maxLong)
-        });
-
-        return Response.json(res.body, {
-            status: res.statusCode
-        });
-    }
-
-    if (zone)
-    {
-        if (zone !== "red" && zone !== "yellow")
+        if (startDate && endDate)
         {
-            return Response.json(
-                {error: "Zone must be red or yellow"},
-                {status: 500}
-            );
+            const res = await getSiteByDate({
+                startDate: new Date(startDate),
+                endDate: new Date(endDate)
+            });
+
+            return Response.json(res.body, {
+                status: res.statusCode
+            });
         }
 
-        const res = await getSiteByZone(zone as "red" | "yellow");
+        if (minLat && maxLat && minLong && maxLong)
+        {
+            const res = await getSiteByLocation({
+                minLat: parseFloat(minLat),
+                maxLat: parseFloat(maxLat),
+                minLong: parseFloat(minLong),
+                maxLong: parseFloat(maxLong)
+            });
+
+            return Response.json(res.body, {
+                status: res.statusCode
+            });
+        }
+
+        if (zone)
+        {
+            if (zone !== "red" && zone !== "yellow")
+            {
+                return Response.json(
+                    {error: "Zone must be red or yellow"},
+                    {status: 500}
+                );
+            }
+
+            const res = await getSiteByZone(zone as "red" | "yellow");
+
+            return Response.json(res.body, {
+                status: res.statusCode
+            });
+        }
+
+        const res = await getAllSites();
 
         return Response.json(res.body, {
             status: res.statusCode
         });
+    } catch (error: any) {
+        console.error("ROUTE ERROR: ", error);
+        return Response.json(
+            {error: `Route error: ${error?.message || error}`},
+            {status: 500}
+        )
     }
-
-    const res = await getAllSites();
-
-    return Response.json(res.body, {
-        status: res.statusCode
-    });
 };
 
 export async function POST(req: Request) {
