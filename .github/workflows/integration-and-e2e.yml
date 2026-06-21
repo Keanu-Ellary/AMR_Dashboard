@@ -43,7 +43,7 @@ jobs:
       working-directory: ./amr-dashboard
 
     - name: Start Docker
-      run: docker compose up db minio ai-lambda -d
+      run: docker compose -f docker-compose.dev.yml up db minio ai-lambda -d
       working-directory: ./amr-dashboard
 
     - name: Wait for Database
