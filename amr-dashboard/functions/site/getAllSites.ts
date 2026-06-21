@@ -40,7 +40,7 @@ export async function getAllSites() {
 
         return {
             statusCode: 500,
-            body: {error: "Failed to fetch sites"}
+            body: {error: "Failed to fetch sites: " + error}
         }
     }
 }

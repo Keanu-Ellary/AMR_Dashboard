@@ -51,8 +51,6 @@ jobs:
           file: ./amr-dashboard/Dockerfile
           push: true
           tags: ghcr.io/keanu-ellary/amr_dashboard/next-app:latest
-          build-args: |
-            DATABASE_URL=${{ secrets.PROD_DATABASE_URL }}
 
       # --- AI Lambda (Pushes to AWS ECR and Updates Lambda) ---
       - name: Configure AWS credentials
