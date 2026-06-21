@@ -17,12 +17,12 @@ This project is a comprehensive dashboard of Anti-Microbial Resistance (AMR) dat
 ![GitHub Tag](https://img.shields.io/github/v/tag/Keanu-Ellary/AMR_Dashboard?&style=for-the-badge)
 ![Unit Tests](https://img.shields.io/github/actions/workflow/status/Keanu-Ellary/AMR_Dashboard/main.yml?label=Unit%20Tests%20%20Frontend%20and%20Backend&style=for-the-badge)
 ![Integration & E2E Tests](https://img.shields.io/github/actions/workflow/status/Keanu-Ellary/AMR_Dashboard/integration-and-e2e.yml?label=Integration%20and%20E2E%20Tests&style=for-the-badge)
-![Build & Deploy](https://img.shields.io/github/actions/workflow/status/Keanu-Ellary/AMR_Dashboard/deploy.yml?label=Build%20and%20Deploy&style=for-the-badge)
 ## Documentation
 | Document | Link |
 | -------- | ------- |
-| General Operations Guide  | [Link]()    |
-| Setup and Deployment Guide | [Link](https://docs.google.com/document/d/1Bukbn6amXSgiqb-MTv7_xMKbt_Tf_D-vpluB8hLt48g/edit?usp=sharing)|
+| General Operations Guide  | [Link](https://drive.google.com/file/d/1EbBBpaDrZRXwRQb5xWALBHHrfOozjDzD/view?usp=drive_link) |
+| Setup and Deployment Guide | [Link](https://drive.google.com/file/d/10kIR9m1PWQdRB7ibbWGntdPQyDg_zoGX/view?usp=drive_link)|
+
 ## Tech Stack
 
 ![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)
