@@ -133,7 +133,7 @@ describe("External Services Integration Tests (MinIO & AI Lambda)", () => {
 
       // Extract filename from URL (format: http://127.0.0.1:9000/site-images/site-<timestamp>.jpg)
       const imageUrl = siteInDb!.images[0].url;
-      expect(imageUrl).toContain(`http://127.0.0.1:9000/${BUCKET}/site-`);
+      expect(imageUrl).toContain(`http://${process.env.MINIO_ENDPOINT}/${BUCKET}/site-`);
 
       const fileName = imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
 
